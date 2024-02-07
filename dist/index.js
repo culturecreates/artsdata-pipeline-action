@@ -37535,8 +37535,8 @@ async function run() {
       }
     });
 
-    console.log('Response:', response.data);
-    core.setOutput('response', response.data);
+    console.log('Response:', response.message);
+    core.setOutput('response', response.message);
   } catch (error) {
     console.log('Error:', error.message)
     core.setFailed(error.message);
