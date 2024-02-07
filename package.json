@@ -4,6 +4,7 @@
   "description": "Action to manage the data pipeline for Artsdata",
   "main": "index.js",
   "scripts": {
+    "start": "node src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +13,7 @@
   "dependencies": {
     "@actions/core": "^1.10.1",
     "@actions/github": "^6.0.0",
+    "@vercel/ncc": "^0.38.1",
     "axios": "^1.6.7"
   }
 }

@@ -18,6 +18,9 @@ inputs:
   download_file:
     description: 'Name of the download file'
     required: true
+  group:
+    description: 'Group of the artifact'
+    required: true
 
 runs:
   using: 'node20'

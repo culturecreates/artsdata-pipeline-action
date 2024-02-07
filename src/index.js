@@ -8,20 +8,24 @@ async function run() {
     const artifactName = core.getInput('artifact_name');
     const pageUrl = core.getInput('page_url');
     const publisherUri = core.getInput('publisher_uri');
-    const downloadUrl = core.getInput('download_url');
+    const downloadUrl = core.getInput('download_uri');
     const downloadFile = core.getInput('download_file');
+    const group = core.getInput('group');
 
     // Construct data payload
+    const today = new Date();
     const data = {
       artifact: artifactName,
       comment: `Entities from ${pageUrl}`,
       publisher: publisherUri,
-      group: github.context.repo,
-      version: Date.now(),
+      group: group,
+      version: today.toISOString(),
       downloadUrl: downloadUrl,
       downloadFile: downloadFile,
       reportCallbackUrl: 'https://huginn-staging.herokuapp.com/users/1/web_requests/273/databus'
     };
+
+    console.log('Data:', data)
 
     // Perform HTTP request
     const response = await axios.post('http://api.artsdata.ca/databus/', data, {
@@ -33,6 +37,7 @@ async function run() {
     console.log('Response:', response.data);
     core.setOutput('response', response.data);
   } catch (error) {
+    console.log('Error:', error.message)
     core.setFailed(error.message);
   }
 }
