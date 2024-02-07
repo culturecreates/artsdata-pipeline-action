@@ -11,6 +11,7 @@ inputs:
   publisher_uri:
     description: 'URI of the publisher'
     required: true
+    secret: true
   download_uri:
     description: 'URL to download'
     required: true
