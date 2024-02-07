@@ -18,5 +18,5 @@ jobs:
           publisher_uri: "${{ secrets.PUBLISHER_URI_GREGORY }}"
           download_uri: "https://raw.githubusercontent.com/culturecreates/artsdata-planet-ipaa/main/output/artists.jsonld"
           download_file: artists.jsonld
-          group: "https://github.com/culturecreates/artsdata-planet-ipaa"
+          group: "artsdata-planet-ipaa"
 
