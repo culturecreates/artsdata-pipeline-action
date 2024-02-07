@@ -1,0 +1,21 @@
+name: Push IPAA Artists
+
+on:
+  workflow_dispatch:
+            
+jobs:
+  call_reusable_workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Action setup
+        uses: ./
+        with:
+          artifact_name: ipaa-artists
+          page_url: https://ipaa.ca/indigenous-artists/
+          publisher_uri: "${{ secrets.PUBLISHER_URI_GREGORY }}"
+          download_uri: https://raw.githubusercontent.com/culturecreates/artsdata-planet-ipaa/main/output/artists.jsonld
+          download_file: artists.jsonld
+

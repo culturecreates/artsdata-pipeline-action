@@ -1,0 +1,23 @@
+name: 'Custom Artsdata Pipeline Action'
+description: 'A custom action for the Artsdata pipeline'
+
+inputs:
+  artifact_name:
+    description: 'Name of the artifact'
+    required: true
+  page_url:
+    description: 'URL of the page'
+    required: true
+  publisher_uri:
+    description: 'URI of the publisher'
+    required: true
+  download_uri:
+    description: 'URL to download'
+    required: true
+  download_file:
+    description: 'Name of the download file'
+    required: true
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
