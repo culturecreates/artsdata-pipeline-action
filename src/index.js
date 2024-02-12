@@ -6,24 +6,23 @@ const axios = require('axios');
 async function run() {
   let artsDataApiResponse;
   try {
-    const artifactName = core.getInput('artifact_name');
-    const pageUrl = core.getInput('page_url');
-    const publisherUri = core.getInput('publisher_uri');
-    const downloadUrl = core.getInput('download_uri');
-    const downloadFile = core.getInput('download_file');
-    const group = core.getInput('group');
+    const artifact = core.getInput('artifact');
+    const publisher = core.getInput('publisher');
+    const downloadUrl = core.getInput('downloadUrl');
+
+    const group = github.context.repo.repo;
+
+    const downloadFile = downloadUrl.split("/").pop();
 
     // Construct data payload
     const today = new Date().toISOString().replace(/:/g, "_")
     const data = {
-      artifact: artifactName,
-      comment: `Entities from ${pageUrl}`,
-      publisher: publisherUri,
+      artifact: artifact,
+      publisher: publisher,
       group: group,
       version: today,
       downloadUrl: downloadUrl,
       downloadFile: downloadFile,
-      reportCallbackUrl: 'https://huginn-staging.herokuapp.com/users/1/web_requests/273/databus'
     };
 
     console.log('Data:', data)

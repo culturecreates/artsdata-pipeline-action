@@ -13,10 +13,7 @@ jobs:
       - name: Action setup
         uses: ./
         with:
-          artifact_name: ipaa-artists
-          page_url: https://ipaa.ca/indigenous-artists/
-          publisher_uri: "${{ secrets.PUBLISHER_URI_GREGORY }}"
-          download_uri: "https://raw.githubusercontent.com/culturecreates/artsdata-planet-ipaa/main/output/artists.jsonld"
-          download_file: artists.jsonld
-          group: "artsdata-planet-ipaa"
+          artifact: ipaa-artists
+          publisher: "${{ secrets.PUBLISHER_URI_GREGORY }}"
+          downloadUrl: "https://raw.githubusercontent.com/culturecreates/artsdata-planet-ipaa/main/output/artists.jsonld"
 
