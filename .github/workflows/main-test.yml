@@ -1,4 +1,4 @@
-name: Push IPAA Artists
+name: Push IPAA Entities
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
       - name: Action setup
         uses: ./
         with:
-          artifact: ipaa-artists
+          artifact: ipaa-entities
           publisher: "${{ secrets.PUBLISHER_URI_GREGORY }}"
-          downloadUrl: "https://raw.githubusercontent.com/culturecreates/artsdata-planet-ipaa/main/output/artists.jsonld"
-
+          downloadUrl: "https://raw.githubusercontent.com/culturecreates/artsdata-planet-ipaa/main/output/entities.jsonld"
+          group: "artsdata-planet-ipaa"
