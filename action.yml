@@ -12,6 +12,24 @@ inputs:
   downloadUrl:
     description: 'URL to download'
     required: true
+  downloadFile:
+    description: 'Name of the file to download with extension'
+    required: false
+  comment:
+    description: 'Comment'
+    required: false
+  group:
+    description: 'Group of artifacts/versions. Typically the name of the tool creating the artifact. Use unreserved characters.'
+    required: false
+  version:
+    description: 'Version of the artifact. Usually a date. For example: 2020-10-23. Use unreserved characters.'
+    required: false
+  reportCallbackUrl:
+    description: 'URL to send back the data validation report asynchronously using POST "Content-Type: application/json"'
+    required: false
+  shacl:
+    description: 'URL to the SHACL file'
+    required: false
 
 runs:
   using: 'node20'

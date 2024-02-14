@@ -37510,20 +37510,20 @@ async function run() {
     const artifact = core.getInput('artifact');
     const publisher = core.getInput('publisher');
     const downloadUrl = core.getInput('downloadUrl');
-
-    const group = github.context.repo.repo;
-
-    const downloadFile = downloadUrl.split("/").pop();
+    const downloadFile = core.getInput('downloadFile') || downloadUrl.split("/").pop();
+    const group = core.getInput('group') || github.context.repo.repo;
+    const version = core.getInput('version') || new Date().toISOString().replace(/:/g, "_")
+    const comment = core.getInput('comment') || `Published by ${group} on ${version}`
 
     // Construct data payload
-    const today = new Date().toISOString().replace(/:/g, "_")
     const data = {
       artifact: artifact,
       publisher: publisher,
       group: group,
-      version: today,
+      version: version,
       downloadUrl: downloadUrl,
       downloadFile: downloadFile,
+      comment: comment
     };
 
     console.log('Data:', data)
