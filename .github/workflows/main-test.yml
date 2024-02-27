@@ -15,6 +15,6 @@ jobs:
         with:
           artifact: culture-mauricie-cms-organizations
           publisher: "${{ secrets.PUBLISHER_URI_GREGORY }}"
-          downloadUrl: "https://footlight-cms-entities-exported.s3.ca-central-1.amazonaws.com/culture-mauricie-organizations.ttl?re[…]61513902f5c9f6aea57e9fe84b18d8bdf86b68"
+          downloadUrl: "https://drive.google.com/uc?export=download&id=1pFFYFcyFpB4SjehR0TCG1DF5jt7ULC84"
           downloadFile: "culture-mauricie-organizations.ttl"
           group: "artsdata-planet-footlight"
