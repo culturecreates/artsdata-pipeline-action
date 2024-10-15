@@ -71,5 +71,51 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
 
     - name: Push to Artsdata
-      using: 'node20'
-      main: 'dist/index.js'
+      run: |
+
+        artifact=${{ inputs.artifact }}
+        publisher=${{ inputs.publisher }}
+        downloadFile=${{ inputs.downloadFile }}
+        repo=${{ github.repository }}
+        ref=${{ github.ref }}
+        group=${{ inputs.group }}
+        version=${{ inputs.version }}
+        comment=${{ inputs.comment }}
+
+        downloadUrl="https://raw.githubusercontent.com/${repo}/${ref}/output/${downloadFile}"
+
+        group=${group:-${repo#*/}}
+        version=${version:-$(date +%Y-%m-%dT%H:%M:%S | sed 's/:/_/g')}
+        comment=${comment:-"Published by ${group} on ${version}"}
+
+        data=$(jq -n \
+        --arg artifact "$artifact" \
+        --arg publisher "$publisher" \
+        --arg group "$group" \
+        --arg version "$version" \
+        --arg downloadUrl "$downloadUrl" \
+        --arg downloadFile "$downloadFile" \
+        --arg comment "$comment" \
+        '{
+          artifact: $artifact,
+          publisher: $publisher,
+          group: $group,
+          version: $version,
+          downloadUrl: $downloadUrl,
+          downloadFile: $downloadFile,
+          comment: $comment
+        }'
+        )
+
+        echo "Data: $data"
+
+        response=$(curl -s -w "%{http_code}" -o response.txt -X POST http://api.artsdata.ca/databus/ \
+        -H "Content-Type: application/json" \
+        -d "$data")
+
+        if [[ "$response" -ne 200 ]]; then
+        echo "Error: $(cat response.txt)"
+        else
+        echo "Success: Data posted successfully."
+        fi
+      shell: bash
