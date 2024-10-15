@@ -1,0 +1,21 @@
+name: Test to check fetching and commiting files.
+
+on:
+  workflow_dispatch:
+            
+jobs:
+  call_reusable_workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Action setup
+        uses: ./
+        with:
+          page-url: 'https://www.aramusique.org/evenements/liste/page/1'
+          entity-identifier: 'h3.tribe-events-calendar-list__event-title.tribe-common-h6.tribe-common-h4--min-medium a'
+          is-paginated: 'false'
+          headless: 'false'
+          downloadFile: "aramusique-test.ttl"
+          token: ${{ secrets.DEV_PAT }}
