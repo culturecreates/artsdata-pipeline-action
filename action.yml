@@ -50,7 +50,7 @@ runs:
     - name: Fetch Data using Docker
       run: |
         docker build -t rdf-fetcher .
-        docker run rdf-fetcher \
+        docker run -v $(pwd)/output:/usr/src/app/output rdf-fetcher \
           "${{ inputs.page-url }}" \
           "${{ inputs.entity-identifier }}" \
           "output/${{ inputs.downloadFile }}" \
