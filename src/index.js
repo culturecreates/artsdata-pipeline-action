@@ -8,8 +8,8 @@ async function run() {
   try {
     const artifact = core.getInput('artifact');
     const publisher = core.getInput('publisher');
-    const downloadUrl = core.getInput('downloadUrl');
-    const downloadFile = core.getInput('downloadFile') || downloadUrl.split("/").pop();
+    const downloadFile = core.getInput('downloadFile');
+    const downloadUrl = "https://raw.githubusercontent.com/" + github.context.repo.owner + "/" + github.context.repo.repo + "/" + github.context.sha + "/output/" + downloadFile;
     const group = core.getInput('group') || github.context.repo.repo;
     const version = core.getInput('version') || new Date().toISOString().replace(/:/g, "_")
     const comment = core.getInput('comment') || `Published by ${group} on ${version}`

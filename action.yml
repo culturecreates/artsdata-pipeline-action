@@ -69,3 +69,7 @@ runs:
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.token }}
+
+    - name: Push to Artsdata
+      using: 'node20'
+      main: 'dist/index.js'

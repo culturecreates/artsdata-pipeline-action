@@ -18,4 +18,6 @@ jobs:
           is-paginated: 'false'
           headless: 'false'
           downloadFile: "aramusique-test.ttl"
+          artifact: test-artifact
+          publisher: ${{ secrets.PUBLISHER_URI_GREGORY }}
           token: ${{ secrets.DEV_PAT }}
