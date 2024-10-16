@@ -4,6 +4,7 @@ description: 'A custom action for the Artsdata pipeline'
 inputs:
   mode: 
     description: 'Mode of the action(fetch/push/fetch-push)'
+    required: true
     default: 'push'
   page-url:
     description: 'URL of the page to crawl'
@@ -44,20 +45,46 @@ runs:
     - name: Check mode requirements
       run: |
         if [[ "${{ inputs.mode }}" == "fetch" || "${{ inputs.mode }}" == "fetch-push" ]]; then
-          [[ -z "${{ inputs.page-url }}" ]] && { echo "Page URL is required for ${ { inputs.mode }} mode."; exit 1; }
-          [[ -z "${{ inputs.entity-identifier }}" ]] && { echo "Entity Identifier is required for ${ { inputs.mode }} mode."; exit 1; }
-          [[ -z "${{ inputs.downloadFile }}" ]] && { echo "Download File is required for ${ { inputs.mode }} mode."; exit 1; }
-          [[ -z "${{ inputs.token }}" ]] && { echo "Token is required for ${ { inputs.mode }} mode."; exit 1; }
+          if [[ -z "${{ inputs.page-url }}" ]]; then
+            echo "Page URL is required for ${{ inputs.mode }} mode."
+            exit 1
+          fi
+
+          if [[ -z "${{ inputs.entity-identifier }}" ]]; then
+            echo "Entity Identifier is required for ${{ inputs.mode }} mode."
+            exit 1
+          fi
+
+          if [[ -z "${{ inputs.downloadFile }}" ]]; then
+            echo "Download File is required for ${{ inputs.mode }} mode."
+            exit 1
+          fi
+
+          if [[ -z "${{ inputs.token }}" ]]; then
+            echo "Token is required for ${{ inputs.mode }} mode."
+            exit 1
+          fi
         fi
 
         if [[ "${{ inputs.mode }}" == "push" || "${{ inputs.mode }}" == "fetch-push" ]]; then
-          [[ -z "${{ inputs.artifact }}" ]] && { echo "Artifact is required for ${ { inputs.mode }} mode."; exit 1; }
-          [[ -z "${{ inputs.publisher }}" ]] && { echo "Publisher is required for ${ { inputs.mode }} mode."; exit 1; }
+          if [[ -z "${{ inputs.artifact }}" ]]; then
+            echo "Artifact is required for ${{ inputs.mode }} mode."
+            exit 1
+          fi
+
+          if [[ -z "${{ inputs.publisher }}" ]]; then
+            echo "Publisher is required for ${{ inputs.mode }} mode."
+            exit 1
+          fi
         fi
 
-        if [[${{ inputs.mode }} == "push" ]]; then
-          [[ -z "${{ inputs.downloadUrl }}" ]] && { echo "Download URL is required for push mode."; exit 1; }
+        if [[ "${{ inputs.mode }}" == "push" ]]; then
+          if [[ -z "${{ inputs.downloadUrl }}" ]]; then
+            echo "Download URL is required for push mode."
+            exit 1
+          fi
         fi
+
       shell: bash
 
     - name: Fetch Data using Docker
@@ -97,15 +124,19 @@ runs:
         downloadFile=${{ inputs.downloadFile }}
         repo=${{ github.repository }}
         ref=${{ github.ref }}
-        group=${{ inputs.group:-${repo#*/} }}
-        version=${{ inputs.version:-$(date +%Y-%m-%dT%H:%M:%S | sed 's/:/_/g') }}
-        comment=${{ inputs.comment:-"Published by ${group} on ${version}" }}
+        group=${{ inputs.group }}
+        version=${{ inputs.version }}
+        comment=${{ inputs.comment }}
   
-        if [[${{ inputs.mode }} == "push" ]]; then
+        if [[ "${{ inputs.mode }}"" == "push" ]]; then
           downloadUrl=${{ inputs.downloadUrl }}
         else
           downloadUrl="https://raw.githubusercontent.com/${repo}/${ref}/output/${downloadFile}"
         fi
+
+        group=${group:-${repo#*/}}
+        version=${version:-$(date +%Y-%m-%dT%H:%M:%S | sed 's/:/_/g')}
+        comment=${comment:-"Published by ${group} on ${version}"}
 
         data=$(jq -n \
         --arg artifact "$artifact" \
