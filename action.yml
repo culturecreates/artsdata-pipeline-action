@@ -2,63 +2,82 @@ name: 'Custom Artsdata Pipeline Action'
 description: 'A custom action for the Artsdata pipeline'
 
 inputs:
+  mode: 
+    description: 'Mode of the action(fetch/push/fetch-push)'
+    default: 'push'
   page-url:
     description: 'URL of the page to crawl'
-    required: true
   entity-identifier:
     description: 'Identifier of the entity'
-    required: true
-  is-paginated:
-    description: 'Whether the page is paginated'
-    required: true
-  headless:
-    description: 'Whether to run in headless mode'
-    required: true
-  artifact:
-    description: 'Name of the artifact'
-    required: true
-  publisher:
-    description: 'URI of the publisher'
-    required: false
-    secret: true
   downloadFile:
     description: 'Name of the file to download with extension'
-    required: true
-  comment:
-    description: 'Comment'
-    required: false
-  group:
-    description: 'Group of artifacts/versions. Typically the name of the tool creating the artifact. Use unreserved characters.'
-    required: false
-  version:
-    description: 'Version of the artifact. Usually a date. For example: 2020-10-23. Use unreserved characters.'
-    required: false
-  reportCallbackUrl:
-    description: 'URL to send back the data validation report asynchronously using POST "Content-Type: application/json"'
-    required: false
-  shacl:
-    description: 'URL to the SHACL file'
-    required: false
+  downloadUrl:
+    description: 'URL of the file to download'
+  is-paginated:
+    description: 'Whether the page is paginated'
+    default: 'false'
+  headless:
+    description: 'Whether to run in headless mode'
+    default: 'false'
+  artifact:
+    description: 'Name of the artifact'
   token:
     description: 'GitHub token'
     secret: true
-    required: true
+  publisher:
+    description: 'URI of the publisher'
+    secret: true
+  comment:
+    description: 'Comment'
+  group:
+    description: 'Group of artifacts/versions. Typically the name of the tool creating the artifact. Use unreserved characters.'
+  version:
+    description: 'Version of the artifact. Usually a date. For example: 2020-10-23. Use unreserved characters.'
+  reportCallbackUrl:
+    description: 'URL to send back the data validation report asynchronously using POST "Content-Type: application/json"'
+  shacl:
+    description: 'URL to the SHACL file'
 
 runs: 
   using: 'composite'
   steps:
-    - name: Fetch Data using Docker
+    - name: Check mode requirements
       run: |
+        if [[ "${{ inputs.mode }}" == "fetch" || "${{ inputs.mode }}" == "fetch-push" ]]; then
+          [[ -z "${{ inputs.page-url }}" ]] && { echo "Page URL is required for ${ { inputs.mode }} mode."; exit 1; }
+          [[ -z "${{ inputs.entity-identifier }}" ]] && { echo "Entity Identifier is required for ${ { inputs.mode }} mode."; exit 1; }
+          [[ -z "${{ inputs.downloadFile }}" ]] && { echo "Download File is required for ${ { inputs.mode }} mode."; exit 1; }
+          [[ -z "${{ inputs.token }}" ]] && { echo "Token is required for ${ { inputs.mode }} mode."; exit 1; }
+        fi
+
+        if [[ "${{ inputs.mode }}" == "push" || "${{ inputs.mode }}" == "fetch-push" ]]; then
+          [[ -z "${{ inputs.artifact }}" ]] && { echo "Artifact is required for ${ { inputs.mode }} mode."; exit 1; }
+          [[ -z "${{ inputs.publisher }}" ]] && { echo "Publisher is required for ${ { inputs.mode }} mode."; exit 1; }
+        fi
+
+        if [[${{ inputs.mode }} == "push" ]]; then
+          [[ -z "${{ inputs.downloadUrl }}" ]] && { echo "Download URL is required for push mode."; exit 1; }
+        fi
+      shell: bash
+
+    - name: Fetch Data using Docker
+      if: ${{ inputs.mode == 'fetch' || inputs.mode == 'fetch-push' }}
+      run: |
+        isPaginated=${{ inputs.is-paginated || 'false' }}
+        headless=${{ inputs.headless || 'false' }}
+
         docker build -t rdf-fetcher .
         docker run -v $(pwd)/output:/usr/src/app/output rdf-fetcher \
           "${{ inputs.page-url }}" \
           "${{ inputs.entity-identifier }}" \
           "output/${{ inputs.downloadFile }}" \
-          "${{ inputs.is-paginated }}" \
-          "${{ inputs.headless }}"
+          "$isPaginated" \
+          "$headless"
+
       shell: bash
 
     - name: Commit and Push Changes
+      if: ${{ inputs.mode == 'fetch' || inputs.mode == 'fetch-push' }}
       run: |
         git config --local user.email "actions@github.com"
         git config --local user.name "GitHub Actions"
@@ -71,22 +90,22 @@ runs:
         GITHUB_TOKEN: ${{ inputs.token }}
 
     - name: Push to Artsdata
+      if: ${{ inputs.mode == 'push' || inputs.mode == 'fetch-push' }}
       run: |
-
         artifact=${{ inputs.artifact }}
         publisher=${{ inputs.publisher }}
         downloadFile=${{ inputs.downloadFile }}
         repo=${{ github.repository }}
         ref=${{ github.ref }}
-        group=${{ inputs.group }}
-        version=${{ inputs.version }}
-        comment=${{ inputs.comment }}
-
-        downloadUrl="https://raw.githubusercontent.com/${repo}/${ref}/output/${downloadFile}"
-
-        group=${group:-${repo#*/}}
-        version=${version:-$(date +%Y-%m-%dT%H:%M:%S | sed 's/:/_/g')}
-        comment=${comment:-"Published by ${group} on ${version}"}
+        group=${{ inputs.group:-${repo#*/} }}
+        version=${{ inputs.version:-$(date +%Y-%m-%dT%H:%M:%S | sed 's/:/_/g') }}
+        comment=${{ inputs.comment:-"Published by ${group} on ${version}" }}
+  
+        if [[${{ inputs.mode }} == "push" ]]; then
+          downloadUrl=${{ inputs.downloadUrl }}
+        else
+          downloadUrl="https://raw.githubusercontent.com/${repo}/${ref}/output/${downloadFile}"
+        fi
 
         data=$(jq -n \
         --arg artifact "$artifact" \
