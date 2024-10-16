@@ -128,7 +128,7 @@ runs:
         version=${{ inputs.version }}
         comment=${{ inputs.comment }}
   
-        if [[ "${{ inputs.mode }}"" == "push" ]]; then
+        if [[ "${{ inputs.mode }}" == "push" ]]; then
           downloadUrl=${{ inputs.downloadUrl }}
         else
           downloadUrl="https://raw.githubusercontent.com/${repo}/${ref}/output/${downloadFile}"
