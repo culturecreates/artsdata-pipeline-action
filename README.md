@@ -13,35 +13,21 @@ artsdata-push:
     - name: Action setup
       uses: culturecreates/artsdata-pipeline-action@v1.1.0
       with:
-        artifact:
-          description: 'Name of the artifact'
-          required: true
-        publisher:
-          description: 'URI of the publisher'
-          required: true
-          secret: true
-        downloadUrl:
-          description: 'URL to download'
-          required: true
+        mode: 
+        page-url:
+        entity-identifier:
         downloadFile:
-          description: 'Name of the file to download with extension'
-          required: false
+        downloadUrl:
+        is-paginated:
+        headless:
+        artifact:
+        token:
+        publisher:
         comment:
-          description: 'Comment'
-          required: false
         group:
-          description: 'Group of artifacts/versions. Typically the name of the tool creating the artifact. Use unreserved characters.'
-          required: false
         version:
-          description: 'Version of the artifact. Usually a date. For example: 2020-10-23. Use unreserved characters.'
-          required: false
         reportCallbackUrl:
-          description: 'URL to send back the data validation report asynchronously using POST "Content-Type: application/json"'
-          required: false
         shacl:
-          description: 'URL to the SHACL file'
-          required: false
-
 ```
 
 <br>
@@ -50,15 +36,22 @@ artsdata-push:
 
 | Name                                  | Description                                                                                                                                                              |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `artifact`                            | Name of the artifact.                                                                                                                                                    |
-| `publisher`                           | URI of the publisher.                                                                                                                                                    |
-| `downloadUrl`                         | URL to download the JSON-LD file.                                                                                                                                        |
-| `downloadFile` (**Optional**)         | Name of the file to download with extension. (If this is not provided, the download file will be assumed to be the file at the end of downloadUrl).                      |
-| `comment` (**Optional**)              | Comment about the artsdata push.                                                                                                                                         |
-| `group` (**Optional**)                | Group of artifacts/versions. Use unreserved characters. (If this is not provided, group will be set as your repository name).                                            |
-| `version` (**Optional**)              | Version of the artifact. Usually a date. For example: 2020-10-23. Use unreserved characters. (If this is not provided, version will be set as the current date).         |
-| `reportCallbackUrl` (**Optional**)    | URL to send back the data validation report asynchronously using POST "Content-Type: application/json".                                                                  |
-| `shacl` (**Optional**)                | URL to the SHACL file to perform validations.                                                                                                                            |
+| `mode`                            | Mode to run the workflow in (fetch/push/fetch-push, defaults to push).    
+| `page-url`                            | URL of the page to crawl (required for fetch and fetch-push modes).
+| `entity-identifier	`                            | Identifier of the entity (required for fetch and fetch-push modes).
+| `downloadFile`                            | Name of the file to download with extension (required for fetch and fetch-push modes).
+| `downloadUrl`                            | URL of the file to download (required for push mode).
+| `is-paginated`                            | Whether the page is paginated (defaults to false).
+| `headless`                            | Whether to run in headless mode (defaults to false).
+| `artifact`                            | Name of the artifact (required for push and fetch-push modes).
+| `token`                            | GitHub token (required for fetch and fetch-push modes, secret).
+| `publisher`                            | 	URI of the publisher (required for push and fetch-push modes).
+| `comment`                            | Comment about the artsdata push.
+| `group`                            | Group of artifacts/versions. Use unreserved characters. (If not provided, group will be set as your repository name).
+| `version`                            | Version of the artifact. Usually a date (e.g., 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date).
+| `reportCallbackUrl	`                            | URL to send back the data validation report asynchronously using POST "Content-Type: application/json".
+| `shacl`                            | URL to the SHACL file to perform validations.
+
 
 <br>
 
