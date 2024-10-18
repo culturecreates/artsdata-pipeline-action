@@ -42,6 +42,9 @@ inputs:
 runs: 
   using: 'composite'
   steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+
     - name: Check mode requirements
       run: |
         if [[ "${{ inputs.mode }}" == "fetch" || "${{ inputs.mode }}" == "fetch-push" ]]; then
