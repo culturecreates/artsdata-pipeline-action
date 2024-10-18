@@ -93,8 +93,8 @@ runs:
         isPaginated=${{ inputs.is-paginated || 'false' }}
         headless=${{ inputs.headless || 'false' }}
 
-        docker build -t rdf-fetcher .
-        docker run -v $(pwd)/output:/usr/src/app/output rdf-fetcher \
+        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:main
+        docker run -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:main \
           "${{ inputs.page-url }}" \
           "${{ inputs.entity-identifier }}" \
           "output/${{ inputs.downloadFile }}" \
