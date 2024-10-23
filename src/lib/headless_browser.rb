@@ -4,7 +4,8 @@ require 'linkeddata'
 
 module HeadlessBrowser
   def self.fetch_json_ld_objects(entity_urls, base_url)
-    browser = Ferrum::Browser.new(headless: true, pending_connection_errors: false)
+    puts "Loading browser..."
+    browser = Ferrum::Browser.new(headless: true, pending_connection_errors: false, process_timeout: 60, xvfb: true, browser_options: { 'no-sandbox': nil })
     graph = RDF::Graph.new
     add_url_sparql_file = File.read('./sparql/add_derived_from.sparql')
     entity_urls.each do |entity_url|

@@ -10,7 +10,9 @@ module RDFProcessor
       begin
         puts "Processing #{entity_url} in non-headless mode"
         entity_url = entity_url.gsub(' ', '+')
-        loaded_graph = RDF::Graph.load(entity_url)
+        linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
+        options = { headers: { 'User-Agent' => "artsdata-crawler/#{linkeddata_version}" } }
+        loaded_graph = RDF::Graph.load(entity_url, **options)
         sparql_file_with_url = add_url_sparql_file.gsub("subject_url", entity_url)
         loaded_graph.query(SPARQL.parse(sparql_file_with_url, update: true))
         graph << loaded_graph

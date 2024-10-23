@@ -36,7 +36,7 @@ module EntityFetcher
       number_of_entities = entity_urls.length
       entities_data.each do |entity|
         href = entity["href"]
-        entity_urls << (href.start_with?('http') ? href : base_url + href)
+        entity_urls << (href.start_with?('http') ? href : base_url + (href.start_with?('/') ? href : "/#{href}"))
       end
 
       break if entity_urls.length == number_of_entities || page_number.nil?
