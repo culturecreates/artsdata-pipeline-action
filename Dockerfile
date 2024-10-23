@@ -36,6 +36,4 @@ RUN bundle install
 
 COPY . .
 
-ENV FERRUM_CHROME_PATH=/usr/bin/google-chrome
-
 ENTRYPOINT ["bundle", "exec", "ruby", "src/main.rb"]

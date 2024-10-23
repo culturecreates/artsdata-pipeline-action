@@ -97,7 +97,7 @@ runs:
         headless=${{ inputs.headless || 'false' }}
 
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:main
-        docker run -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:main \
+        docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:main \
           "${{ inputs.page-url }}" \
           "${{ inputs.entity-identifier }}" \
           "output/${{ inputs.downloadFile }}" \
