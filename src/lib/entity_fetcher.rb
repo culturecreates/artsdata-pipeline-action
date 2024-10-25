@@ -27,6 +27,7 @@ module EntityFetcher
           retry
         else
           puts "Max retries reached. Unable to fetch the content for page #{page_number}."
+          puts e.message
           break
         end
       end
