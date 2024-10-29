@@ -7,7 +7,7 @@ module HeadlessBrowser
     puts "Loading browser..."
     browser = Ferrum::Browser.new(browser_path: "/usr/bin/google-chrome-stable", headless: true, pending_connection_errors: false, process_timeout: 60, xvfb: true, browser_options: { 'no-sandbox': nil })
     linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
-    browser.headers.set("User-Agent", "artsdata-crawler/#{linkeddata_version}")
+    browser.headers.set({"User-Agent" => "artsdata-crawler/#{linkeddata_version}"})
     graph = RDF::Graph.new
     add_url_sparql_file = File.read('./sparql/add_derived_from.sparql')
     entity_urls.each do |entity_url|
