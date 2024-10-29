@@ -20,7 +20,9 @@ module EntityFetcher
       url = "#{page_url}#{page_number}"
       puts "Fetching entity urls from #{url}..."
       begin
-        main_page_html_text = URI.open(url).read
+        linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
+        headers = {"User-Agent" => "artsdata-crawler/#{linkeddata_version}"}
+        main_page_html_text = URI.open(url, headers).read
       rescue StandardError => e
         retry_count += 1
         if retry_count < max_retries
