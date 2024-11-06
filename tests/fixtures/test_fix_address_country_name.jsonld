@@ -1,0 +1,12 @@
+{
+    "@context": "http://schema.org",
+    "@type": "PostalAddress",
+    "addressCountry": {
+      "@type": "Country",
+      "name": "Canada",
+      "identifier": "CA",
+      "alternateName": "CAN",
+      "sameAs": "http://example.org/canada"
+    }
+}
+  
