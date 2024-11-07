@@ -38,6 +38,8 @@ inputs:
     description: 'URL to send back the data validation report asynchronously using POST "Content-Type: application/json"'
   shacl:
     description: 'URL to the SHACL file'
+  fetch-urls-headlessly:
+    description: 'Set as true to fetch the entity URLs headlessly'
 
 runs: 
   using: 'composite'
@@ -95,6 +97,7 @@ runs:
       run: |
         isPaginated=${{ inputs.is-paginated || 'false' }}
         headless=${{ inputs.headless || 'false' }}
+        fetchUrlsHeadlessly=${{ inputs.fetch-urls-headlessly || 'false' }}
 
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:main
         docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:main \
@@ -102,7 +105,8 @@ runs:
           "${{ inputs.entity-identifier }}" \
           "output/${{ inputs.downloadFile }}" \
           "$isPaginated" \
-          "$headless"
+          "$headless" \
+          "$fetchUrlsHeadlessly"
 
       shell: bash
 
