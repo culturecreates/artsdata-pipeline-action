@@ -3,22 +3,25 @@ require_relative 'lib/rdf_processor'
 require_relative 'lib/headless_browser'
 
 if ARGV.length < 4
-  puts "Usage: ruby script_name.rb <page_url> <entity_identifier> <file_name> <is_paginated> <headless>"
+  puts "Usage: ruby script_name.rb <page_url> <entity_identifier> <file_name> <is_paginated> <headless> <fetch_urls_headlessly>"
   exit
 end
 
-page_url, entity_identifier, file_name, is_paginated, headless = ARGV[0..4]
+page_url, entity_identifier, file_name, is_paginated, headless, fetch_urls_headlessly = ARGV[0..5]
 
-entity_urls = EntityFetcher.fetch_entity_urls(page_url, entity_identifier, is_paginated)
+linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
+headers = {"User-Agent" => "artsdata-crawler/#{linkeddata_version}"}
+
+entity_urls = EntityFetcher.fetch_entity_urls(page_url, entity_identifier, is_paginated, fetch_urls_headlessly, headers)
 base_url = page_url.split('/')[0..2].join('/')
 
 if headless == 'true'
-  graph = HeadlessBrowser.fetch_json_ld_objects(entity_urls, base_url)
+  graph = HeadlessBrowser.fetch_json_ld_objects(entity_urls, base_url, headers)
   File.open(file_name, 'w') do |file|
     file.puts(graph.dump(:jsonld))
   end
 else
-  graph = RDFProcessor.process_rdf(entity_urls, base_url)
+  graph = RDFProcessor.process_rdf(entity_urls, base_url, headers)
   File.open(file_name, 'w') do |file|
     file.puts(graph.dump(:jsonld))
   end

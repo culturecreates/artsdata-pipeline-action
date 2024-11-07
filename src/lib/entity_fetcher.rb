@@ -2,7 +2,7 @@ require 'nokogiri'
 require 'open-uri'
 
 module EntityFetcher
-  def self.fetch_entity_urls(page_url, entity_identifier, is_paginated)
+  def self.fetch_entity_urls(page_url, entity_identifier, is_paginated, fetch_entity_urls_headlessly, headers)
     base_url = page_url.split('/')[0..2].join('/')
     entity_urls = []
 
@@ -13,28 +13,15 @@ module EntityFetcher
     else
       page_number = is_paginated.to_i
     end
-    
-    max_retries, retry_count = 3, 0
 
     loop do
       url = "#{page_url}#{page_number}"
       puts "Fetching entity urls from #{url}..."
-      begin
-        linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
-        headers = {"User-Agent" => "artsdata-crawler/#{linkeddata_version}"}
-        main_page_html_text = URI.open(url, headers).read
-      rescue StandardError => e
-        retry_count += 1
-        if retry_count < max_retries
-          retry
-        else
-          puts "Max retries reached. Unable to fetch the content for page #{page_number}."
-          puts e.message
-          break
-        end
+      if fetch_entity_urls_headlessly == 'true'
+        main_doc = Nokogiri::HTML(HeadlessBrowser.fetch_entity_urls_headless(url, headers))
+      else
+        main_doc = Nokogiri::HTML(self.fetch_entity_urls_headful(url, headers))
       end
-
-      main_doc = Nokogiri::HTML(main_page_html_text)
       entities_data = main_doc.css(entity_identifier)
       number_of_entities = entity_urls.length
       entities_data.each do |entity|
@@ -45,9 +32,24 @@ module EntityFetcher
       break if entity_urls.length == number_of_entities || page_number.nil?
 
       page_number += 1
-      retry_count = 0
     end
-
     entity_urls.uniq
+  end
+
+  def self.fetch_entity_urls_headful(url, headers)
+    retry_count = 0
+    max_retries = 3
+    begin
+      main_page_html_text = URI.open(url, headers).read
+    rescue StandardError => e
+      retry_count += 1
+      if retry_count < max_retries
+        retry
+      else
+        puts "Max retries reached. Unable to fetch the content for page #{page_number}."
+        puts e.message
+      end
+    end
+    main_page_html_text
   end
 end
