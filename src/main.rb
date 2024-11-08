@@ -15,13 +15,21 @@ headers = {"User-Agent" => "artsdata-crawler/#{linkeddata_version}"}
 entity_urls = EntityFetcher.fetch_entity_urls(page_url, entity_identifier, is_paginated, fetch_urls_headlessly, headers)
 base_url = page_url.split('/')[0..2].join('/')
 
+sparql_paths = [
+  "./sparql/remove_objects.sparql",
+  "./sparql/replace_blank_nodes.sparql",
+  "./sparql/fix_entity_type_capital.sparql",
+  "./sparql/fix_date_timezone.sparql",
+  "./sparql/fix_address_country_name.sparql"
+]
+
 if headless == 'true'
-  graph = HeadlessBrowser.fetch_json_ld_objects(entity_urls, base_url, headers)
+  graph = HeadlessBrowser.fetch_json_ld_objects(entity_urls, base_url, headers, sparql_paths)
   File.open(file_name, 'w') do |file|
     file.puts(graph.dump(:jsonld))
   end
 else
-  graph = RDFProcessor.process_rdf(entity_urls, base_url, headers)
+  graph = RDFProcessor.process_rdf(entity_urls, base_url, headers, sparql_paths)
   File.open(file_name, 'w') do |file|
     file.puts(graph.dump(:jsonld))
   end
