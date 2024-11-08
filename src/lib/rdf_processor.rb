@@ -2,7 +2,7 @@ require 'linkeddata'
 require 'sparql'
 require_relative 'sparql_processor'
 module RDFProcessor
-  def self.process_rdf(entity_urls, base_url, headers)
+  def self.process_rdf(entity_urls, base_url, headers, sparql_paths)
     graph = RDF::Graph.new
     add_url_sparql_file = File.read('./sparql/add_derived_from.sparql')
 
@@ -19,14 +19,6 @@ module RDFProcessor
         puts "Error loading RDF from #{entity_url}: #{e.message}"
       end
     end
-
-    sparql_paths = [
-      "./sparql/replace_blank_nodes.sparql",
-      "./sparql/fix_entity_type_capital.sparql",
-      "./sparql/fix_date_timezone.sparql",
-      "./sparql/fix_address_country_name.sparql",
-      "./sparql/remove_objects.sparql"
-    ]
 
     SparqlProcessor.perform_sparql_transformations(graph, sparql_paths, base_url)
   end
