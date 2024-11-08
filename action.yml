@@ -100,7 +100,7 @@ runs:
         fetchUrlsHeadlessly=${{ inputs.fetch-urls-headlessly || 'false' }}
 
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest
-        docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:main \
+        docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest \
           "${{ inputs.page-url }}" \
           "${{ inputs.entity-identifier }}" \
           "output/${{ inputs.downloadFile }}" \
