@@ -1,0 +1,12 @@
+DELETE {
+  ?subject <http://schema.org/url> ?oldUrl .
+}
+INSERT {
+  ?subject <http://schema.org/url> ?newUrl .
+}
+WHERE {
+  ?subject <http://schema.org/url> ?oldUrl .
+  
+  FILTER(CONTAINS(STR(?oldUrl), "#038;"))
+  BIND(IRI(REPLACE(STR(?oldUrl), "#038;", "")) AS ?newUrl)
+}
