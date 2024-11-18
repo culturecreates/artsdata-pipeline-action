@@ -40,6 +40,8 @@ inputs:
     description: 'URL to the SHACL file'
   fetch-urls-headlessly:
     description: 'Set as true to fetch the entity URLs headlessly'
+  offset:
+    description: 'Offset for paginated pages'
 
 runs: 
   using: 'composite'
@@ -98,6 +100,7 @@ runs:
         isPaginated=${{ inputs.is-paginated || 'false' }}
         headless=${{ inputs.headless || 'false' }}
         fetchUrlsHeadlessly=${{ inputs.fetch-urls-headlessly || 'false' }}
+        offset=${{ inputs.offset || '1' }}
 
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest
         docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest \
@@ -106,7 +109,8 @@ runs:
           "output/${{ inputs.downloadFile }}" \
           "$isPaginated" \
           "$headless" \
-          "$fetchUrlsHeadlessly"
+          "$fetchUrlsHeadlessly" \
+          "$offset"
 
       shell: bash
 

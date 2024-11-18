@@ -2,7 +2,7 @@ require 'nokogiri'
 require 'open-uri'
 
 module EntityFetcher
-  def self.fetch_entity_urls(page_url, entity_identifier, is_paginated, fetch_entity_urls_headlessly, headers)
+  def self.fetch_entity_urls(page_url, entity_identifier, is_paginated, fetch_entity_urls_headlessly, headers, offset)
     base_url = page_url.split('/')[0..2].join('/')
     entity_urls = []
 
@@ -12,6 +12,12 @@ module EntityFetcher
       page_number = 1
     else
       page_number = is_paginated.to_i
+    end
+
+    if offset
+      offset = offset.to_i
+    else
+      offset = 1
     end
 
     loop do
@@ -33,7 +39,7 @@ module EntityFetcher
 
       break if entity_urls.length == number_of_entities || page_number.nil?
 
-      page_number += 1
+      page_number += offset
     end
     entity_urls.uniq
   end
