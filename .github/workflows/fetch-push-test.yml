@@ -14,9 +14,12 @@ jobs:
         uses: ./
         with:
           mode: 'fetch-push'
-          page-url: 'https://www.aramusique.org/evenements/liste/page/1'
-          entity-identifier: 'h3.tribe-events-calendar-list__event-title.tribe-common-h6.tribe-common-h4--min-medium a'
-          downloadFile: "aramusique-test.jsonld"
-          artifact: test-artifact
+          page-url: 'https://capitol.nb.ca/en/tickets-events?start='
+          entity-identifier: 'div.fc-item-block-standard-wrapper.odd a, div.fc-item-block-standard-wrapper.even a'
+          downloadFile: "capitolnb-events.jsonld"
+          artifact: capitol-nb-ca
+          is-paginated: "0"
+          headless: "true"
+          offset: "12"
           publisher: ${{ secrets.PUBLISHER_URI_GREGORY }}
           token: ${{ secrets.DEV_PAT }}
