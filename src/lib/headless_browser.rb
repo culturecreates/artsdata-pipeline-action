@@ -1,6 +1,7 @@
 require 'ferrum'
 require 'json'
 require 'linkeddata'
+require 'rbconfig'
 
 module HeadlessBrowser
   def self.fetch_json_ld_objects(entity_urls, base_url, headers, sparql_paths, browser: nil, graph: nil)
@@ -16,15 +17,18 @@ module HeadlessBrowser
     graph
   end
 
-  def self.create_browser(headers: nil)
-    # MacOS "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-    # Linux "/usr/bin/google-chrome-stable"
-    browser = Ferrum::Browser.new(browser_path: "/usr/bin/google-chrome-stable", headless: true, pending_connection_errors: false, process_timeout: 60, xvfb: true, browser_options: { 'no-sandbox': nil })
+  def self.create_browser(headers = nil)
+    browser_path =  if running_on_macos?
+                      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+                    else
+                      "/usr/bin/google-chrome-stable"
+                    end
+    browser = Ferrum::Browser.new(browser_path: browser_path, headless: true, pending_connection_errors: false, process_timeout: 60, xvfb: true, browser_options: { 'no-sandbox': nil })
     browser.headers.set(headers) if headers
     browser
   end
 
-  def self.process_entity_url(entity_url, browser, graph, add_url_sparql_file: nil)
+  def self.process_entity_url(entity_url, browser, graph, add_url_sparql_file = nil)
     puts "Processing #{entity_url} in headless mode"
     browser.go_to(entity_url)
     sleep 15
@@ -37,13 +41,15 @@ module HeadlessBrowser
     puts "Error processing #{entity_url} in headless mode: #{e.message}"
   end
 
-  def self.process_json_ld_script(script, entity_url, graph, add_url_sparql_file)
+  def self.process_json_ld_script(script, entity_url, graph, add_url_sparql_file = nil)
     # Parse the JSON-LD string into a JSON object
     json_ld = string_to_json(script.text)
     # Convert the JSON-LD object to an RDF graph
     loaded_graph = RDF::Graph.new << JSON::LD::API.toRdf(json_ld)
-    # sparql_file_with_url = add_url_sparql_file.gsub("subject_url", entity_url)
-    # loaded_graph.query(SPARQL.parse(sparql_file_with_url, update: true))
+    if add_url_sparql_file
+      sparql_file_with_url = add_url_sparql_file.gsub("subject_url", entity_url)
+      loaded_graph.query(SPARQL.parse(sparql_file_with_url, update: true))
+    end
     graph << loaded_graph
   rescue JSON::ParserError => e
     puts "Error parsing JSON-LD: #{e.message}"
@@ -60,5 +66,9 @@ module HeadlessBrowser
     browser.go_to(url)
     sleep 15
     browser.body
+  end
+
+  def self.running_on_macos?
+    RbConfig::CONFIG['host_os'] =~ /darwin|mac os/
   end
 end

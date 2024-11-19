@@ -6,5 +6,6 @@ gem 'nokogiri'
 gem 'open-uri'
 gem 'rake'
 gem 'ferrum'
+gem 'mocha'
 
 
