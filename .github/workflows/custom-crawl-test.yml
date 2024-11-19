@@ -1,0 +1,59 @@
+name: Custom crawl test
+
+on:
+  workflow_dispatch:
+    inputs:
+      page-url:
+        description: 'URL of the page to crawl'
+      entity-identifier:
+        description: 'Identifier of the entity'
+      is-paginated:
+        description: 'Whether the page is paginated'
+        default: 'false'
+      headless:
+        description: 'Whether to run in headless mode'
+        required : false
+        default: 'false'
+      fetch-urls-headlessly:
+        description: 'Set as true to fetch the entity URLs headlessly'
+        default: 'false'
+        required: false
+      offset:
+        description: 'Offset for paginated pages'
+        default: '1'
+        required: false
+            
+jobs:
+  call_reusable_workflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Run ruby code
+        run: |
+            isPaginated=${{ inputs.is-paginated || 'false' }}
+            headless=${{ inputs.headless || 'false' }}
+            fetchUrlsHeadlessly=${{ inputs.fetch-urls-headlessly || 'false' }}
+            offset=${{ inputs.offset || '1' }}
+
+            bundle exec ruby src/main.rb \
+            "${{ inputs.page-url }}" \
+            "${{ inputs.entity-identifier }}" \
+            output/test_entity.jsonld \
+            "$isPaginated" \
+            "$headless" \
+            "$fetchUrlsHeadlessly" \
+            "$offset"
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jsonld-data
+          path: output/
+    
