@@ -1,4 +1,4 @@
-name: Test to check fetching, commiting and pushing files to Artsdata.
+name: Test fetch-push
 
 on:
   workflow_dispatch:
