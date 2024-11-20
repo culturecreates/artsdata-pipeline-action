@@ -10,7 +10,8 @@ class HeadlessBrowser
   end
 
   # Main method to return html for a single url in headless mode
-  # Outputs: RDF::Graph
+  # Input: URL of the index page
+  # Output: string contianing html
   def fetch_entity_urls_headless(url)
     @browser.go_to(url)
     sleep 15
@@ -18,7 +19,8 @@ class HeadlessBrowser
   end
 
   # Main method to return an RDF::Graph using the list of entity URLs
-  # Outputs: RDF::Graph
+  # Input: Array of URLs
+  # Output: RDF::Graph
   def fetch_json_ld_objects(entity_urls)
     @graph = RDF::Graph.new
     entity_urls.each do |entity_url|
