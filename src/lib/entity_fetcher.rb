@@ -25,7 +25,8 @@ module EntityFetcher
       puts "Fetching entity urls from #{url}..."
       if fetch_entity_urls_headlessly == 'true'
         puts "Entity url fetch mode - Headless"
-        main_doc = Nokogiri::HTML(HeadlessBrowser.fetch_entity_urls_headless(url, headers))
+        html = HeadlessBrowser.new(headers).fetch_entity_urls_headless(url)
+        main_doc = Nokogiri::HTML(html)
       else
         puts "Entity url fetch mode - Headful"
         main_doc = Nokogiri::HTML(self.fetch_entity_urls_headful(url, headers))

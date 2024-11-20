@@ -1,13 +1,14 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.8.6)
-      public_suffix (>= 2.0.2, < 6.0)
+    addressable (2.8.7)
+      public_suffix (>= 2.0.2, < 7.0)
     bcp47_spec (0.2.1)
-    builder (3.2.4)
-    concurrent-ruby (1.2.3)
+    bigdecimal (3.1.8)
+    builder (3.3.0)
+    concurrent-ruby (1.3.4)
     connection_pool (2.4.1)
-    date (3.3.4)
+    date (3.4.0)
     ebnf (2.4.0)
       htmlentities (~> 4.3)
       rdf (~> 3.3)
@@ -27,16 +28,20 @@ GEM
       concurrent-ruby (~> 1.0)
     htmlentities (4.3.4)
     json-canonicalization (1.0.0)
-    json-ld (3.3.1)
+    json-ld (3.3.2)
       htmlentities (~> 4.3)
       json-canonicalization (~> 1.0)
       link_header (~> 0.0, >= 0.0.8)
       multi_json (~> 1.15)
       rack (>= 2.2, < 4)
       rdf (~> 3.3)
-    json-ld-preloaded (3.3.0)
+      rexml (~> 3.2)
+    json-ld-preloaded (3.3.1)
       json-ld (~> 3.3)
       rdf (~> 3.3)
+    jsonlint (0.4.0)
+      oj (~> 3)
+      optimist (~> 3)
     ld-patch (3.3.0)
       ebnf (~> 2.4)
       rdf (~> 3.3)
@@ -72,38 +77,34 @@ GEM
       sparql (~> 3.3)
       sparql-client (~> 3.3)
       yaml-ld (~> 0.0)
-    logger (1.6.0)
+    logger (1.6.1)
     matrix (0.4.2)
-    minitest (5.21.2)
+    minitest (5.25.1)
     mocha (2.5.0)
       ruby2_keywords (>= 0.0.5)
     multi_json (1.15.0)
-    net-http-persistent (4.0.2)
+    net-http-persistent (4.0.4)
       connection_pool (~> 2.2)
-    nokogiri (1.16.2-aarch64-linux)
+    nokogiri (1.16.7-x86_64-darwin)
       racc (~> 1.4)
-    nokogiri (1.16.2-arm-linux)
-      racc (~> 1.4)
-    nokogiri (1.16.2-arm64-darwin)
-      racc (~> 1.4)
-    nokogiri (1.16.2-x86-linux)
-      racc (~> 1.4)
-    nokogiri (1.16.2-x86_64-darwin)
-      racc (~> 1.4)
-    nokogiri (1.16.2-x86_64-linux)
-      racc (~> 1.4)
-    open-uri (0.4.1)
+    oj (3.16.7)
+      bigdecimal (>= 3.0)
+      ostruct (>= 0.2)
+    open-uri (0.5.0)
       stringio
       time
       uri
-    psych (5.1.2)
+    optimist (3.2.0)
+    ostruct (0.6.1)
+    psych (5.2.0)
       stringio
-    public_suffix (5.0.4)
-    racc (1.7.3)
-    rack (3.0.9)
-    rake (13.1.0)
-    rdf (3.3.1)
+    public_suffix (6.0.1)
+    racc (1.8.1)
+    rack (3.1.8)
+    rake (13.2.1)
+    rdf (3.3.2)
       bcp47_spec (~> 0.2)
+      bigdecimal (~> 3.1, >= 3.1.5)
       link_header (~> 0.0, >= 0.0.8)
     rdf-aggregate-repo (3.3.0)
       rdf (~> 3.3)
@@ -161,12 +162,12 @@ GEM
     rdf-turtle (3.3.0)
       ebnf (~> 2.4)
       rdf (~> 3.3)
-    rdf-vocab (3.3.0)
+    rdf-vocab (3.3.2)
       rdf (~> 3.3)
     rdf-xsd (3.3.0)
       rdf (~> 3.3)
       rexml (~> 3.2)
-    rexml (3.2.6)
+    rexml (3.3.9)
     ruby2_keywords (0.0.5)
     scanf (1.0.0)
     shacl (0.4.1)
@@ -195,18 +196,18 @@ GEM
     sparql-client (3.3.0)
       net-http-persistent (~> 4.0, >= 4.0.2)
       rdf (~> 3.3)
-    stringio (3.1.0)
+    stringio (3.1.2)
     sxp (1.3.0)
       matrix (~> 0.4)
       rdf (~> 3.3)
     temple (0.10.3)
-    thor (1.3.0)
-    tilt (2.3.0)
-    time (0.3.0)
+    thor (1.3.2)
+    tilt (2.4.0)
+    time (0.4.1)
       date
-    unicode-types (1.9.0)
-    uri (0.13.0)
-    webrick (1.8.1)
+    unicode-types (1.10.0)
+    uri (1.0.2)
+    webrick (1.9.0)
     websocket-driver (0.7.6)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
@@ -217,16 +218,12 @@ GEM
       rdf-xsd (~> 3.3)
 
 PLATFORMS
-  aarch64-linux
-  arm-linux
-  arm64-darwin
-  x86-linux
-  x86_64-darwin
-  x86_64-linux
+  x86_64-darwin-23
 
 DEPENDENCIES
   ferrum
-  linkeddata
+  jsonlint (~> 0.4.0)
+  linkeddata (~> 3.3)
   minitest
   mocha
   nokogiri
@@ -234,4 +231,4 @@ DEPENDENCIES
   rake
 
 BUNDLED WITH
-   2.5.3
+   2.3.22
