@@ -1,3 +1,9 @@
+# URIs can be mistakenly HTML encoded
+# '&' has HTML code:
+# - Name code: '&amp;' 
+# - Decimal code: '&#038;' or '&#38;'
+# - Hex code: '&#x26;'
+
 DELETE {
   ?subject <http://schema.org/url> ?oldUrl .
 }
