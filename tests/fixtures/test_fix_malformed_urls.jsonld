@@ -1,10 +1,8 @@
 {
-    "@context": {
-      "schema": "http://schema.org/"
-    },
+    "@context":  "http://schema.org/",
     "@id": "http://example.com/123",
       "@type": "schema:VirtualLocation",
       "schema:url": {
-        "@id": "https://example.com/?post_type=event&p=12292"
+        "@id": "https://example.com/?post_type=event&#038;p=12292"
       }
 }
