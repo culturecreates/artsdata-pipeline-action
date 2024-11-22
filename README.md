@@ -28,6 +28,8 @@ artsdata-push:
         version:
         reportCallbackUrl:
         shacl:
+        fetch-urls-headlessly:
+        offset:
 ```
 
 <br>
@@ -51,10 +53,27 @@ artsdata-push:
 | `version`                            | Version of the artifact. Usually a date (e.g., 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date).
 | `reportCallbackUrl	`                            | URL to send back the data validation report asynchronously using POST "Content-Type: application/json".
 | `shacl`                            | URL to the SHACL file to perform validations.
-
+| `fetch-urls-headlessly`                            | Fetch the URLs of entities using a headless browser(defaults to false).
+| `offset`                            | Offset for pagination strategy (defaults to 1).
 
 <br>
 
 ## Potential Issues
 
 Remember to use only unreserved characters ([0-9a-zA-Z-._]) for input variables where mentioned.
+
+# Release Instructions
+
+When preparing a release for the artsdata-pipeline-action, please follow these versioning guidelines:
+
+## Minor release (e.g., 2.0.7 → 2.0.8): 
+
+For small feature additions or bug fixes.
+
+## Major release (e.g., 2.0.7 → 2.1.0): 
+
+For larger changes or significant improvements that could impact compatibility.
+
+## Significant Update (e.g., 2.0.7 → 3.0.0): 
+
+For major overhauls or breaking changes. If there's a drastic change in functionality or usage, increment to the next "big update" version.

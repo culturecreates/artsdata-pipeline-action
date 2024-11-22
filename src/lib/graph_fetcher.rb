@@ -10,7 +10,7 @@ class GraphFetcher
     @entity_urls = entity_urls
     @base_url = base_url
     @headers = headers ||= {"User-Agent" => "artsdata-crawler"}
-    @graph = if headless
+    @graph = if headless == "true"
               headless_browser = HeadlessBrowser.new(headers)
               headless_browser.fetch_json_ld_objects(entity_urls)
             else
