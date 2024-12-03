@@ -1,0 +1,10 @@
+PREFIX schema: <http://schema.org/>
+
+insert {
+    ?p schema:sameAs ?isni .
+}
+where {
+    ?p schema:identifier ?id .
+    filter(strstarts(?id,"0000"))
+    bind(URI(concat("https://isni.org/isni/",replace(?id," ",""))) as ?isni)
+}

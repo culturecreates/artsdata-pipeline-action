@@ -1,0 +1,17 @@
+PREFIX schema: <http://schema.org/>
+insert {
+    ?eventSeries a schema:EventSeries ;
+                 schema:subEvent ?event .
+}
+where {
+    ?event a schema:Event ; schema:url ?page .
+    {
+        select ?page (count(?event) as ?count) ?eventSeries
+        where {
+            ?event a schema:Event ; schema:url ?page .
+            bind(URI(concat(str(?page),"#EventSeries")) as ?eventSeries)
+        }
+        group by ?page ?eventSeries
+        HAVING(?count > 1)
+    }
+}
