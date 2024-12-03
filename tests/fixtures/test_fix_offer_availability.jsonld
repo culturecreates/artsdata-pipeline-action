@@ -1,0 +1,12 @@
+{
+    "@context": "http://schema.org/",
+    "@type": "Event",
+    "name": "Sample Event",
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "USD",
+      "price": "50",
+      "availability": "outOfStock"
+    }
+  }
+  

@@ -1,0 +1,58 @@
+{
+    "@context": "http://schema.org/",
+    "@id": "http://example.com/event-series/1",
+    "@type": "EventSeries",
+    "subEvent": [
+      {
+        "@id": "http://example.com/event/1",
+        "@type": "Event",
+        "startDate": "2024-12-01T18:00:00",
+        "endDate": "2024-12-01T20:00:00",
+        "performer": {
+          "@id": "http://example.com/performer/1",
+          "@type": "Person",
+          "name": "Artist A"
+        },
+        "organizer": {
+          "@id": "http://example.com/organizer/1",
+          "@type": "Organization",
+          "name": "Organizer X"
+        },
+        "location": {
+          "@id": "http://example.com/location/1",
+          "@type": "Place",
+          "name": "Venue A"
+        },
+        "description": "A wonderful event",
+        "image": "http://example.com/images/event1.jpg",
+        "name": "Event 1",
+        "url": "http://example.com/events/event1"
+      },
+      {
+        "@id": "http://example.com/event/2",
+        "@type": "Event",
+        "startDate": "2024-12-02T18:00:00",
+        "endDate": "2024-12-02T20:00:00",
+        "performer": {
+          "@id": "http://example.com/performer/2",
+          "@type": "Person",
+          "name": "Artist B"
+        },
+        "organizer": {
+          "@id": "http://example.com/organizer/1",
+          "@type": "Organization",
+          "name": "Organizer X"
+        },
+        "location": {
+          "@id": "http://example.com/location/2",
+          "@type": "Place",
+          "name": "Venue B"
+        },
+        "description": "Another wonderful event",
+        "image": "http://example.com/images/event2.jpg",
+        "name": "Event 2",
+        "url": "http://example.com/events/event2"
+      }
+    ]
+  }
+  

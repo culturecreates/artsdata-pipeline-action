@@ -1,0 +1,21 @@
+{
+    "@context": "http://schema.org/",
+    "@type": "Organization",
+    "@id": "http://www.example.com/org1",
+    "name": "Sample Organization",
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+1-800-555-1234"
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+1-800-555-5678"
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+1-800-555-9876"
+      }
+    ]
+  }
+  

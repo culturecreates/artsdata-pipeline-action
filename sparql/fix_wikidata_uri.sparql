@@ -1,0 +1,12 @@
+PREFIX schema: <http://schema.org/>
+DELETE {
+    ?e schema:sameAs ?sameAs .
+}
+INSERT {
+    ?e schema:sameAs ?fixedWikidataURI .
+}
+WHERE {
+    ?e schema:sameAs ?sameAs .
+    FILTER(CONTAINS(STR(?sameAs), "www.wikidata.org/wiki/Q"))
+    BIND(URI(CONCAT("http://www.wikidata.org/entity/Q", STRAFTER(STR(?sameAs), "www.wikidata.org/wiki/Q"))) AS ?fixedWikidataURI)
+}

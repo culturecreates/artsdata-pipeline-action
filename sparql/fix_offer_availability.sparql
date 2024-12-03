@@ -1,0 +1,15 @@
+PREFIX schema: <http://schema.org/>
+
+delete {
+    ?offer schema:availability ?availability .
+} 
+insert {
+    ?offer schema:availability ?new_availability .
+}
+where {
+    ?event schema:offers ?offer .
+    ?offer schema:availability ?availability .
+    filter(!CONTAINS(str(?availability), "http://schema.org/"))
+    bind(concat("http://schema.org/", ?availability) as ?new_availability)
+    ?event a schema:Event .
+}
