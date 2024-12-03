@@ -1,0 +1,49 @@
+PREFIX schema: <http://schema.org/>
+
+insert {
+    ?s schema:startDate ?firstStartDate .
+    ?s schema:endDate ?lastEndDate .
+    ?s schema:performer ?performer .
+    ?s schema:organizer ?organizer .
+    ?s schema:location ?location .
+    ?s schema:description ?description .
+    ?s schema:image ?image .
+    ?s schema:name ?name .
+    ?s schema:url ?url .
+}
+where {
+    OPTIONAL {
+        ?sampleSubEvent schema:performer ?performer .
+    }
+    OPTIONAL {
+        ?sampleSubEvent schema:organizer ?organizer .
+    }
+    OPTIONAL {
+        ?sampleSubEvent schema:location ?location .
+    }
+    OPTIONAL {
+        ?sampleSubEvent schema:description ?description .
+    }
+    OPTIONAL {
+        ?sampleSubEvent schema:image ?image .
+    }
+    OPTIONAL {
+        ?sampleSubEvent schema:name ?name .
+    }
+    OPTIONAL {
+        ?sampleSubEvent schema:url ?url .
+    }
+    {
+        select ?s  (min(?startDate) as ?firstStartDate) (max(?endDate) as ?lastEndDate) (sample(?subEvent) as ?sampleSubEvent)
+        where {
+            ?s a schema:EventSeries .
+            ?s schema:subEvent ?subEvent .
+            ?subEvent schema:startDate ?startDate .
+            OPTIONAL {
+                ?subEvent schema:endDate ?endDate .
+            }
+            filter(not exists {?s schema:name ?name })
+        }
+        group by ?s 
+    }
+}

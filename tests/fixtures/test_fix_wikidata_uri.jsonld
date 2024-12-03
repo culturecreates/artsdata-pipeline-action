@@ -1,0 +1,9 @@
+{
+    "@context": {
+      "schema": "http://schema.org/",
+      "sameAs": "schema:sameAs"
+    },
+    "@id": "http://example.com/entity/123",
+    "schema:sameAs": "http://www.wikidata.org/wiki/Q42"
+  }
+  

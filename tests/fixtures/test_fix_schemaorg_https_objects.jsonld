@@ -1,0 +1,20 @@
+{
+    "@context": {
+      "schema": "http://schema.org/"
+    },
+    "@graph": [
+      {
+        "@id": "http://example.org/resource1",
+        "schema:someProperty": {
+          "@value": "https://schema.org/Example1"
+        }
+      },
+      {
+        "@id": "http://example.org/resource2",
+        "schema:anotherProperty": {
+          "@value": "https://schema.org/Example2"
+        }
+      }
+    ]
+  }
+  

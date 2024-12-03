@@ -1,0 +1,11 @@
+delete {
+    ?a ?b ?c .
+}
+insert {
+    ?a ?b ?c2 .
+}
+where {
+    ?a ?b ?c .
+    filter(strstarts(?c, "https://schema.org/"))
+    bind(URI(concat("http://", strafter(?c, "https://"))) as ?c2)
+}
