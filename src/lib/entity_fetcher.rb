@@ -37,12 +37,14 @@ module EntityFetcher
         href = entity["href"]
         entity_urls << (href.start_with?('http') ? href : base_url + (href.start_with?('/') ? href : "/#{href}"))
       end
-
-      break if entity_urls.length == number_of_entities || page_number.nil?
-
+      entity_urls = entity_urls.uniq
+      if entity_urls.length == number_of_entities || page_number.nil?
+        puts "All entity URLs have been successfully fetched. Total entities: #{entity_urls.length}."
+        break
+      end
       page_number += offset
     end
-    entity_urls.uniq
+    entity_urls
   end
 
   def self.fetch_entity_urls_headful(url, headers)
@@ -55,7 +57,7 @@ module EntityFetcher
       if retry_count < max_retries
         retry
       else
-        puts "Max retries reached. Unable to fetch the content for page #{page_number}."
+        puts "Max retries reached. Unable to fetch the content for page #{url}."
         puts e.message
       end
     end
