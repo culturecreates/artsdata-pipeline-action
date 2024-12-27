@@ -22,11 +22,14 @@ RUN apt-get update && apt-get install -y \
     libxshmfence1 \
     libgles2-mesa \
     xvfb \
+    tzdata \
     --no-install-recommends && \
     curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
     apt-get update && apt-get install -y google-chrome-stable --no-install-recommends && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    ln -fs /usr/share/zoneinfo/America/Toronto /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata
 
 WORKDIR /usr/src/app
 
