@@ -49,6 +49,15 @@ runs:
     - name: Check out the repository
       uses: actions/checkout@v3
 
+    - name: Set Timezone
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y tzdata
+        echo "America/Toronto" | sudo tee /etc/timezone
+        sudo ln -sf /usr/share/zoneinfo/America/Toronto /etc/localtime
+        sudo dpkg-reconfigure -f noninteractive tzdata
+      shell: bash
+
     - name: Check mode requirements
       run: |
         if [[ "${{ inputs.mode }}" == "fetch" || "${{ inputs.mode }}" == "fetch-push" ]]; then
