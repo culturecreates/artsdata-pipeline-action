@@ -1,0 +1,8 @@
+{
+    "@context": {
+      "schema": "http://schema.org/"
+    },
+    "@id": "https://example.org/person/123",
+    "schema:identifier": "00001234567"
+}
+  
