@@ -27,8 +27,6 @@ class GraphFetcher
       "./sparql/fix_schemaorg_https_objects.sparql",
       "./sparql/fix_wikidata_uri.sparql",
       "./sparql/fix_isni.sparql",
-      "./sparql/create_eventseries.sparql",
-      "./sparql/copy_subevent_data_to_eventseries.sparql",
       "./sparql/collapse_duplicate_contact_pointblanknodes.sparql"
     ]
 
