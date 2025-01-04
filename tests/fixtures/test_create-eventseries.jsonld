@@ -1,0 +1,32 @@
+{
+    "@context": {
+      "schema": "http://schema.org/"
+    },
+    "@graph": [
+      {
+        "@type": "schema:Event",
+        "schema:id": "event1",
+        "schema:name": "Event 1",
+        "schema:url": "http://example.com/subevent"
+      },
+      {
+        "@type": "schema:Event",
+        "schema:id": "event2",
+        "schema:name": "Event 2",
+        "schema:url": "http://example.com/subevent"
+      },
+      {
+        "@type": "schema:Event",
+        "schema:id": "event3",
+        "schema:name": "Event 3",
+        "schema:url": "http://example.com/subevent"
+      },
+      {
+        "@type": "schema:Event",
+        "schema:id": "event4",
+        "schema:name": "Event 4",
+        "schema:url": "http://example.com/subevent"
+      }
+    ]
+  }
+  
