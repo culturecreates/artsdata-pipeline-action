@@ -15,6 +15,11 @@ base_url = page_url.split('/')[0..2].join('/')
 # Fetch index page with list of urls
 entity_urls = EntityFetcher.fetch_entity_urls(page_url, entity_identifier, is_paginated, fetch_urls_headlessly, headers, offset)
 
+if entity_urls.empty?
+  puts "No entity URLs found. Check your identifier. Exiting..."
+  exit
+end
+
 # Fetch the data at each url to build the graph
 graph = GraphFetcher.load(entity_urls: entity_urls, base_url: base_url, headers: headers, headless: headless)
 
