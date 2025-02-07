@@ -12,7 +12,7 @@ class HeadlessBrowser
   # Main method to return html for a single url in headless mode
   # Input: URL of the index page
   # Output: string contianing html
-  def fetch_entity_urls_headless(url)
+  def fetch_page_data_with_browser(url)
     @browser.go_to(url)
     sleep 15
     @browser.body

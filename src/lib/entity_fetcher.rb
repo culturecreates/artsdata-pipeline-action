@@ -24,17 +24,25 @@ module EntityFetcher
       url = "#{page_url}#{page_number}"
       puts "Fetching entity urls from #{url}..."
       if fetch_entity_urls_headlessly == 'true'
-        puts "Entity url fetch mode - Headless"
-        html = HeadlessBrowser.new(headers).fetch_entity_urls_headless(url)
-        main_doc = Nokogiri::HTML(html)
+        puts "Entity url fetch mode - Browser"
+        page_data = HeadlessBrowser.new(headers).fetch_page_data_with_browser(url)
       else
-        puts "Entity url fetch mode - Headful"
-        main_doc = Nokogiri::HTML(self.fetch_entity_urls_headful(url, headers))
+        puts "Entity url fetch mode - Normal"
+        page_data = self.fetch_page_data(url, headers)
+      end
+      if(page_url.end_with?('.xml'))
+        main_doc = Nokogiri::XML(page_data)
+      else
+        main_doc = Nokogiri::HTML(page_data)
       end
       entities_data = main_doc.css(entity_identifier)
       number_of_entities = entity_urls.length
       entities_data.each do |entity|
-        href = entity["href"]
+        if(main_doc.xml?)
+          href = entity.child.to_s
+        else
+          href = entity["href"]
+        end
         entity_urls << (href.start_with?('http') ? href : base_url + (href.start_with?('/') ? href : "/#{href}"))
       end
       entity_urls = entity_urls.uniq
@@ -47,7 +55,7 @@ module EntityFetcher
     entity_urls
   end
 
-  def self.fetch_entity_urls_headful(url, headers)
+  def self.fetch_page_data(url, headers)
     retry_count = 0
     max_retries = 3
     begin
