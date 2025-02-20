@@ -7,9 +7,9 @@ inputs:
     required: true
     default: 'push'
   page-url:
-    description: 'URL of the page to crawl'
+    description: 'URLs of the page to crawl'
   entity-identifier:
-    description: 'Identifier of the entity'
+    description: 'Identifiers of the entity to fetch'
   downloadFile:
     description: 'Name of the file to download with extension'
   downloadUrl:
