@@ -45,6 +45,7 @@ jobs:
 
       - name: Run ruby code
         run: |
+            mkdir -p output
             isPaginated=${{ inputs.is-paginated || 'false' }}
             headless=${{ inputs.headless || 'false' }}
             fetchUrlsHeadlessly=${{ inputs.fetch-urls-headlessly || 'false' }}
