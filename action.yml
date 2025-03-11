@@ -102,7 +102,7 @@ runs:
         docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest \
           "${{ inputs.page-url }}" \
           "${{ inputs.entity-identifier }}" \
-          "output/${{ inputs.downloadFile }}" \
+          "output/${downloadFile}" \
           "$isPaginated" \
           "$headless" \
           "$fetchUrlsHeadlessly" \
@@ -128,7 +128,7 @@ runs:
       run: |
         artifact=${{ inputs.artifact }}
         publisher=${{ inputs.publisher }}
-        downloadFile=${{ inputs.downloadFile }}
+        downloadFile="${{ inputs.downloadFile || format('{0}.jsonld', inputs.artifact) }}"
         repo=${{ github.repository }}
         ref=${{ github.ref }}
         group=${{ inputs.group }}
