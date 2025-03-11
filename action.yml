@@ -62,11 +62,6 @@ runs:
             exit 1
           fi
 
-          if [[ -z "${{ inputs.downloadFile }}" ]]; then
-            echo "Download File is required for ${{ inputs.mode }} mode."
-            exit 1
-          fi
-
           if [[ -z "${{ inputs.token }}" ]]; then
             echo "Token is required for ${{ inputs.mode }} mode."
             exit 1
@@ -101,6 +96,7 @@ runs:
         headless=${{ inputs.headless || 'false' }}
         fetchUrlsHeadlessly=${{ inputs.fetch-urls-headlessly || 'false' }}
         offset=${{ inputs.offset || '1' }}
+        downloadFile="${{ inputs.downloadFile || format('{0}.jsonld', inputs.artifact) }}"
 
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest
         docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest \
