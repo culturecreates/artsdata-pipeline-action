@@ -7,22 +7,26 @@ module EntityFetcher
   def self.fetch_entity_urls(page_url:, entity_identifier:, is_paginated:, fetch_entity_urls_headlessly:, headers:, offset:, base_url:)
     entity_urls = []
 
-    page_number = EntityFetcherHelper.get_page_number(is_paginated)
     offset = EntityFetcherHelper.get_offset(offset)
-
     identifier_mapping = EntityFetcherHelper.create_url_identifier_mapping(page_url, entity_identifier)
 
+    if fetch_entity_urls_headlessly == 'true'
+      puts "Entity url fetch mode - Browser"
+      browser = HeadlessBrowser.new(headers)
+    else
+      puts "Entity url fetch mode - Normal"
+    end
+
     identifier_mapping.each do |page, identifier|
+      page_number = EntityFetcherHelper.get_page_number(is_paginated)
       loop do
         url = "#{page}#{page_number}"
         puts "Fetching entity urls from #{url}..."
-        if fetch_entity_urls_headlessly == 'true'
-          puts "Entity url fetch mode - Browser"
-          page_data = HeadlessBrowser.new(headers).fetch_page_data_with_browser(url)
-        else
-          puts "Entity url fetch mode - Normal"
-          page_data = self.fetch_page_data(url, headers)
-        end
+        page_data = if fetch_entity_urls_headlessly == 'true'
+                      browser.fetch_page_data_with_browser(url)
+                    else
+                      self.fetch_page_data(url, headers)
+                    end
         if(page.end_with?('.xml'))
           main_doc = Nokogiri::XML(page_data)
         else
@@ -40,12 +44,13 @@ module EntityFetcher
         end
         entity_urls = entity_urls.uniq
         if entity_urls.length == number_of_entities || page_number.nil?
-          puts "All entity URLs have been successfully fetched. Total entities: #{entity_urls.length}."
+          puts "Fetched all entity URLs from #{url}."
           break
         end
         page_number += offset
       end
     end
+    puts "All entity URLs have been successfully fetched. Total entities: #{entity_urls.length}."
     entity_urls
   end
 

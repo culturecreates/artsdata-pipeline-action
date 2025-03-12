@@ -10,7 +10,6 @@ end
 page_url, entity_identifier, file_name, is_paginated, headless, fetch_urls_headlessly, offset = ARGV[0..6]
 
 page_url = page_url.split(',')
-entity_identifier = entity_identifier.split(',')
 
 linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
 headers = {"User-Agent" => "artsdata-crawler/#{linkeddata_version}"}

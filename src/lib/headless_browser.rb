@@ -23,6 +23,7 @@ class HeadlessBrowser
   # Output: RDF::Graph
   def fetch_json_ld_objects(entity_urls)
     @graph = RDF::Graph.new
+    puts "URL processing mode: Headless"
     entity_urls.each do |entity_url|
       process_entity_url(entity_url)
     end
@@ -30,7 +31,7 @@ class HeadlessBrowser
   end
 
   def process_entity_url(entity_url)
-    puts "Processing #{entity_url} in headless mode"
+    puts "Processing #{entity_url}"
     @browser.go_to(entity_url)
     sleep 5
     @browser.stop
