@@ -32,7 +32,7 @@ class GraphFetcher
 
     base_url = entity_urls[0].split('/')[0..2].join('/')
     sparql_processor = SparqlProcessor.new(sparql_paths, base_url)
-    @graph = sparql_processor.perform_sparql_transformations(@graph)
+    @graph = sparql_processor.perform_sparql_transformations(@graph, "domain_name")
     @graph
   end
 end

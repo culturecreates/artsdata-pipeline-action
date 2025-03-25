@@ -2,6 +2,7 @@ require 'ferrum'
 require 'json'
 require 'linkeddata'
 require 'rbconfig'
+require_relative 'sparql_processor'
 
 class HeadlessBrowser
   def initialize(headers = nil)
@@ -48,8 +49,12 @@ class HeadlessBrowser
     end
 
     # Add the derivedFrom triple to the graph
-    sparql_file_with_url = @add_url_sparql_file.gsub("subject_url", entity_url)
-    entity_graph.query(SPARQL.parse(sparql_file_with_url, update: true))
+    intermediate_sparql_paths = [
+      './sparql/add_derived_from.sparql',
+      './sparql/add_language.sparql'
+    ]
+    sparql_processor = SparqlProcessor.new(intermediate_sparql_paths, entity_url)
+    entity_graph = sparql_processor.perform_sparql_transformations(entity_graph, "subject_url")
 
     @graph << entity_graph
   rescue StandardError => e

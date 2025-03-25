@@ -1,0 +1,30 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ?s ?p ?o .
+}
+INSERT {
+  ?s ?p ?o_lang .
+}
+WHERE {
+  ?s ?p ?o .
+  # fetch only the string literals that don't have a language tag
+  FILTER(datatype(?o) = xsd:string && !lang(?o))
+  
+  # fetch the language tag of the entity from derived_from url
+  OPTIONAL {
+    <subject_url> ?pre ?existingLangLiteral.
+    FILTER(LANG(?existingLangLiteral) != "")
+  }
+  
+  # fetch string before if language tag contains "-" else return the language tag and if no language tag is found return "und"
+  BIND(
+    IF(BOUND(?existingLangLiteral), 
+       IF(CONTAINS(LANG(?existingLangLiteral), "-"), STRBEFORE(LANG(?existingLangLiteral), "-"), LANG(?existingLangLiteral)),
+       "und"
+    ) 
+    AS ?langCode
+  )
+
+  BIND(strlang(str(?o), ?langCode) AS ?o_lang)
+}
