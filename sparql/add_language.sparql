@@ -21,10 +21,13 @@ WHERE {
   BIND(
     IF(BOUND(?existingLangLiteral), 
        IF(CONTAINS(LANG(?existingLangLiteral), "-"), STRBEFORE(LANG(?existingLangLiteral), "-"), LANG(?existingLangLiteral)),
-       "und"
+       ""
     ) 
     AS ?langCode
   )
 
-  BIND(strlang(str(?o), ?langCode) AS ?o_lang)
+  BIND(
+    IF(?langCode = "", ?o, strlang(str(?o), ?langCode)) 
+    AS ?o_lang
+  )
 }

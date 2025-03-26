@@ -24,10 +24,8 @@ inputs:
     description: 'Name of the artifact'
   token:
     description: 'GitHub token'
-    secret: true
   publisher:
     description: 'URI of the publisher'
-    secret: true
   comment:
     description: 'Comment'
   group:
