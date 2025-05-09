@@ -107,7 +107,7 @@ runs:
           "$isPaginated" \
           "$headless" \
           "$fetchUrlsHeadlessly" \
-          "$offset"
+          "$offset" \
           "$customUserAgent"
 
       shell: bash

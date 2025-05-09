@@ -62,7 +62,7 @@ jobs:
             "$isPaginated" \
             "$headless" \
             "$fetchUrlsHeadlessly" \
-            "$offset"
+            "$offset" \
             "$customUserAgent"
       
       - name: Upload artifact
