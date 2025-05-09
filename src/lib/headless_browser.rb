@@ -14,9 +14,23 @@ class HeadlessBrowser
   # Input: URL of the index page
   # Output: string contianing html
   def fetch_page_data_with_browser(url)
-    @browser.go_to(url)
+    retry_count = 0
+    max_retries = 3
+    begin
+      @browser.go_to(url)
+      sleep 15
+      main_page_html_text = @browser.body
+    rescue StandardError => e
+      retry_count += 1
+      if retry_count < max_retries
+        retry
+      else
+        puts "Max retries reached. Unable to fetch the content for page #{url}."
+        puts e.message
+      end
+    end
     sleep 15
-    @browser.body
+    main_page_html_text
   end
 
   # Main method to return an RDF::Graph using the list of entity URLs
