@@ -40,6 +40,8 @@ inputs:
     description: 'Set as true to fetch the entity URLs headlessly'
   offset:
     description: 'Offset for paginated pages'
+  custom-user-agent:
+    description: 'Custom user agent string'
 
 runs: 
   using: 'composite'
@@ -95,6 +97,7 @@ runs:
         fetchUrlsHeadlessly=${{ inputs.fetch-urls-headlessly || 'false' }}
         offset=${{ inputs.offset || '1' }}
         downloadFile="${{ inputs.downloadFile || format('{0}.jsonld', inputs.artifact) }}"
+        customUserAgent=${{ inputs.custom-user-agent }}
 
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest
         docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest \
@@ -105,6 +108,7 @@ runs:
           "$headless" \
           "$fetchUrlsHeadlessly" \
           "$offset"
+          "$customUserAgent"
 
       shell: bash
 

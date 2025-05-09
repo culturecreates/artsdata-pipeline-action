@@ -3,16 +3,16 @@ require_relative 'lib/graph_fetcher'
 require 'fileutils'
 
 if ARGV.length < 4
-  puts "Usage: ruby script_name.rb <page_url> <entity_identifie> <file_name> <is_paginated> <headless> <fetch_urls_headlessly> <offset>"
+  puts "Usage: ruby script_name.rb <page_url> <entity_identifie> <file_name> <is_paginated> <headless> <fetch_urls_headlessly> <offset> <custom_user_agent>"
   exit
 end
 
-page_url, entity_identifier, file_name, is_paginated, headless, fetch_urls_headlessly, offset = ARGV[0..6]
+page_url, entity_identifier, file_name, is_paginated, headless, fetch_urls_headlessly, offset, custom_user_agent = ARGV[0..7]
 
 page_url = page_url.split(',')
 
 linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
-headers = {"User-Agent" => "artsdata-crawler/#{linkeddata_version}"}
+headers = {"User-Agent" => custom_user_agent || "artsdata-crawler/#{linkeddata_version}"}
 base_url = page_url[0].split('/')[0..2].join('/')
 
 # Fetch index page with list of urls
