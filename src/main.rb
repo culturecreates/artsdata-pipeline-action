@@ -24,7 +24,7 @@ entity_urls = EntityFetcher.fetch_entity_urls(
 
 if entity_urls.empty?
   puts "No entity URLs found. Check your identifier. Exiting..."
-  exit
+  exit(1)
 end
 
 # Fetch the data at each url to build the graph
