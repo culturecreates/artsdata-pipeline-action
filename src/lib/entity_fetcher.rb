@@ -65,7 +65,7 @@ module EntityFetcher
         retry
       else
         puts "Max retries reached. Unable to fetch the content for page #{url}."
-        puts e.message
+        puts "#{e.message}, consider passing a custom user agent instead of #{headers['User-Agent']}"
       end
     end
     main_page_html_text

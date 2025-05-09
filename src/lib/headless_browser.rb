@@ -26,7 +26,7 @@ class HeadlessBrowser
         retry
       else
         puts "Max retries reached. Unable to fetch the content for page #{url}."
-        puts e.message
+        puts "#{e.message}, consider passing a custom user agent instead of #{@browser.headers.get['User-Agent']}"
       end
     end
     sleep 15
