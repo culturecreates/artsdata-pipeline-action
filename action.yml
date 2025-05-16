@@ -48,6 +48,7 @@ runs:
   steps:
     - name: log the tag
       run: git describe --tags
+      shell: bash
       
     - name: Check out the repository
       uses: actions/checkout@v3
