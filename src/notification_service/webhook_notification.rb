@@ -6,6 +6,10 @@ module NotificationService
     end
 
     def send_notification(stage:, message:)
+      if @webhook_url.nil? || @webhook_url.empty?
+        puts "No webhook URL provided. Skipping notification."
+        return
+      end
       uri = URI.parse(@webhook_url)
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = (uri.scheme == "https")
