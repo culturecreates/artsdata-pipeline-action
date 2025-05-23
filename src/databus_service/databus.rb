@@ -33,7 +33,7 @@ module DatabusService
 
       request = Net::HTTP::Post.new(uri.request_uri)
       request.body = data
-
+      request['Content-Type'] = 'application/json'
       begin
         response = http.request(request)
         if response.code.to_i == 200
