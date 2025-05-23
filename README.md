@@ -26,7 +26,7 @@ artsdata-push:
         comment:
         group:
         version:
-        reportCallbackUrl:
+        report-callback-url:
         shacl:
         fetch-urls-headlessly:
         offset:
@@ -52,7 +52,7 @@ artsdata-push:
 | `comment`                           | Comment about the artsdata push.
 | `group`                             | Group of artifacts/versions. Use unreserved characters. (If not provided, group will be set as your repository name).
 | `version`                           | Version of the artifact. Usually a date (e.g., 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date).
-| `reportCallbackUrl	`               | URL to send back the data validation report asynchronously using POST "Content-Type: application/json".
+| `report-callback-url`               | URL to send back the data validation report asynchronously using POST "Content-Type: application/json".
 | `shacl`                             | URL to the SHACL file to perform validations.
 | `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(defaults to false).
 | `offset`                            | Offset for pagination strategy (defaults to 1).

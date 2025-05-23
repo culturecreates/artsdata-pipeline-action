@@ -1,38 +1,117 @@
-require_relative 'lib/entity_fetcher'
-require_relative 'lib/graph_fetcher'
-require 'fileutils'
+require_relative 'lib/helper'
+require 'yaml'
 
-if ARGV.length < 4
-  puts "Usage: ruby script_name.rb <page_url> <entity_identifie> <file_name> <is_paginated> <headless> <fetch_urls_headlessly> <offset> <custom_user_agent>"
-  exit
-end
-
-page_url, entity_identifier, file_name, is_paginated, headless, fetch_urls_headlessly, offset, custom_user_agent = ARGV[0..7]
-
-page_url = page_url.split(',')
-
-linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
-headers = {"User-Agent" => custom_user_agent || "artsdata-crawler/#{linkeddata_version}"}
-base_url = page_url[0].split('/')[0..2].join('/')
-
-# Fetch index page with list of urls
-entity_urls = EntityFetcher.fetch_entity_urls(
-  page_url: page_url, entity_identifier: entity_identifier,
-  is_paginated: is_paginated, fetch_entity_urls_headlessly: fetch_urls_headlessly,
-  headers: headers, offset: offset, base_url: base_url
-)
-
-if entity_urls.empty?
-  puts "No entity URLs found. Check your identifier. Exiting..."
+config_file = ARGV[0]
+if config_file.nil?
+  puts "Usage: ruby main.rb <config_file>"
   exit(1)
 end
 
-# Fetch the data at each url to build the graph
-graph = GraphFetcher.load(entity_urls: entity_urls, base_url: base_url, headers: headers, headless: headless)
+config = YAML.load_file(config_file)
 
-FileUtils.mkdir_p(File.dirname(file_name))
+mode = config['mode']
 
-File.open(file_name, 'w') do |file|
-  file.puts(graph.dump(:jsonld))
+page_url = config['page_url']
+entity_identifier = config['entity_identifier']
+is_paginated = config['is_paginated']
+headless = config['headless']
+fetch_urls_headlessly = config['fetch_urls_headlessly']
+offset = config['offset']
+custom_user_agent = config['custom_user_agent']
+callback_url = config['callback_url']
+workflow_id = config['workflow_id']
+actor = config['actor']
+token = config['token']
+repository = config['repository']
+artifact = config['artifact']
+publisher = config['publisher']
+reference = config['reference']
+version = config['version']
+comment = config['comment']
+group = config['group']
+download_file = config['download_file']
+download_url = config['download_url']
+shacl = config['shacl']
+
+Helper.check_mode_requirements(mode, config)
+
+notification_service = Helper.get_notification_service(
+  workflow_id: workflow_id, 
+  actor: actor, 
+  webhook_url: callback_url
+)
+
+if mode.include?('fetch')
+  page_url, base_url = Helper.format_urls(page_url)
+  headers = Helper.get_headers(custom_user_agent)
+  download_file ||= "#{artifact}.jsonld"
+
+  page_fetcher_for_urls = Helper.get_page_fetcher(is_headless: fetch_urls_headlessly, headers: headers)
+  entity_fetcher = Helper.get_entity_fetcher(page_fetcher: page_fetcher_for_urls, base_url: base_url)
+
+  page_fetcher_for_graph = Helper.get_page_fetcher(is_headless: headless, headers: headers)
+  graph_fetcher = Helper.get_graph_fetcher(
+    headers: headers,
+    page_fetcher: page_fetcher_for_graph,
+    sparql_path: "./sparql/"
+  )
+
+  github_saver = Helper.get_github_saver(
+    repository: repository,
+    file_name: download_file,
+    token: token,
+  )
+
+  entity_urls = entity_fetcher.fetch_entity_urls(
+    page_url: page_url, entity_identifier: entity_identifier,
+    is_paginated: is_paginated, offset: offset
+  )
+  
+  notification_service.send_notification(
+    stage: 'entity_urls_fetched',
+    message: 'generated list of urls to crawl , count: ' + entity_urls.length.to_s
+  )
+
+  graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)
+
+  notification_service.send_notification(
+    stage: 'graph_fetched',
+    message: 'crawl completed, triple count: ' + graph.size.to_s
+  )
+  github_saver.save_graph_to_file(file_name: download_file, graph: graph)
+  github_saver.save(File.read(download_file))
+
+  notification_service.send_notification(
+    stage: 'file_saved',
+    message: 'file saved to github'
+  )
+end
+
+if mode.include?('push')
+  databus_service = Helper.get_databus_service(
+    artifact: artifact,
+    publisher: publisher,
+    repository: repository,
+    reference: reference
+  )
+
+  response = databus_service.send(
+    download_url: download_url,
+    download_file: download_file,
+    version: version,
+    comment: comment,
+    group: group
+  )
+
+  case response[:status]
+  when :success
+    notification_service.send_notification(stage: 'databus_push', message: response[:message])
+  when :error
+    notification_service.send_notification(stage: 'databus_push', message: "Error occurred: #{response[:message]}")
+  when :exception
+    notification_service.send_notification(stage: 'databus_push', message: "Exception occurred: #{response[:message]}")
+  else
+    notification_service.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
+  end
 end
 
