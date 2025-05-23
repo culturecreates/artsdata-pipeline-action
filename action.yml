@@ -77,9 +77,9 @@ runs:
 
         mkdir -p output
 
-        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:3.0.0
+        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.0.0
         docker run --shm-size=1g -v $(pwd):/usr/src/app \
-          ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:3.0.0 \
+          ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.0.0 \
           config.yml
 
       shell: bash
