@@ -100,8 +100,8 @@ runs:
         downloadFile="${{ inputs.downloadFile || format('{0}.jsonld', inputs.artifact) }}"
         customUserAgent=${{ inputs.custom-user-agent }}
 
-        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest
-        docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:latest \
+        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v2.4.3
+        docker run --shm-size=1g -v $(pwd)/output:/usr/src/app/output ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v2.4.3 \
           "${{ inputs.page-url }}" \
           "${{ inputs.entity-identifier }}" \
           "output/${downloadFile}" \
