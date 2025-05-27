@@ -9,9 +9,12 @@ module PageFetcherService
 
     def fetch_page_data(page_url)
       response = URI.open(page_url, @headers)
-      charset = response.charset || 'UTF-8'
+      charset = response.charset || 'utf-8'
       data = response.read
-      data.force_encoding(charset).encode("UTF-8")
+      if charset != 'utf-8'
+        data = data.force_encoding(charset).encode("UTF-8")
+      end
+      data
     end
   end
 end

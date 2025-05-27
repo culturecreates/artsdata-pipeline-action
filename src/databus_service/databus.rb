@@ -1,17 +1,15 @@
 module DatabusService
   class Databus
-    def initialize(artifact:, publisher:, repository:, reference:)
+    def initialize(artifact:, publisher:, repository:)
       @artifact = artifact
       @publisher = publisher
       @repository = repository
-      @reference = reference
     end
 
     def send(download_url:, download_file:, version:, comment:, group:)
       group ||= @repository.split('/').last
       version ||= Time.now.strftime("%Y-%m-%dT%H:%M:%S").gsub(':', '_')
       comment ||= "Published by #{group} on #{version}"
-      download_url ||= "https://raw.githubusercontent.com/#{@repository}/#{@reference}/output/#{download_file}"
 
       data_hash = {
         artifact: @artifact,
@@ -19,7 +17,7 @@ module DatabusService
         group: group,
         version: version,
         downloadUrl: download_url,
-        downloadFile: download_file,
+        downloadFile: download_file.split('/').last,
         comment: comment
       }
 
@@ -36,7 +34,7 @@ module DatabusService
       request['Content-Type'] = 'application/json'
       begin
         response = http.request(request)
-        if response.code.to_i == 200
+        if response.code.to_i == 201
           puts("Data posted successfully.")
           return { status: :success, message: "Data posted successfully." }
         else

@@ -19,7 +19,7 @@ module FileSaverService
       begin
         existing_file = @client.contents(@repository, path: @path)
         sha = existing_file.sha
-        @client.update_contents(
+        response = @client.update_contents(
           @repository,
           @path,
           @message,
@@ -28,7 +28,7 @@ module FileSaverService
           author: @author
         )
       rescue Octokit::NotFound
-        @client.create_contents(
+        response = @client.create_contents(
           @repository,
           @path,
           @message,
@@ -36,6 +36,9 @@ module FileSaverService
           author: @author
         )
       end
+      owner, repo = @repository.split("/")
+      branch = response[:content][:branch] || "main"
+      "https://raw.githubusercontent.com/#{owner}/#{repo}/#{branch}/#{@path}"
     end
   end
 end

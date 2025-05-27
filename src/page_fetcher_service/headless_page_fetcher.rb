@@ -11,12 +11,18 @@ module PageFetcherService
     end
 
     def fetch_page_data(page_url)
+      selector = 'body'
+      timeout = 10 
       @browser_instance.go_to(page_url)
-      sleep 15
+      start_time = Time.now
+      until @browser_instance.at_css(selector)
+        raise "Timeout waiting for page to load" if Time.now - start_time > timeout
+        sleep 0.5
+      end
       html = @browser_instance.body
 
-      charset = html[/<meta.*?charset=["']?([^"'>\s]+)/i, 1] || 'UTF-8'
-      if charset != 'UTF-8'
+      charset = html[/<meta.*?charset=["']?([^"'>\s]+)/i, 1] || 'utf-8'
+      if charset != 'utf-8'
         html.force_encoding(charset).encode("UTF-8")
       end
       html
