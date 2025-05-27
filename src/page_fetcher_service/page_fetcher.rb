@@ -16,7 +16,6 @@ module PageFetcherService
         else
           puts "Max retries reached. Unable to fetch the content for page #{page_url}."
           puts "#{e.message}, consider passing a custom user agent instead of #{@headers['User-Agent']}"
-          exit(1)
         end
       end
       data
