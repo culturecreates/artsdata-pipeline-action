@@ -26,7 +26,8 @@ module EntityFetcherService
             main_doc = Nokogiri::HTML(page_data)
           end
           number_of_entities = entity_urls.length
-          entity_urls.concat(@uri_fetcher.fetch_entity_urls(page_data: main_doc, page_type: page_type, entity_identifier: identifier)).uniq
+          entity_urls.concat(@uri_fetcher.fetch_entity_urls(page_data: main_doc, page_type: page_type, entity_identifier: identifier))
+          entity_urls = entity_urls.uniq
           if entity_urls.length == number_of_entities || page_number.nil?
             puts "Fetched all entity URLs from #{url}."
             break
