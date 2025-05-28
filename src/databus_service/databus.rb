@@ -17,7 +17,7 @@ module DatabusService
         group: group,
         version: version,
         downloadUrl: download_url,
-        downloadFile: download_file.split('/').last,
+        downloadFile: download_file&.split('/')&.last || download_url.split('/')&.last, 
         comment: comment
       }
 
