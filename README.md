@@ -36,27 +36,39 @@ artsdata-push:
 <br>
 
 ## Inputs
+### All modes
 
-| Name                                  | Description                                                                                                                                                              |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `mode`                              | Mode to run the workflow in (fetch/push/fetch-push, defaults to push).    
-| `page-url`                          | URL of the page to crawl (required for fetch and fetch-push modes).
-| `entity-identifier	`               | Identifier of the entity (required for fetch and fetch-push modes).
-| `downloadFile`                      | Name of the file to download with extension (required for fetch and fetch-push modes).
-| `downloadUrl`                       | URL of the file to download (required for push mode).
-| `is-paginated`                      | Whether the page is paginated (defaults to false).
-| `headless`                          | Whether to run in headless mode (defaults to false).
-| `artifact`                          | Name of the artifact (required for push and fetch-push modes).
-| `token`                             | GitHub token (required for fetch and fetch-push modes, secret).
-| `publisher`                         | URI of the publisher (required for push and fetch-push modes).
-| `comment`                           | Comment about the artsdata push.
+| Name                                  | Description      |
+| ------------------------------------- | -------------------------- |
+| `mode`                             | **required**: Mode to run the workflow in. MUST be one of `fetch \| push \| fetch-push`. Defaults to `push`.  
+| `artifact`                         | **required**: Name of the artifact (required for push and fetch-push modes).
+| `downloadFile`                      | Optional filename override with extension and path. When using fetch and fetch-push modes, the data will be saved to the Github repo calling the action. If not provided, it will be set to `output/[artifact].jsonld`.
+| `report-callback-url`               | Optional URL to send back the data validation report asynchronously using POST "Content-Type: application/json". 
+
+### Fetch mode (including fetch-push)
+
+| Name                                  | Description      |
+| ------------------------------------- | -------------------------- |
+| `page-url`                          | **required**: URL of the page to crawl (required for fetch and fetch-push modes).
+| `entity-identifier`               | **required**: Identifier of the entity (required for fetch and fetch-push modes).
+| `token`                             | **required**: GitHub token (required for fetch and fetch-push modes, secret).
+| `headless`                          | Whether to run in headless mode (optional, defaults to false).
+| `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(optional, defaults to false).
+| `is-paginated`                      | Whether the page is paginated (optional, defaults to false).
+| `offset`                            | Offset for pagination strategy (optinal, defaults to 1).
+| `custom-user-agent`                 | custom-user-agent for the http requests (optional, defaults to artsdata-crawler)
+
+### Push mode (including fetch-push)
+
+| Name                                  | Description         |
+| ------------------------------------- | -------------------------- |
+| `publisher`                         | **required**: URI of the publisher (required for push and fetch-push modes).
+| `downloadUrl`                       | **required**: URL of the file to download (required for push mode).
 | `group`                             | Group of artifacts/versions. Use unreserved characters. (If not provided, group will be set as your repository name).
 | `version`                           | Version of the artifact. Usually a date (e.g., 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date).
-| `report-callback-url`               | URL to send back the data validation report asynchronously using POST "Content-Type: application/json".
-| `shacl`                             | URL to the SHACL file to perform validations.
-| `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(defaults to false).
-| `offset`                            | Offset for pagination strategy (defaults to 1).
-| `custom-user-agent`                 | custom-user-agent for the http requests (defaults to artsdata-crawler)
+| `comment`                           | Comment about the artifact push (optional)
+| `shacl`                             | URL to the SHACL file to perform validations (optional)
+
 
 <br>
 
