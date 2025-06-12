@@ -16,11 +16,11 @@ module UriFetcherService
         end
         entities_data.each do |entity|
           if(page_type == :xml)
-            href = entity.child.to_s
+            url = entity.child.to_s
           else
             href = entity['href']
+            url = (href.start_with?('http') ? href : @base_url + (href.start_with?('/') ? href : "/#{href}"))
           end
-          url = (href.start_with?('http') ? href : @base_url + (href.start_with?('/') ? href : "/#{href}"))
           entity_urls << url
         end
       rescue StandardError => e

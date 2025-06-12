@@ -8,7 +8,7 @@ module PageFetcherService
       retry_count = 0
       max_retries = 3
       begin
-        data = fetch_page_data(page_url)
+        data, content_type = fetch_page_data(page_url)
       rescue StandardError => e
       retry_count += 1
         if retry_count < max_retries
@@ -18,7 +18,7 @@ module PageFetcherService
           puts "#{e.message}, consider passing a custom user agent instead of #{@headers['User-Agent']}"
         end
       end
-      data
+      [data, content_type]
     end
 
     private 

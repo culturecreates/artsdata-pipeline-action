@@ -18,8 +18,8 @@ module EntityFetcherService
         loop do
           url = "#{page}#{page_number}"
           puts "Fetching entity urls from #{url}..."
-          page_data, _ = @page_fetcher.fetcher_with_retry(page_url: url)
-          page_type = get_page_type(url)
+          page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: url)
+          page_type = get_page_type(content_type)
           main_doc = Nokogiri::HTML(page_data)
           number_of_entities = entity_urls.length
           entity_urls.concat(@uri_fetcher.fetch_entity_urls(page_data: main_doc, page_type: page_type, entity_identifier: identifier))
@@ -55,8 +55,8 @@ module EntityFetcherService
     end
 
     private
-    def get_page_type(page_url)
-      if page_url.end_with?('.xml')
+    def get_page_type(content_type)
+      if content_type.include?('xml')
         :xml
       else
         :html

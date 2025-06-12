@@ -19,13 +19,14 @@ module PageFetcherService
         raise "Timeout waiting for page to load" if Time.now - start_time > timeout
         sleep 0.5
       end
-      html = @browser_instance.body
-
-      charset = html[/<meta.*?charset=["']?([^"'>\s]+)/i, 1] || 'utf-8'
+      data = @browser_instance.body
+      headers = @browser_instance.network.response.headers.transform_keys(&:downcase)
+      content_type = headers["content-type"]
+      charset = data[/<meta.*?charset=["']?([^"'>\s]+)/i, 1] || 'utf-8'
       if charset != 'utf-8'
-        html.force_encoding(charset).encode("UTF-8")
+        data.force_encoding(charset).encode("UTF-8")
       end
-      html
+      [data, content_type]
     end
   end
 end

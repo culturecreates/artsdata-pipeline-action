@@ -14,7 +14,7 @@ module GraphFetcherService
         puts "Processing URL #{index + 1}/#{entity_urls.length}: #{entity_url}"
         entity_url = entity_url.gsub(' ', '+')
         loaded_graph = RDF::Graph.new
-        data = @page_fetcher.fetcher_with_retry(page_url: entity_url)
+        data,_ = @page_fetcher.fetcher_with_retry(page_url: entity_url)
         begin
           RDF::Reader.for(:rdfa).new(data, base_uri: entity_url) do |reader|
             loaded_graph << reader
