@@ -56,7 +56,7 @@ module EntityFetcherService
 
     private
     def get_page_type(content_type)
-      if content_type.include?('xml')
+      if content_type&.include?('xml')
         :xml
       else
         :html
