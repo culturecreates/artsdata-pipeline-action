@@ -16,6 +16,9 @@ module FileSaverService
     end
 
     def save(content)
+      if(!@access_token)
+        puts("Access token is not provided. Cannot save to GitHub.")
+      end
       begin
         existing_file = @client.contents(@repository, path: @path)
         sha = existing_file.sha

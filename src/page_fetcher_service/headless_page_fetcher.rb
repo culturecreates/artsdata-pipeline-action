@@ -19,6 +19,7 @@ module PageFetcherService
         raise "Timeout waiting for page to load" if Time.now - start_time > timeout
         sleep 0.5
       end
+      @browser_instance.network.wait_for_idle
       data = @browser_instance.body
       headers = @browser_instance.network.response.headers.transform_keys(&:downcase)
       content_type = headers["content-type"]

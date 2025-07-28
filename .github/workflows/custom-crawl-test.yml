@@ -45,26 +45,39 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-
-      - name: Run ruby code
+      - name: Generate config.yml
         run: |
-            mkdir -p output
-            isPaginated=${{ inputs.is-paginated || 'false' }}
-            headless=${{ inputs.headless || 'false' }}
-            fetchUrlsHeadlessly=${{ inputs.fetch-urls-headlessly || 'false' }}
-            offset=${{ inputs.offset || '1' }}
-            customUserAgent=${{ inputs.custom-user-agent }}
-
-            bundle exec ruby src/main.rb \
-            "${{ inputs.page-url }}" \
-            "${{ inputs.entity-identifier }}" \
-            output/test_entity.jsonld \
-            "$isPaginated" \
-            "$headless" \
-            "$fetchUrlsHeadlessly" \
-            "$offset" \
-            "$customUserAgent"
-      
+          mkdir -p output
+          cat <<EOF > config.yml
+          mode: "fetch"
+          page_url: "${{ inputs.page-url }}"
+          entity_identifier: "${{ inputs.entity-identifier }}"
+          is_paginated: ${{ inputs.is-paginated }}
+          headless: ${{ inputs.headless }}
+          fetch_urls_headlessly: ${{ inputs.fetch-urls-headlessly }}
+          offset: ${{ inputs.offset }}
+          custom_user_agent: ${{
+            inputs.custom-user-agent && format('"{0}"', inputs.custom-user-agent) || 'null'
+          }}
+          callback_url: null
+          workflow_id: "${{ github.workflow }}"
+          actor: "${{ github.actor }}"
+          token: null
+          repository: "${{ github.repository }}"
+          artifact: "test-events"
+          publisher: "test-publisher"
+          downloadUrl: ""
+          reference: "${{ github.ref_name }}"
+          version: "1.0.0"
+          comment: "Test comment"
+          group: "test-group"
+          download_file: "output/test-events2.jsonld"
+          download_url: "https://example.com/test.jsonld"
+          shacl: null
+          EOF
+      - name: Run Ruby script with config
+        run: |
+          bundle exec ruby src/main.rb config.yml   
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
