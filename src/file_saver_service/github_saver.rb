@@ -18,6 +18,7 @@ module FileSaverService
     def save(content)
       if(!@access_token)
         puts("Access token is not provided. Cannot save to GitHub.")
+        exit(0)
       end
       begin
         existing_file = @client.contents(@repository, path: @path)
