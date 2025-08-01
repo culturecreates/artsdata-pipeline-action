@@ -79,11 +79,12 @@ module Helper
     )
   end
 
-  def self.get_databus_service(artifact:, publisher:, repository:)
+  def self.get_databus_service(artifact:, publisher:, repository:, databus_url:)
     DatabusService::Databus.new(
       artifact: artifact,
       publisher: publisher,
       repository: repository,
+      databus_url: databus_url
     )
   end
 end
