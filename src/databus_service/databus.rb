@@ -1,9 +1,10 @@
 module DatabusService
   class Databus
-    def initialize(artifact:, publisher:, repository:)
+    def initialize(artifact:, publisher:, repository:, databus_url:)
       @artifact = artifact
       @publisher = publisher
       @repository = repository
+      @databus_url = databus_url
     end
 
     def send(download_url:, download_file:, version:, comment:, group:)
@@ -25,7 +26,7 @@ module DatabusService
 
       puts "\nData (JSON payload): #{data}"
 
-      uri = URI.parse("http://api.artsdata.ca/databus/")
+      uri = URI.parse(@databus_url)
 
       http = Net::HTTP.new(uri.host, uri.port)
 

@@ -32,6 +32,7 @@ group = config['group']
 download_file = config['download_file']
 download_url = config['download_url']
 shacl = config['shacl']
+databus_url = config['databus']
 
 Helper.check_mode_requirements(mode, config)
 
@@ -91,7 +92,8 @@ if mode.include?('push')
   databus_service = Helper.get_databus_service(
     artifact: artifact,
     publisher: publisher,
-    repository: repository
+    repository: repository,
+    databus_url: databus_url 
   )
 
   response = databus_service.send(
