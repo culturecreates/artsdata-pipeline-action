@@ -68,7 +68,6 @@ artsdata-push:
 | `version`                           | Version of the artifact. Usually a date (e.g., 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date).
 | `comment`                           | Comment about the artifact push (optional)
 | `shacl`                             | URL to the SHACL file to perform validations (optional)
-| `shacl`                             | URL to the SHACL file to perform validations (optional)
 | `custom-databus-url`                | Custom databus URL to push the data to (optional, default - http://api.artsdata.ca/databus/)
 
 
