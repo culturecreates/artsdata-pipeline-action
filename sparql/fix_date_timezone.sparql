@@ -1,8 +1,6 @@
 PREFIX schema: <http://schema.org/>
 # This SPARQL fixes the timezone format of schema:Date and schema:DateTime literals in the graph
 
-PREFIX schema: <http://schema.org/>
-
 DELETE {
     ?s ?p ?old_date .
 }
