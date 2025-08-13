@@ -31,6 +31,7 @@ artsdata-push:
         fetch-urls-headlessly:
         offset:
         custom-user-agent:
+        custum-databus-url:
 ```
 
 <br>
@@ -92,3 +93,5 @@ For larger changes or significant improvements that could impact compatibility.
 ## Significant Update (e.g., 2.0.7 → 3.0.0): 
 
 For major overhauls or breaking changes. If there's a drastic change in functionality or usage, increment to the next "big update" version.
+
+**When drafting a new release, ensure that the Docker image version specified in action.yml matches the release version**
