@@ -16,7 +16,11 @@ class FixStartDateTest < Minitest::Test
     # puts "after: #{graph.dump(:jsonld)}"
     assert_equal(
       RDF::Literal.new("2015-03-31T20:00:00", datatype: RDF::URI("http://schema.org/DateTime")), 
-      graph.query([nil, RDF::URI("http://schema.org/startDate"), nil]).first.object
+      graph.query([RDF::URI("http://example.org/events/1"), RDF::URI("http://schema.org/startDate"), nil]).first.object
+    )
+    assert_equal(
+      RDF::Literal.new("2015-03-31T20:00:00", datatype: RDF::URI("http://schema.org/Date")), 
+      graph.query([RDF::URI("http://example.org/events/2"), RDF::URI("http://schema.org/startDate"), nil]).first.object
     )
   end
 end
