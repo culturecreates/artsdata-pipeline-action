@@ -28,6 +28,7 @@ module GraphFetcherService
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", entity_urls[0].split('/')[0..2].join('/'))
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
+        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
 
         graph << loaded_graph
       end
