@@ -79,19 +79,33 @@ artsdata-push:
 Remember to use only unreserved characters ([0-9a-zA-Z-._]) for input variables where mentioned.
 
 # Release Instructions
+Follow these instructions to make a new release.
 
-When preparing a release for the artsdata-pipeline-action, please follow these versioning guidelines:
+## Steps
+1. Run tests with `> rake` and ensure all pass
+2. Update file `action.yml` with the new version vX.X.X (2 different places in file)
+3. Commit changes
+4. Create a new Github **release** with the new version tag vX.X.X
 
-## Minor release (e.g., 2.0.7 → 2.0.8): 
+Creating and saving a new release will run a workflow to build the assets and set a floating tag with the manjor release version. All workflows using this action will run the latest major release.
+
+**CAUTION: when drafting a new release, ensure that the Docker image version specified in action.yml matches the release version**
+
+
+
+## Semantic Versioning
+When preparing a release for the artsdata-pipeline-action, please follow the semantic versioning guidelines.
+
+### Minor release (e.g., 2.0.7 → 2.0.8): 
 
 For small feature additions or bug fixes.
 
-## Major release (e.g., 2.0.7 → 2.1.0): 
+### Major release (e.g., 2.0.7 → 2.1.0): 
 
 For larger changes or significant improvements that could impact compatibility.
 
-## Significant Update (e.g., 2.0.7 → 3.0.0): 
+### Significant Update (e.g., 2.0.7 → 3.0.0): 
 
 For major overhauls or breaking changes. If there's a drastic change in functionality or usage, increment to the next "big update" version.
 
-**When drafting a new release, ensure that the Docker image version specified in action.yml matches the release version**
+
