@@ -87,7 +87,7 @@ Follow these instructions to make a new release.
 3. Commit changes
 4. Create a new Github **release** with the new version tag vX.X.X
 
-Creating and saving a new release will run a workflow to build the assets and set a floating tag with the manjor release version. All workflows using this action will run the latest major release.
+Creating and saving a new release will run a workflow to build the assets and set a floating tag with the major release version. All workflows using this action will run the latest major release.
 
 **CAUTION: when drafting a new release, ensure that the Docker image version specified in action.yml matches the release version**
 
