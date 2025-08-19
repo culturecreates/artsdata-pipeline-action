@@ -1,0 +1,13 @@
+PREFIX schema: <http://schema.org/>
+
+DELETE {
+  ?event schema:eventAttendanceMode ?literalAttendanceMode .
+}
+INSERT {
+  ?event schema:eventAttendanceMode ?iriAttendanceMode .
+}
+WHERE {
+  ?event schema:eventAttendanceMode ?literalAttendanceMode .
+  FILTER(STR(?literalAttendanceMode) IN ("OfflineEventAttendanceMode", "OnlineEventAttendanceMode", "MixedEventAttendanceMode"))
+  BIND(IRI(CONCAT("http://schema.org/", STR(?literalAttendanceMode))) AS ?iriAttendanceMode)
+}
