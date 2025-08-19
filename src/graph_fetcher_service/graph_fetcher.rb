@@ -29,6 +29,7 @@ module GraphFetcherService
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
+        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
 
         graph << loaded_graph
       end
