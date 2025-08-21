@@ -9,7 +9,7 @@ module EntityFetcherService
 
     def fetch_entity_urls(page_url:, entity_identifier:, is_paginated:, offset:)
       entity_urls = []
-  
+      atleast_one_page_loaded = false
       offset = get_offset(offset)
       identifier_mapping = create_url_identifier_mapping(page_url, entity_identifier)
   
@@ -19,6 +19,9 @@ module EntityFetcherService
           url = "#{page}#{page_number}"
           puts "Fetching entity urls from #{url}..."
           page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: url)
+          if !page_data.nil? 
+            atleast_one_page_loaded = true
+          end
           page_type = get_page_type(content_type)
           main_doc = Nokogiri::HTML(page_data)
           number_of_entities = entity_urls.length
@@ -32,6 +35,15 @@ module EntityFetcherService
         end
       end
       puts "All matching entity URLs have been successfully fetched. Total entities: #{entity_urls.length}."
+      if !atleast_one_page_loaded
+        notification_message = 'No pages were loaded. Check your page URL. Exiting...'
+        puts notification_message
+        NotificationService::WebhookNotification.instance.send_notification(
+          stage: 'fetching_entity_urls',
+          message: notification_message
+        )
+        exit(1)
+      end
       entity_urls
     end
 
