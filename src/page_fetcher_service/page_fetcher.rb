@@ -10,12 +10,18 @@ module PageFetcherService
       begin
         data, content_type = fetch_page_data(page_url)
       rescue StandardError => e
-      retry_count += 1
+        retry_count += 1
         if retry_count < max_retries
+          sleep(2 ** retry_count)
           retry
         else
+          notification_message = "#{e.message}, consider passing a custom user agent instead of #{@headers['User-Agent']}"
+          NotificationService::WebhookNotification.instance.send_notification(
+            stage: 'fetching_page_data',
+            message: notification_message
+          )
           puts "Max retries reached. Unable to fetch the content for page #{page_url}."
-          puts "#{e.message}, consider passing a custom user agent instead of #{@headers['User-Agent']}"
+          puts notification_message
         end
       end
       [data, content_type]

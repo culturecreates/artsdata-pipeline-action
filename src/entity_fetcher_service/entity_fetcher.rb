@@ -31,11 +31,7 @@ module EntityFetcherService
           page_number += offset
         end
       end
-      if entity_urls.empty?
-        puts "No entity URLs found. Check your identifier. Exiting..."
-        exit(1)
-      end
-      puts "All entity URLs have been successfully fetched. Total entities: #{entity_urls.length}."
+      puts "All matching entity URLs have been successfully fetched. Total entities: #{entity_urls.length}."
       entity_urls
     end
 

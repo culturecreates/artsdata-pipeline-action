@@ -36,19 +36,51 @@ databus_url = config['databus']
 
 Helper.check_mode_requirements(mode, config)
 
-notification_service = Helper.get_notification_service(
-  workflow_id: workflow_id, 
-  actor: actor, 
+NotificationService::WebhookNotification.setup(
+  workflow_id: workflow_id,
+  actor: actor,
   webhook_url: callback_url
 )
+
+notification_instance = NotificationService::WebhookNotification.instance
 
 if mode.include?('fetch')
   page_url, base_url = Helper.format_urls(page_url)
   headers = Helper.get_headers(custom_user_agent)
-  download_file ||= "output/#{artifact}.jsonld"
 
   page_fetcher_for_urls = Helper.get_page_fetcher(is_headless: fetch_urls_headlessly, headers: headers)
   entity_fetcher = Helper.get_entity_fetcher(page_fetcher: page_fetcher_for_urls, base_url: base_url)
+
+  entity_urls = entity_fetcher.fetch_entity_urls(
+    page_url: page_url, 
+    entity_identifier: entity_identifier,
+    is_paginated: is_paginated, 
+    offset: offset
+  )
+
+  if entity_urls.empty?
+    notification_message = 'No entity URLs found. Check your identifier. Exiting...'
+    puts notification_message
+    notification_instance.send_notification(
+      stage: 'fetching_entity_urls',
+      message: notification_message
+    )
+    exit(1)
+  end
+  
+  notification_instance.send_notification(
+    stage: 'fetching_entity_urls',
+    message: 'generated list of urls to crawl , count: ' + entity_urls.length.to_s
+  )
+
+  if mode.include?('test')
+    entity_urls = entity_urls.take(5) # Limit to 5 URLs for testing
+  end
+
+  notification_instance.send_notification(
+    stage: 'entity_urls_fetched',
+    message: 'sample entity urls fetched: ' + entity_urls.join(', ')
+  )
 
   page_fetcher_for_graph = Helper.get_page_fetcher(is_headless: headless, headers: headers)
   graph_fetcher = Helper.get_graph_fetcher(
@@ -57,35 +89,34 @@ if mode.include?('fetch')
     sparql_path: "./sparql/"
   )
 
-  github_saver = Helper.get_github_saver(
-    repository: repository,
-    file_name: download_file,
-    token: token,
-  )
-
-  entity_urls = entity_fetcher.fetch_entity_urls(
-    page_url: page_url, entity_identifier: entity_identifier,
-    is_paginated: is_paginated, offset: offset
-  )
-  
-  notification_service.send_notification(
-    stage: 'entity_urls_fetched',
-    message: 'generated list of urls to crawl , count: ' + entity_urls.length.to_s
-  )
-
   graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)
 
-  notification_service.send_notification(
+  notification_instance.send_notification(
     stage: 'graph_fetched',
     message: 'crawl completed, triple count: ' + graph.size.to_s
   )
-  github_saver.save_graph_to_file(file_name: download_file, graph: graph)
-  download_url = github_saver.save(File.read(download_file))
 
-  notification_service.send_notification(
-    stage: 'file_saved',
-    message: 'file saved to github'
+  entity_types = graph_fetcher.fetch_types(graph: graph)
+  notification_instance.send_notification(
+    stage: 'entity_types_fetched',
+    message: 'entity types fetched: ' + entity_types.map(&:to_s).join(', ')
   )
+
+  if !mode.include?('test')
+    download_file ||= "output/#{artifact}.jsonld"
+    github_saver = Helper.get_github_saver(
+      repository: repository,
+      file_name: download_file,
+      token: token,
+    )
+    github_saver.save_graph_to_file(file_name: download_file, graph: graph)
+    download_url = github_saver.save(File.read(download_file))
+
+    notification_instance.send_notification(
+      stage: 'file_saved',
+      message: 'file saved to github'
+    )
+  end
 end
 
 if mode.include?('push')
@@ -106,13 +137,13 @@ if mode.include?('push')
 
   case response[:status]
   when :success
-    notification_service.send_notification(stage: 'databus_push', message: response[:message])
+    notification_instance.send_notification(stage: 'databus_push', message: response[:message])
   when :error
-    notification_service.send_notification(stage: 'databus_push', message: "Error occurred: #{response[:message]}")
+    notification_instance.send_notification(stage: 'databus_push', message: "Error occurred: #{response[:message]}")
   when :exception
-    notification_service.send_notification(stage: 'databus_push', message: "Exception occurred: #{response[:message]}")
+    notification_instance.send_notification(stage: 'databus_push', message: "Exception occurred: #{response[:message]}")
   else
-    notification_service.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
+    notification_instance.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
   end
 end
 
