@@ -24,7 +24,12 @@ module UriFetcherService
           entity_urls << url
         end
       rescue StandardError => e
-        puts "Error fetching entity URLs: #{e.message}"
+        notification_message = "Error fetching entity URLs: #{e.message}"
+        NotificationService::WebhookNotification.instance.send_notification(
+          stage: 'fetching_entity_urls',
+          message: notification_message
+        )
+        puts notification_message
       end
       entity_urls
     end

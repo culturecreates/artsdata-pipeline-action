@@ -1,5 +1,23 @@
 module NotificationService
   class WebhookNotification < NotificationService::Notification
+    @instance = nil
+
+    class << self
+      def setup(workflow_id:, actor:, webhook_url:)
+        raise "NotificationService already initialized. Call `close` first." if @instance
+        @instance = new(workflow_id: workflow_id, actor: actor, webhook_url: webhook_url)
+      end
+
+      def instance
+        raise "NotificationService not initialized. Call `setup` first." unless @instance
+        @instance
+      end
+
+      def close
+        @instance = nil
+      end
+    end
+
     def initialize(workflow_id:, actor:, webhook_url:)
       super(workflow_id: workflow_id, actor: actor)
       @webhook_url = webhook_url
@@ -23,10 +41,12 @@ module NotificationService
         actor: @actor
       }
       request.body = payload.to_json
-    
-      response = http.request(request)
-    
-      puts "Webhook notification sent. HTTP #{response.code}: #{response.message}"
+      begin
+        response = http.request(request)
+        puts "Notification sent. Response: #{response.code} #{response.message}"
+      rescue StandardError => e
+        puts "Failed to send notification: #{e.message}"
+      end
     end
   end
 end

@@ -56,10 +56,6 @@ module Helper
     )
   end
 
-  def self.get_notification_service(workflow_id:, actor:, webhook_url:)
-    NotificationService::WebhookNotification.new(workflow_id: workflow_id, actor: actor, webhook_url: webhook_url)
-  end
-
   def self.get_graph_fetcher(headers:, page_fetcher:, sparql_path:)
     GraphFetcherService::GraphFetcher.new(
       headers: headers,

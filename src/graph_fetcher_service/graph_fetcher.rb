@@ -40,5 +40,9 @@ module GraphFetcherService
       graph = @sparql.perform_sparql_transformation(graph, "fix_isni.sparql")
       graph = @sparql.perform_sparql_transformation(graph, "collapse_duplicate_contact_pointblanknodes.sparql")
     end
+
+    def fetch_types(graph:)
+      graph.query([nil, RDF.type, nil]).map(&:object).uniq
+    end
   end
 end
