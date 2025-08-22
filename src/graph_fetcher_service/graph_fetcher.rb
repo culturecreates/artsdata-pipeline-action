@@ -16,7 +16,7 @@ module GraphFetcherService
         loaded_graph = RDF::Graph.new
         data,_ = @page_fetcher.fetcher_with_retry(page_url: entity_url)
         begin
-          RDF::Reader.for(:rdfa).new(data, base_uri: entity_url) do |reader|
+          RDF::Reader.for(:rdfa).new(data, base_uri: entity_url, logger: false) do |reader|
             loaded_graph << reader
           end
         rescue StandardError => e
