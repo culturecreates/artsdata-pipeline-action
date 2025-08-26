@@ -1,0 +1,38 @@
+{
+  "@context": "http://schema.org",
+  "@graph": [
+    {
+      "@type": "Event",
+      "@id": "http://example.com/event1",
+      "name": "badly formatted startDate without timezone",
+      "startDate": "2025-09-01T19:30"
+    },
+    {
+      "@type": "Event",
+      "@id": "http://example.com/event2",
+      "name": "badly formatted startDate with timezone",
+      "startDate": {
+        "@value": "2025-09-01T19:30-05:00",
+        "@type": "DateTime"
+      }
+    },
+    {
+        "@type": "Event",
+        "@id": "http://example.com/event3",
+        "name": "perfectly formatted startDate without timezone",
+        "startDate": {
+            "@value": "2025-09-01T19:30:00",
+            "@type": "Date"
+        }
+    },
+    {
+        "@type": "Event",
+        "@id": "http://example.com/event4",
+        "name": "perfectly formatted startDate with timezone",
+        "startDate": {
+            "@value": "2025-09-01T19:30:00-05:00",
+            "@type": "DateTime"
+        }
+    }
+  ]
+}

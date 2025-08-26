@@ -1,0 +1,28 @@
+PREFIX schema: <http://schema.org/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+DELETE {
+  ?s ?p ?oldDate .
+}
+INSERT {
+  ?s ?p ?newDate .
+}
+WHERE {
+  ?s ?p ?oldDate .
+
+  FILTER (datatype(?oldDate) = schema:Date || datatype(?oldDate) = schema:DateTime)
+
+  BIND(datatype(?oldDate) as ?old_date_type)
+  BIND(STR(?oldDate) AS ?dateStr)
+
+  FILTER(REGEX(?dateStr, "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}([+-]\\d{2}:\\d{2}|Z)?$"))
+
+  BIND(
+    IF(REGEX(?dateStr, "([+-]\\d{2}:\\d{2}|Z)$"),
+       REPLACE(?dateStr, "(\\d{2}:\\d{2})([+-]\\d{2}:\\d{2}|Z)$", "$1:00$2"),
+       CONCAT(?dateStr, ":00")
+    ) AS ?fixedStr
+  )
+
+  BIND(STRDT(?fixedStr, ?old_date_type) AS ?newDate)
+}
