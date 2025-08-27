@@ -140,10 +140,13 @@ if mode.include?('push')
     notification_instance.send_notification(stage: 'databus_push', message: response[:message])
   when :error
     notification_instance.send_notification(stage: 'databus_push', message: "Error occurred: #{response[:message]}")
+    exit(1)
   when :exception
     notification_instance.send_notification(stage: 'databus_push', message: "Exception occurred: #{response[:message]}")
+    exit(1)
   else
     notification_instance.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
+    exit(1)
   end
 end
 
