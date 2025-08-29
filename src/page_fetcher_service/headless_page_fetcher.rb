@@ -10,8 +10,7 @@ module PageFetcherService
       @browser_instance.headers.set(@headers) if @headers
     end
 
-    def fetch_page_data(page_url)
-      selector = 'body'
+    def fetch_page_data(page_url:, selector:)
       timeout = 10 
       @browser_instance.go_to(page_url)
       start_time = Time.now
