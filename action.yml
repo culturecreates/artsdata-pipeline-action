@@ -50,12 +50,6 @@ runs:
   using: 'composite'
   steps:
 
-    - name: echo details of the parent workflow
-      run: |
-        echo "workflow url is  https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/${{ github.event.workflow }}"
-
-      shell: bash
-
     - name: Run
       run: |
 
@@ -77,7 +71,7 @@ runs:
           publisher: ${{ inputs.publisher }}
           reference: ${{ github.ref }}
           version: ${{ inputs.version }}
-          comment: ${{ inputs.comment }}
+          comment: ${{ inputs.comment || format('https://github.com/{0}/blob/{1}/{2}', github.repository, github.ref_name, github.event.workflow) }}
           group: ${{ inputs.group }}
           download_file: ${{ inputs.downloadFile }}
           download_url: ${{ inputs.downloadUrl }}
@@ -87,11 +81,11 @@ runs:
 
         mkdir -p output
 
-        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.3.4
+        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.3.5
         docker run --shm-size=1g \
           -v $(pwd)/config.yml:/usr/src/app/config.yml:ro \
           -v $(pwd)/output:/usr/src/app/output \
-          ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.3.4\
+          ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.3.5\
           config.yml
 
       shell: bash
