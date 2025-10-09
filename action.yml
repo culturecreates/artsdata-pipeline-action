@@ -50,6 +50,12 @@ runs:
   using: 'composite'
   steps:
 
+    - name: echo details of the parent workflow
+      run: |
+        echo "workflow url is  https://github.com/${{ github.repository }}/blob/${{ github.ref_name }}/${{ github.event.workflow }}"
+
+      shell: bash
+
     - name: Run
       run: |
 
