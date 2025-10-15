@@ -6,6 +6,7 @@ if config_file.nil?
   puts "Usage: ruby main.rb <config_file>"
   exit(1)
 end
+xpath_config_file = ARGV[1]
 
 config = YAML.load_file(config_file)
 
@@ -33,7 +34,14 @@ download_file = config['download_file']
 download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
-xpath_config = config['xpath_config']
+
+if xpath_config_file && File.exist?(xpath_config_file)
+  begin
+    xpath_config = JSON.parse(File.read(xpath_config_file))
+  rescue JSON::ParserError => e
+    xpath_config = nil
+  end
+end
 
 puts(xpath_config) #to be removed later
 

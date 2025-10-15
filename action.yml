@@ -46,7 +46,7 @@ inputs:
     description: 'Custom Databus URL'
     default: 'http://api.artsdata.ca/databus/'
   xpath-config:
-    description: 'XPath configuration as a JSON string'
+    description: 'XPath configuration as JSON'
 
 runs: 
   using: 'composite'
@@ -79,8 +79,10 @@ runs:
           download_url: ${{ inputs.downloadUrl }}
           shacl: ${{ inputs.shacl }}
           databus: ${{ inputs.custom-databus-url }}
-          xpath_config: | 
-            ${{ inputs.xpath-config }}
+        EOF
+
+        cat <<EOF > xpath-config.json
+          ${{ inputs.xpath-config }}
         EOF
 
         mkdir -p output
@@ -88,8 +90,10 @@ runs:
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.4.1
         docker run --shm-size=1g \
           -v $(pwd)/config.yml:/usr/src/app/config.yml:ro \
+          -v $(pwd)/xpath-config.json:/usr/src/app/xpath-config.json:ro \
           -v $(pwd)/output:/usr/src/app/output \
           ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.4.1\
-          config.yml
+          config.yml\
+          xpath-config.json
 
       shell: bash

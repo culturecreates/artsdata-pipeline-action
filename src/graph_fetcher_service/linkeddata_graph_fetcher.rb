@@ -20,21 +20,21 @@ module GraphFetcherService
         rescue StandardError => e
           puts "Error loading RDFa data from #{entity_url}: #{e.message}"
         end
-        xpath_content = JSON.parse(@xpath_config)
-        entity_type = xpath_content['entity_type']
-        entity_uri = get_uri_by_type(loaded_graph, entity_type)
-
-        if entity_uri.nil?
-          notification_instance = NotificationService::WebhookNotification.instance
-          puts "Warning: Multiple/No entities of type #{entity_type} found from #{entity_url}, cannot add xpath data."
-          notification_instance.send_notification(
-            stage: 'adding_xpath_data',
-            message: "Multiple entities of type #{entity_type} found."
-          )
+        if(!@xpath_config.nil?)
+          entity_type = @xpath_config['entity_type']
+          entity_uri = get_uri_by_type(loaded_graph, entity_type)
+          if !entity_uri.nil?
+            extract_logic = @xpath_config['extract']
+            loaded_graph << extract_with_xpath(entity_uri, data, extract_logic)
+          else
+            notification_instance = NotificationService::WebhookNotification.instance
+            puts "Warning: Multiple/No entities of type #{entity_type} found from #{entity_url}, cannot add xpath data."
+            notification_instance.send_notification(
+              stage: 'adding_xpath_data',
+              message: "Multiple entities of type #{entity_type} found."
+            )
+          end
         end
-
-        extract_logic = xpath_content['extract']
-        loaded_graph << extract_with_xpath(entity_uri, data, extract_logic)
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', entity_url)
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', entity_url)
         loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
