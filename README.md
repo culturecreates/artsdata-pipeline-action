@@ -32,6 +32,7 @@ artsdata-push:
         offset:
         custom-user-agent:
         custum-databus-url:
+        xpath-config:
 ```
 
 <br>
@@ -58,6 +59,16 @@ artsdata-push:
 | `is-paginated`                      | Whether the page is paginated (optional, defaults to false).
 | `offset`                            | Offset for pagination strategy (optinal, defaults to 1).
 | `custom-user-agent`                 | custom-user-agent for the http requests (optional, defaults to artsdata-crawler)
+| `xpath-config`                      | custom xpath-config to fetch additional_data. 
+Format: 
+    { 
+      "entity_type": "type of entity you want to add additional info to, example "http://schema.org/Event", 
+      "extract": { 
+          "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
+          "value": "object value from xpath result, example: @href",
+          "isArray": "set as true if the object should be an array" 
+      } 
+    }
 
 ### Push mode (including fetch-push)
 
