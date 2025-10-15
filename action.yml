@@ -79,7 +79,8 @@ runs:
           download_url: ${{ inputs.downloadUrl }}
           shacl: ${{ inputs.shacl }}
           databus: ${{ inputs.custom-databus-url }}
-          xpath_config: ${{ inputs.xpath-config || '' }}
+          xpath_config: | 
+            ${{ inputs.xpath-config }}
         EOF
 
         mkdir -p output
