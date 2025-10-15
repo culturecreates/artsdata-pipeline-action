@@ -25,6 +25,9 @@ on:
       custom-user-agent:
         description: 'Custom user agent string'
         required: false
+      xpath-config:
+        description: 'XPath configuration as a JSON string'
+        required: false
             
 jobs:
   call_reusable_workflow:
@@ -74,6 +77,8 @@ jobs:
           download_file: "output/test-events2.jsonld"
           download_url: "https://example.com/test.jsonld"
           shacl: null
+          xpath_config: |
+            ${{ inputs.xpath-config }}
           EOF
       - name: Run Ruby script with config
         run: |
