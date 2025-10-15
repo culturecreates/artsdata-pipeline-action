@@ -4,6 +4,7 @@ require_relative '../page_fetcher_service/headless_page_fetcher'
 require_relative '../entity_fetcher_service/entity_fetcher'
 require_relative '../uri_fetcher_service/uri_fetcher'
 require_relative '../graph_fetcher_service/graph_fetcher'
+require_relative '../graph_fetcher_service/linkeddata_graph_fetcher'
 require_relative '../browser_service/browser'
 require_relative '../browser_service/chrome_browser'
 require_relative '../sparql_service/sparql'
@@ -56,11 +57,12 @@ module Helper
     )
   end
 
-  def self.get_graph_fetcher(headers:, page_fetcher:, sparql_path:)
-    GraphFetcherService::GraphFetcher.new(
+  def self.get_graph_fetcher(headers:, page_fetcher:, sparql_path:, xpath_config:)
+    GraphFetcherService::LinkedDataGraphFetcher.new(
       headers: headers,
       page_fetcher: page_fetcher,
-      sparql: SparqlService::Sparql.new(sparql_path)
+      sparql: SparqlService::Sparql.new(sparql_path),
+      xpath_config: xpath_config
     )
   end
 

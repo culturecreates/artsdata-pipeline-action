@@ -45,6 +45,8 @@ inputs:
   custom-databus-url:
     description: 'Custom Databus URL'
     default: 'http://api.artsdata.ca/databus/'
+  xpath-config:
+    description: 'XPath configuration as a JSON string'
 
 runs: 
   using: 'composite'
@@ -77,6 +79,7 @@ runs:
           download_url: ${{ inputs.downloadUrl }}
           shacl: ${{ inputs.shacl }}
           databus: ${{ inputs.custom-databus-url }}
+          xpath_config: ${{ inputs.xpath-config || '' }}
         EOF
 
         mkdir -p output

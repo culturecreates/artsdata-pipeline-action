@@ -33,6 +33,9 @@ download_file = config['download_file']
 download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
+xpath_config = config['xpath_config']
+
+puts(xpath_config) #to be removed later
 
 Helper.check_mode_requirements(mode, config)
 
@@ -86,7 +89,8 @@ if mode.include?('fetch')
   graph_fetcher = Helper.get_graph_fetcher(
     headers: headers,
     page_fetcher: page_fetcher_for_graph,
-    sparql_path: "./sparql/"
+    sparql_path: "./sparql/",
+    xpath_config: xpath_config
   )
 
   graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)
