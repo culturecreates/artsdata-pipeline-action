@@ -72,23 +72,19 @@ module GraphFetcherService
 
       extract_logic.each do |predicate, config|
         xpath_expr = config['xpath']
+        css_expr = config['css']
         value_expr = config['value']
         is_array = config['array'].to_s.downcase == 'true'
 
+        if xpath_expr.nil? && !css_expr.nil?
+          xpath_expr = Nokogiri::CSS.xpath_for(css_expr).first
+        end
         nodes = doc.xpath(xpath_expr)
         next if nodes.empty?
 
         extracted_values = nodes.map do |node|
-          case value_expr
-          when 'normalize-space(.)'
-            node.text.strip
-          when '@href'
-            node['href']  # get the href attribute
-          when '@src'
-            node['src']   # get the src attribute
-          else
-            node.text.strip  # fallback
-          end
+          result = node.xpath(value_expr)
+          result.is_a?(Nokogiri::XML::NodeSet) ? result.text.strip : result.to_s.strip
         end
 
         if is_array
