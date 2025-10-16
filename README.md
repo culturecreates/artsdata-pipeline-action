@@ -65,7 +65,8 @@ Format:
       "entity_type": "type of entity you want to add additional info to, example "http://schema.org/Event", 
       "extract": { 
           "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
-          "value": "object value from xpath result, example: @href",
+          "css": "css expression, example: div.um-name"
+          "value": "xpath 1.0 function, example: @href",
           "isArray": "set as true if the object should be an array" 
       } 
     }
