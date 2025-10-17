@@ -32,7 +32,7 @@ artsdata-push:
         offset:
         custom-user-agent:
         custum-databus-url:
-        xpath-config:
+        html-extract-config:
 ```
 
 <br>
@@ -52,22 +52,25 @@ artsdata-push:
 | Name                                  | Description      |
 | ------------------------------------- | -------------------------- |
 | `page-url`                          | **required**: URL of the page to crawl (required for fetch and fetch-push modes).
-| `entity-identifier`               | **required**: Identifier of the entity (required for fetch and fetch-push modes).
+| `entity-identifier`                 | **required**: Identifier of the entity (required for fetch and fetch-push modes).
 | `token`                             | **required**: GitHub token (required for fetch and fetch-push modes, secret).
 | `headless`                          | Whether to run in headless mode (optional, defaults to false).
 | `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(optional, defaults to false).
 | `is-paginated`                      | Whether the page is paginated (optional, defaults to false).
 | `offset`                            | Offset for pagination strategy (optinal, defaults to 1).
 | `custom-user-agent`                 | custom-user-agent for the http requests (optional, defaults to artsdata-crawler)
-| `xpath-config`                      | custom xpath-config to fetch additional_data. 
-Format: 
+| `html-extract-config`               | custom xpath-config to fetch additional_data. 
+html-extract-config format: 
     { 
       "entity_type": "type of entity you want to add additional info to, example "http://schema.org/Event", 
       "extract": { 
-          "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
-          "css": "css expression, example: div.um-name"
-          "value": "xpath 1.0 function, example: @href",
-          "isArray": "set as true if the object should be an array" 
+        "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
+        "css": "css expression, example: div.um-name", either css or xpath is required.
+        "isArray": "set as true if the object should be an array, default is false",
+        "transform": {
+          "function": "function_name", eg : split (this is the only function currently available)
+          "args": "arguments" eg : [","]
+        }
       } 
     }
 

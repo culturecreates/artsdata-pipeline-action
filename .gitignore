@@ -1,4 +1,4 @@
 .vscode
 config.yml
-xpath-config.json
+html-extract-config.json
 output/

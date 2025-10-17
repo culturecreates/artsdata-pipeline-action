@@ -1,10 +1,10 @@
 module GraphFetcherService
   class GraphFetcher
-    def initialize(headers:, page_fetcher:, sparql:, xpath_config:)
+    def initialize(headers:, page_fetcher:, sparql:, html_extract_config:)
       @headers = headers
       @page_fetcher = page_fetcher
       @sparql = sparql
-      @xpath_config = xpath_config
+      @html_extract_config = html_extract_config
     end
 
     def load_with_retry(entity_urls:)

@@ -6,7 +6,7 @@ if config_file.nil?
   puts "Usage: ruby main.rb <config_file>"
   exit(1)
 end
-xpath_config_file = ARGV[1]
+html_extract_config_file = ARGV[1]
 
 config = YAML.load_file(config_file)
 
@@ -35,15 +35,13 @@ download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
 
-if xpath_config_file && File.exist?(xpath_config_file)
+if html_extract_config_file && File.exist?(html_extract_config_file)
   begin
-    xpath_config = JSON.parse(File.read(xpath_config_file))
+    html_extract_config = JSON.parse(File.read(html_extract_config_file))
   rescue JSON::ParserError => e
-    xpath_config = nil
+    html_extract_config = nil
   end
 end
-
-puts(xpath_config) #to be removed later
 
 Helper.check_mode_requirements(mode, config)
 
@@ -98,7 +96,7 @@ if mode.include?('fetch')
     headers: headers,
     page_fetcher: page_fetcher_for_graph,
     sparql_path: "./sparql/",
-    xpath_config: xpath_config
+    html_extract_config: html_extract_config
   )
 
   graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)

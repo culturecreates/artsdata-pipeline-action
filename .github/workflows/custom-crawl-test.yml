@@ -25,8 +25,8 @@ on:
       custom-user-agent:
         description: 'Custom user agent string'
         required: false
-      xpath-config:
-        description: 'XPath configuration as a JSON string'
+      html-extract-config:
+        description: 'Custom HTML configuration as JSON'
         required: false
             
 jobs:
@@ -48,7 +48,7 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           bundler-cache: true
-      - name: Generate config.yml
+      - name: Generate config files
         run: |
           mkdir -p output
           cat <<EOF > config.yml
@@ -77,12 +77,13 @@ jobs:
           download_file: "output/test-events2.jsonld"
           download_url: "https://example.com/test.jsonld"
           shacl: null
-          xpath_config: |
-            ${{ inputs.xpath-config }}
+
+          cat <<EOF > html-extract-config.json
+            ${{ inputs.html-extract-config }}
           EOF
       - name: Run Ruby script with config
         run: |
-          bundle exec ruby src/main.rb config.yml   
+          bundle exec ruby src/main.rb config.yml html-extract-config.json
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

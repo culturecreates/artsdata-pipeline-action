@@ -57,12 +57,12 @@ module Helper
     )
   end
 
-  def self.get_graph_fetcher(headers:, page_fetcher:, sparql_path:, xpath_config:)
+  def self.get_graph_fetcher(headers:, page_fetcher:, sparql_path:, html_extract_config:)
     GraphFetcherService::LinkedDataGraphFetcher.new(
       headers: headers,
       page_fetcher: page_fetcher,
       sparql: SparqlService::Sparql.new(sparql_path),
-      xpath_config: xpath_config
+      html_extract_config: html_extract_config
     )
   end
 

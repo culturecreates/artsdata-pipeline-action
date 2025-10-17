@@ -2,8 +2,8 @@ require 'linkeddata'
 
 module GraphFetcherService
   class LinkedDataGraphFetcher < GraphFetcherService::GraphFetcher
-    def initialize(headers:, page_fetcher:, sparql:, xpath_config:)
-      super(headers: headers, page_fetcher: page_fetcher, sparql: sparql, xpath_config: xpath_config)
+    def initialize(headers:, page_fetcher:, sparql:, html_extract_config:)
+      super(headers: headers, page_fetcher: page_fetcher, sparql: sparql, html_extract_config: html_extract_config)
     end
 
     def load_with_retry(entity_urls:)
@@ -20,17 +20,17 @@ module GraphFetcherService
         rescue StandardError => e
           puts "Error loading RDFa data from #{entity_url}: #{e.message}"
         end
-        if(!@xpath_config.nil?)
-          entity_type = @xpath_config['entity_type']
+        if(!@html_extract_config.nil?)
+          entity_type = @html_extract_config['entity_type']
           entity_uri = get_uri_by_type(loaded_graph, entity_type)
           if !entity_uri.nil?
-            extract_logic = @xpath_config['extract']
+            extract_logic = @html_extract_config['extract']
             loaded_graph << extract_with_xpath(entity_uri, data, extract_logic)
           else
             notification_instance = NotificationService::WebhookNotification.instance
-            puts "Warning: Multiple/No entities of type #{entity_type} found from #{entity_url}, cannot add xpath data."
+            puts "Warning: Multiple/No entities of type #{entity_type} found from #{entity_url}, cannot add html data."
             notification_instance.send_notification(
-              stage: 'adding_xpath_data',
+              stage: 'adding_html_data',
               message: "Multiple entities of type #{entity_type} found."
             )
           end
@@ -55,48 +55,76 @@ module GraphFetcherService
       graph = @sparql.perform_sparql_transformation(graph, "collapse_duplicate_contact_pointblanknodes.sparql")
     end
 
-  def get_uri_by_type(graph, type)
-    entities = graph.query([nil, RDF.type, RDF::URI(type)]).map(&:subject).uniq
-    if entities.size != 1
-      return nil
+    def get_uri_by_type(graph, type)
+      entities = graph.query([nil, RDF.type, RDF::URI(type)]).map(&:subject).uniq
+      if entities.size != 1
+        return nil
+      end
+      entities.first
     end
-    entities.first
-  end
 
+    private
+    def transform_value(transform, value)
+      func = transform['function']
+      args = transform['args'] || {}
+      if self.class.private_method_defined?(func.to_sym)
+        value = self.send(func.to_sym, value, *args)
+      else
+        puts "Warning: Transform function #{func} not defined."
+      end
+      value
+    end
+
+    private
+    def split(string, delimiter)
+      return string if delimiter.nil? || delimiter.empty?
+      string.split(delimiter).map(&:strip)
+    end
 
     private
     def extract_with_xpath(uri, data, extract_logic)
       graph = RDF::Graph.new
       doc = Nokogiri::HTML(data)
 
-
       extract_logic.each do |predicate, config|
-        xpath_expr = config['xpath']
-        css_expr = config['css']
-        value_expr = config['value']
-        is_array = config['array'].to_s.downcase == 'true'
+        xpath_expr, css_expr, transform = config.values_at('xpath', 'css', 'transform')
+        is_uri   = config['uri'].to_s.casecmp?('true')
+        is_array = config['array'].to_s.casecmp?('true')
 
-        if xpath_expr.nil? && !css_expr.nil?
-          xpath_expr = Nokogiri::CSS.xpath_for(css_expr).first
-        end
+        xpath_expr ||= Nokogiri::CSS.xpath_for(css_expr)&.first
+        next unless xpath_expr
+
+        begin
         nodes = doc.xpath(xpath_expr)
+        rescue => e
+          puts "Error extracting for predicate '#{predicate}' with XPath '#{xpath_expr}': #{e.message}"
+          next
+        end
         next if nodes.empty?
 
-        extracted_values = nodes.map do |node|
-          result = node.xpath(value_expr)
-          result.is_a?(Nokogiri::XML::NodeSet) ? result.text.strip : result.to_s.strip
-        end
+        extracted_values = extract_values(nodes, is_array)
 
-        if is_array
-          extracted_values.each do |value|
-            graph << [uri, RDF::URI(predicate), RDF::Literal.new(value)]
-          end
-        else
-          value = extracted_values.first
-          graph << [uri, RDF::URI(predicate), RDF::Literal.new(value)] if value
+        extracted_values.map! { |val| transform_value(transform, val) } if transform
+
+        rdf_class = is_uri ? RDF::URI : RDF::Literal
+        extracted_values.flatten.each do |val|
+          graph << [uri, RDF::URI(predicate), rdf_class.new(val)]
         end
       end
+
       graph
+    end
+
+    private
+    def extract_values(nodes, is_array)
+      case nodes
+      when Nokogiri::XML::NodeSet
+        is_array ? nodes.map { |n| n.text.strip }.compact : [nodes.first.text.strip]
+      when String
+        [nodes.strip]
+      else
+        []
+      end
     end
   end
 end
