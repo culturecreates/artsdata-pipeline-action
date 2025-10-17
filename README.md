@@ -60,13 +60,16 @@ artsdata-push:
 | `offset`                            | Offset for pagination strategy (optinal, defaults to 1).
 | `custom-user-agent`                 | custom-user-agent for the http requests (optional, defaults to artsdata-crawler)
 | `html-extract-config`               | custom xpath-config to fetch additional_data. 
+
 html-extract-config format: 
+
     { 
       "entity_type": "type of entity you want to add additional info to, example "http://schema.org/Event", 
       "extract": { 
         "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
         "css": "css expression, example: div.um-name", either css or xpath is required.
         "isArray": "set as true if the object should be an array, default is false",
+        "isUri": "set as true if the object should be a URI, default is false",
         "transform": {
           "function": "function_name", eg : split (this is the only function currently available)
           "args": "arguments" eg : [","]
