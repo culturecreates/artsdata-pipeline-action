@@ -96,6 +96,8 @@ GEM
       uri
     net-http-persistent (4.0.4)
       connection_pool (~> 2.2)
+    nokogiri (1.16.7-arm64-darwin)
+      racc (~> 1.4)
     nokogiri (1.16.7-x86_64-darwin)
       racc (~> 1.4)
     nokogiri (1.16.7-x86_64-linux)
@@ -237,6 +239,7 @@ GEM
       rdf-xsd (~> 3.3)
 
 PLATFORMS
+  arm64-darwin-24
   x86_64-darwin-23
   x86_64-linux
 
