@@ -10,9 +10,5 @@ module GraphFetcherService
     def load_with_retry(entity_urls:)
       raise NotImplementedError, "Subclasses must implement the save method"
     end
-
-    def fetch_types(graph:)
-      graph.query([nil, RDF.type, nil]).map(&:object).uniq
-    end
   end
 end

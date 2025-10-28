@@ -57,56 +57,68 @@ if mode.include?('fetch')
   page_url, base_url = Helper.format_urls(page_url)
   headers = Helper.get_headers(custom_user_agent)
 
-  page_fetcher_for_urls = Helper.get_page_fetcher(is_headless: fetch_urls_headlessly, headers: headers)
-  entity_fetcher = Helper.get_entity_fetcher(page_fetcher: page_fetcher_for_urls, base_url: base_url)
+  if entity_identifier.nil? || entity_identifier.strip.empty?
+    # Use SpiderCrawler when no entity identifier is provided
+    crawler = Helper.get_spider_crawler(
+      url: page_url,
+      page_fetcher: Helper.get_page_fetcher(is_headless: headless, headers: headers),
+      sparql_path: "./sparql/"
+    )
+    crawler.crawl()
+    graph = crawler.get_graph()
+  else
+    # Use UrlFetcher and GraphFetcher when entity identifier is provided
+    url_fetcher = Helper.get_url_fetcher(
+      page_url: page_url,
+      base_url: base_url,
+      entity_identifier: entity_identifier,
+      is_paginated: is_paginated,
+      offset: offset,
+      page_fetcher: Helper.get_page_fetcher(is_headless: fetch_urls_headlessly, headers: headers)
+    )
 
-  entity_urls = entity_fetcher.fetch_entity_urls(
-    page_url: page_url, 
-    entity_identifier: entity_identifier,
-    is_paginated: is_paginated, 
-    offset: offset
-  )
+    entity_urls = url_fetcher.fetch_urls()
 
-  if entity_urls.empty?
-    notification_message = 'No entity URLs found. Check your identifier. Exiting...'
-    puts notification_message
+    if entity_urls.empty?
+      notification_message = 'No entity URLs found. Check your identifier. Exiting...'
+      puts notification_message
+      notification_instance.send_notification(
+        stage: 'fetching_entity_urls',
+        message: notification_message
+      )
+      exit(1)
+    end
+    
     notification_instance.send_notification(
       stage: 'fetching_entity_urls',
-      message: notification_message
+      message: 'generated list of urls to crawl , count: ' + entity_urls.length.to_s
     )
-    exit(1)
+
+    if mode.include?('test')
+      entity_urls = entity_urls.take(5) # Limit to 5 URLs for testing
+    end
+
+    notification_instance.send_notification(
+      stage: 'entity_urls_fetched',
+      message: 'sample entity urls fetched: ' + entity_urls.join(', ')
+    )
+
+    graph_fetcher = Helper.get_graph_fetcher(
+      headers: headers,
+      page_fetcher: Helper.get_page_fetcher(is_headless: headless, headers: headers),
+      sparql_path: "./sparql/",
+      html_extract_config: html_extract_config
+    )
+
+    graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)
   end
-  
-  notification_instance.send_notification(
-    stage: 'fetching_entity_urls',
-    message: 'generated list of urls to crawl , count: ' + entity_urls.length.to_s
-  )
-
-  if mode.include?('test')
-    entity_urls = entity_urls.take(5) # Limit to 5 URLs for testing
-  end
-
-  notification_instance.send_notification(
-    stage: 'entity_urls_fetched',
-    message: 'sample entity urls fetched: ' + entity_urls.join(', ')
-  )
-
-  page_fetcher_for_graph = Helper.get_page_fetcher(is_headless: headless, headers: headers)
-  graph_fetcher = Helper.get_graph_fetcher(
-    headers: headers,
-    page_fetcher: page_fetcher_for_graph,
-    sparql_path: "./sparql/",
-    html_extract_config: html_extract_config
-  )
-
-  graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)
 
   notification_instance.send_notification(
     stage: 'graph_fetched',
     message: 'crawl completed, triple count: ' + graph.size.to_s
   )
 
-  entity_types = graph_fetcher.fetch_types(graph: graph)
+  entity_types = Helper.fetch_types(graph: graph)
   notification_instance.send_notification(
     stage: 'entity_types_fetched',
     message: 'entity types fetched: ' + entity_types.map(&:to_s).join(', ')

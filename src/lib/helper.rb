@@ -1,8 +1,6 @@
 require_relative '../page_fetcher_service/page_fetcher'
 require_relative '../page_fetcher_service/static_page_fetcher'
 require_relative '../page_fetcher_service/headless_page_fetcher'
-require_relative '../entity_fetcher_service/entity_fetcher'
-require_relative '../uri_fetcher_service/uri_fetcher'
 require_relative '../graph_fetcher_service/graph_fetcher'
 require_relative '../graph_fetcher_service/linkeddata_graph_fetcher'
 require_relative '../browser_service/browser'
@@ -13,13 +11,15 @@ require_relative '../file_saver_service/github_saver'
 require_relative '../notification_service/notification'
 require_relative '../notification_service/webhook_notification'
 require_relative '../databus_service/databus'
+require_relative '../spider_crawler_service/spider_crawler'
+require_relative '../url_fetcher_service/url_fetcher'
 
 module Helper
   def self.check_mode_requirements(mode, config)
     required_map = {
-      "fetch"      => %w[page_url entity_identifier],
+      "fetch"      => %w[page_url],
       "push"       => %w[artifact publisher download_url],
-      "fetch-push" => %w[page_url entity_identifier artifact publisher]
+      "fetch-push" => %w[page_url artifact publisher]
     }
 
     keys_to_check = required_map.select { |k, _| mode == k }.values.flatten.uniq
@@ -50,10 +50,14 @@ module Helper
     end
   end
 
-  def self.get_entity_fetcher(page_fetcher:, base_url:)
-    EntityFetcherService::EntityFetcher.new(
-      page_fetcher: page_fetcher, 
-      uri_fetcher: UriFetcherService::UriFetcher.new(base_url: base_url)
+  def self.get_url_fetcher(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:)
+    UrlFetcherService::UrlFetcher.new(
+      page_url: page_url,
+      base_url: base_url,
+      entity_identifier: entity_identifier,
+      is_paginated: is_paginated,
+      offset: offset,
+      page_fetcher: page_fetcher
     )
   end
 
@@ -84,5 +88,17 @@ module Helper
       repository: repository,
       databus_url: databus_url
     )
+  end
+
+  def self.get_spider_crawler(url:, page_fetcher:, sparql_path:)
+    SpiderCrawlerService::SpiderCrawler.new(
+      url: url,
+      page_fetcher: page_fetcher,
+      sparql: SparqlService::Sparql.new(sparql_path)
+    )
+  end
+
+  def self.fetch_types(graph:)
+    graph.query([nil, RDF.type, nil]).map(&:object).uniq
   end
 end

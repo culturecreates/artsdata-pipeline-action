@@ -52,7 +52,7 @@ artsdata-push:
 | Name                                  | Description      |
 | ------------------------------------- | -------------------------- |
 | `page-url`                          | **required**: URL of the page to crawl (required for fetch and fetch-push modes).
-| `entity-identifier`                 | **required**: Identifier of the entity (required for fetch and fetch-push modes).
+| `entity-identifier`                 | Identifier of the entity to fetch URL, defaults to spider mode if not provided.
 | `token`                             | **required**: GitHub token (required for fetch and fetch-push modes, secret).
 | `headless`                          | Whether to run in headless mode (optional, defaults to false).
 | `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(optional, defaults to false).
