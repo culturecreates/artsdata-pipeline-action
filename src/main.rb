@@ -118,6 +118,16 @@ if mode.include?('fetch')
     message: 'crawl completed, triple count: ' + graph.size.to_s
   )
 
+  if graph.size == 0
+    notification_message = 'No RDF data extracted. Exiting...'
+    puts notification_message
+    notification_instance.send_notification(
+      stage: 'graph_fetched',
+      message: notification_message
+    )
+    exit(1)
+  end 
+
   entity_types = Helper.fetch_types(graph: graph)
   notification_instance.send_notification(
     stage: 'entity_types_fetched',

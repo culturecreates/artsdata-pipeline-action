@@ -6,6 +6,7 @@ module SpiderCrawlerService
       @sparql = sparql
       @graph = RDF::Graph.new
       @base_url = URI.parse(url[0]).scheme + "://" + URI.parse(url[0]).host
+      @atleast_one_page_loaded = false
     end
 
 
@@ -26,6 +27,9 @@ module SpiderCrawlerService
         visited.add(link)
 
         page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: link)
+        if !page_data.nil?
+          @atleast_one_page_loaded = true
+        end
         if content_type.nil? || (!content_type.include?('html') && !content_type.include?('xml'))
           puts "Skipping non-HTML/XML content at #{link} (content type: #{content_type})"
           next
@@ -56,6 +60,15 @@ module SpiderCrawlerService
             queue << [new_link, new_score, depth + 1]
           end
         end
+      end
+      if !@atleast_one_page_loaded
+        notification_message = 'No pages were loaded. Check your starting URL. Exiting...'
+        puts notification_message
+        NotificationService::WebhookNotification.instance.send_notification(
+          stage: 'spider_crawling',
+          message: notification_message
+        )
+        exit(1)
       end
       @graph = @sparql.perform_sparql_transformation(@graph, "fix_entity_type_capital.sparql")
       @graph = @sparql.perform_sparql_transformation(@graph, "fix_address_country_name.sparql")
