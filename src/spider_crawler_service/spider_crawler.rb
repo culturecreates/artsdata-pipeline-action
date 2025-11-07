@@ -96,6 +96,7 @@ module SpiderCrawlerService
       exclusion_terms    = ['mailto']
       down = url.downcase
       return 0 if exclusion_terms.any? { |term| down.include?(term) }
+      return 0 if down.length > 200
 
       event_count  = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).count
       person_count = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Person]).count
