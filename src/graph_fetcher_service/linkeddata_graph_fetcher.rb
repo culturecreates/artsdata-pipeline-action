@@ -35,24 +35,32 @@ module GraphFetcherService
             )
           end
         end
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', entity_url)
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', entity_url)
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", entity_urls[0].split('/')[0..2].join('/'))
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql")
+        if !loaded_graph.empty?
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', entity_url)
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', entity_url)
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", entity_urls[0].split('/')[0..2].join('/'))
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql") 
+        else
+          puts "No RDF data found at #{entity_url}, skipping SPARQL transformations." 
+        end
 
         graph << loaded_graph
       end
-      graph = @sparql.perform_sparql_transformation(graph, "fix_entity_type_capital.sparql")
-      graph = @sparql.perform_sparql_transformation(graph, "fix_address_country_name.sparql")
-      graph = @sparql.perform_sparql_transformation(graph, "fix_malformed_urls.sparql")
-      graph = @sparql.perform_sparql_transformation(graph, "fix_wikidata_uri.sparql")
-      graph = @sparql.perform_sparql_transformation(graph, "fix_isni.sparql")
-      graph = @sparql.perform_sparql_transformation(graph, "collapse_duplicate_contact_pointblanknodes.sparql")
+      if !graph.empty?
+        graph = @sparql.perform_sparql_transformation(graph, "fix_entity_type_capital.sparql")
+        graph = @sparql.perform_sparql_transformation(graph, "fix_address_country_name.sparql")
+        graph = @sparql.perform_sparql_transformation(graph, "fix_malformed_urls.sparql")
+        graph = @sparql.perform_sparql_transformation(graph, "fix_wikidata_uri.sparql")
+        graph = @sparql.perform_sparql_transformation(graph, "fix_isni.sparql")
+        graph = @sparql.perform_sparql_transformation(graph, "collapse_duplicate_contact_pointblanknodes.sparql")
+      else
+        puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
+      end
     end
 
     def get_uri_by_type(graph, type)

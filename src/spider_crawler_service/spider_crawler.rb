@@ -38,15 +38,20 @@ module SpiderCrawlerService
 
         new_links = fetch_links(nokogiri_doc: nokogiri_doc)
         loaded_graph = fetch_graph(page_data: page_data)
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', link)
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', link)
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", @base_url)
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
-        loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql")
+        if !loaded_graph.empty?
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', link)
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', link)
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", @base_url)
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql")
+        else
+          puts "No RDF data found at #{link}, skipping SPARQL transformations." 
+        end
+
         @graph << loaded_graph
 
         new_links.each do |new_link|
@@ -70,12 +75,16 @@ module SpiderCrawlerService
         )
         exit(1)
       end
-      @graph = @sparql.perform_sparql_transformation(@graph, "fix_entity_type_capital.sparql")
-      @graph = @sparql.perform_sparql_transformation(@graph, "fix_address_country_name.sparql")
-      @graph = @sparql.perform_sparql_transformation(@graph, "fix_malformed_urls.sparql")
-      @graph = @sparql.perform_sparql_transformation(@graph, "fix_wikidata_uri.sparql")
-      @graph = @sparql.perform_sparql_transformation(@graph, "fix_isni.sparql")
-      @graph = @sparql.perform_sparql_transformation(@graph, "collapse_duplicate_contact_pointblanknodes.sparql")
+      if !@graph.empty?
+        @graph = @sparql.perform_sparql_transformation(@graph, "fix_entity_type_capital.sparql")
+        @graph = @sparql.perform_sparql_transformation(@graph, "fix_address_country_name.sparql")
+        @graph = @sparql.perform_sparql_transformation(@graph, "fix_malformed_urls.sparql")
+        @graph = @sparql.perform_sparql_transformation(@graph, "fix_wikidata_uri.sparql")
+        @graph = @sparql.perform_sparql_transformation(@graph, "fix_isni.sparql")
+        @graph = @sparql.perform_sparql_transformation(@graph, "collapse_duplicate_contact_pointblanknodes.sparql")
+      else
+        puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
+      end
     end
 
     def get_graph()
