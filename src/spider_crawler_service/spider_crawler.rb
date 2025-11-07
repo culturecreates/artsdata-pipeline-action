@@ -93,7 +93,7 @@ module SpiderCrawlerService
 
 
     def calculate_score(url, graph)
-      exclusion_terms    = ['mailto', 'tickets']
+      exclusion_terms    = ['mailto']
       down = url.downcase
       return 0 if exclusion_terms.any? { |term| down.include?(term) }
 
@@ -118,6 +118,10 @@ module SpiderCrawlerService
         'performances',
         'programmation',
         'programme',
+        'ticket',
+        'tickets',
+        'billet',
+        'billets',
       ]
 
       normalized_end = down.gsub(/[\W_]+$/, '')
