@@ -58,23 +58,27 @@ if mode.include?('fetch')
   headers = Helper.get_headers(custom_user_agent)
 
   if entity_identifier.nil? || entity_identifier.strip.empty?
+    page_fetcher = Helper.get_page_fetcher(is_headless: headless, headers: headers)
     # Use SpiderCrawler when no entity identifier is provided
     crawler = Helper.get_spider_crawler(
       url: page_url,
-      page_fetcher: Helper.get_page_fetcher(is_headless: headless, headers: headers),
-      sparql_path: "./sparql/"
+      page_fetcher: page_fetcher,
+      sparql_path: "./sparql/",
+      robots_txt_ruleset: Helper.get_robots_txt_ruleset(base_url: base_url, page_fetcher: page_fetcher)
     )
     crawler.crawl()
     graph = crawler.get_graph()
   else
     # Use UrlFetcher and GraphFetcher when entity identifier is provided
+    page_fetcher = Helper.get_page_fetcher(is_headless: fetch_urls_headlessly, headers: headers)
     url_fetcher = Helper.get_url_fetcher(
       page_url: page_url,
       base_url: base_url,
       entity_identifier: entity_identifier,
       is_paginated: is_paginated,
       offset: offset,
-      page_fetcher: Helper.get_page_fetcher(is_headless: fetch_urls_headlessly, headers: headers)
+      page_fetcher: page_fetcher,
+      robots_txt_ruleset: Helper.get_robots_txt_ruleset(base_url: base_url, page_fetcher: page_fetcher)
     )
 
     entity_urls = url_fetcher.fetch_urls()

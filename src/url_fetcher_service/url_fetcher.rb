@@ -2,12 +2,13 @@ require 'nokogiri'
 
 module UrlFetcherService
   class UrlFetcher
-    def initialize(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:)
+    def initialize(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:, robots_txt_ruleset:)
       @base_url = base_url
       @identifier_mapping = create_url_identifier_mapping(page_url, entity_identifier)
       @is_paginated = is_paginated
       @offset = get_offset(offset)
       @page_fetcher = page_fetcher
+      @robots_txt_ruleset = robots_txt_ruleset
       @urls = []
       @atleast_one_page_loaded = false
     end
@@ -66,6 +67,11 @@ module UrlFetcherService
             href = entity['href']
             url = (href.start_with?('http') ? href : @base_url + (href.start_with?('/') ? href : "/#{href}"))
           end
+          path = URI.parse(url).path
+          if !@robots_txt_ruleset.allowed?(@page_fetcher.get_user_agent, path)
+            puts "Skipping disallowed URL by robots.txt: #{url}"
+            next
+          end
           page_urls << url
         end
       rescue StandardError => e
@@ -79,7 +85,7 @@ module UrlFetcherService
       page_urls
     end
 
-    private()
+    public
     def detect_identifier_type(identifier)
       identifier = identifier.to_s.strip
       return :xpath if identifier.start_with?('/')

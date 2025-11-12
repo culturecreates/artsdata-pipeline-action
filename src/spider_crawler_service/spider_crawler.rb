@@ -1,9 +1,10 @@
 module SpiderCrawlerService
   class SpiderCrawler
-    def initialize(url:, page_fetcher:, sparql:)
+    def initialize(url:, page_fetcher:, sparql:, robots_txt_ruleset:)
       @url = url
       @page_fetcher = page_fetcher
       @sparql = sparql
+      @robots_txt_ruleset = robots_txt_ruleset
       @graph = RDF::Graph.new
       @base_url = URI.parse(url[0]).scheme + "://" + URI.parse(url[0]).host
       @atleast_one_page_loaded = false
@@ -13,12 +14,18 @@ module SpiderCrawlerService
     def crawl()
       visited = Set.new
       max_depth = 5
+      user_agent = @page_fetcher.get_user_agent
+      
       queue = @url.map { |u| [u, 10, 0] }
 
       until queue.empty?
         queue.sort_by! { |_, score, _| -score }
 
         link, score, depth = queue.shift
+        if !@robots_txt_ruleset.allowed?(user_agent, link.delete(@base_url))
+          puts "Skipping disallowed link by robots.txt: #{link}"
+          next
+        end
         next if visited.include?(link)
         next if depth > max_depth
 
@@ -123,6 +130,7 @@ module SpiderCrawlerService
         'tickets',
         'billet',
         'billets',
+        'designer'
       ]
 
       normalized_end = down.gsub(/[\W_]+$/, '')

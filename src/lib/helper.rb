@@ -13,6 +13,7 @@ require_relative '../notification_service/webhook_notification'
 require_relative '../databus_service/databus'
 require_relative '../spider_crawler_service/spider_crawler'
 require_relative '../url_fetcher_service/url_fetcher'
+require_relative '../robots_txt_parser_service/robots_txt_parser'
 
 module Helper
   def self.check_mode_requirements(mode, config)
@@ -50,14 +51,15 @@ module Helper
     end
   end
 
-  def self.get_url_fetcher(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:)
+  def self.get_url_fetcher(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:, robots_txt_ruleset:)
     UrlFetcherService::UrlFetcher.new(
       page_url: page_url,
       base_url: base_url,
       entity_identifier: entity_identifier,
       is_paginated: is_paginated,
       offset: offset,
-      page_fetcher: page_fetcher
+      page_fetcher: page_fetcher,
+      robots_txt_ruleset: robots_txt_ruleset
     )
   end
 
@@ -90,15 +92,23 @@ module Helper
     )
   end
 
-  def self.get_spider_crawler(url:, page_fetcher:, sparql_path:)
+  def self.get_spider_crawler(url:, page_fetcher:, sparql_path:, robots_txt_ruleset:)
     SpiderCrawlerService::SpiderCrawler.new(
       url: url,
       page_fetcher: page_fetcher,
-      sparql: SparqlService::Sparql.new(sparql_path)
+      sparql: SparqlService::Sparql.new(sparql_path),
+      robots_txt_ruleset: robots_txt_ruleset
     )
   end
 
   def self.fetch_types(graph:)
     graph.query([nil, RDF.type, nil]).map(&:object).uniq
+  end
+
+  def self.get_robots_txt_ruleset(base_url: , page_fetcher: )
+    robots_txt_url = URI.join(base_url, '/robots.txt').to_s
+    puts "Fetching robots.txt from #{robots_txt_url}..."
+    robots_txt_data, _ = page_fetcher.fetcher_with_retry(page_url: robots_txt_url)
+    RobotsTxtParser.parse(robots_txt_data)
   end
 end

@@ -29,6 +29,10 @@ module PageFetcherService
       [data, content_type]
     end
 
+    def get_user_agent
+      @headers['User-Agent']
+    end
+
     private 
     def fetch_page_data(page_url:, selector:)
       raise NotImplementedError, 'Subclasses must implement fetch_page_data'
