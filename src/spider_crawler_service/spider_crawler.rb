@@ -44,7 +44,7 @@ module SpiderCrawlerService
         nokogiri_doc = Nokogiri::HTML(page_data)
 
         new_links = fetch_links(nokogiri_doc: nokogiri_doc)
-        loaded_graph = fetch_graph(page_data: page_data)
+        loaded_graph = fetch_graph(page_url: link, page_data: page_data)
         if !loaded_graph.empty?
           loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', link)
           loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', link)
@@ -166,10 +166,10 @@ module SpiderCrawlerService
     end
 
     private
-    def fetch_graph(page_data:)
+    def fetch_graph(page_url:, page_data:)
       loaded_graph = RDF::Graph.new
         begin
-          RDF::Reader.for(:rdfa).new(page_data, logger: false) do |reader|
+          RDF::Reader.for(:rdfa).new(page_data,base_uri: page_url, logger: false) do |reader|
             loaded_graph << reader
           end
         rescue StandardError => e
