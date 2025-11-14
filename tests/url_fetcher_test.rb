@@ -10,7 +10,7 @@ class UrlFetcherTest < Minitest::Test
       is_paginated: true,
       offset: 10,
       page_fetcher: nil,
-      robots_txt_ruleset: nil
+      robots_txt_content: nil
     )
   end
 

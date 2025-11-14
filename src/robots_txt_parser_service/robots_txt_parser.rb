@@ -1,8 +1,8 @@
 # The RobotsTxtParser module provides functionality to parse and evaluate
 # robots.txt files according to the Robots Exclusion Protocol (REP).
 #
-# It defines a `Ruleset` class that:
-# - Parses a robots.txt file and organizes its directives (User-agent, Allow, Disallow)
+# It defines a `RobotsTxt` class that:
+# - Parses a robots.txt file and organizes its directives (User-agent, Allow, Disallow, Sitemap)
 #   into a structured set of rules grouped by user agent.
 # - Normalizes and escapes rule paths safely, handling both encoded and unencoded inputs.
 # - Converts robots.txt wildcard patterns (`*`) and end markers (`$`) into
@@ -12,17 +12,18 @@
 #   for a given user agent.
 #
 # Example usage:
-#   ruleset = RobotsTxtParser.parse(File.read("robots.txt"))
-#   ruleset.allowed?("Googlebot", "/private/page")  # => false
+#   robotstxt = RobotsTxtParser.parse(File.read("robots.txt"))
+#   robotstxt.allowed?("Googlebot", "/private/page")  # => false
 #
 # The module is designed to closely follow REP semantics while being resilient to
 # malformed or non-standard robots.txt files.
 module RobotsTxtParser
-  class Ruleset
+  class RobotsTxt
     attr_reader :rules_by_agent
 
     def initialize
       @rules_by_agent = {}
+      @sitemaps = []
     end
 
     # Parses the contents of a robots.txt file and builds a mapping of crawl rules
@@ -51,7 +52,7 @@ module RobotsTxtParser
 
         # Handle cases where the colon is missing, e.g. "Disallow /"
         if !line.include?(':')
-          if line =~ /^(user-agent|disallow|allow)\s+(.+)$/i
+          if line =~ /^(user-agent|disallow|allow|sitemap)\s+(.+)$/i
             key = Regexp.last_match(1)
             value = Regexp.last_match(2)
           else
@@ -66,6 +67,8 @@ module RobotsTxtParser
         key = key.downcase
 
         case key
+        when 'sitemap'
+          @sitemaps << value
         when 'user-agent'
           agent_value = value.downcase.split(' ').first
           if previous_line_was_agent
@@ -107,7 +110,7 @@ module RobotsTxtParser
           end
 
         else
-          # Ignore unknown directives (e.g., Crawl-delay, Sitemap)
+          # Ignore unknown directives (e.g., Crawl-delay)
         end
       end
       self
@@ -208,9 +211,15 @@ module RobotsTxtParser
 
       best_match[:type] == :allow
     end
+
+    #Returns the list of sitemap URLs declared in the robots.txt file. default is []
+    public
+    def sitemaps
+      @sitemaps
+    end
   end
 
   def self.parse(content)
-    Ruleset.new.parse(content)
+    RobotsTxt.new.parse(content)
   end
 end

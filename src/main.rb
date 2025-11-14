@@ -64,7 +64,7 @@ if mode.include?('fetch')
       url: page_url,
       page_fetcher: page_fetcher,
       sparql_path: "./sparql/",
-      robots_txt_ruleset: Helper.get_robots_txt_ruleset(base_url: base_url, page_fetcher: page_fetcher)
+      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, page_fetcher: page_fetcher)
     )
     crawler.crawl()
     graph = crawler.get_graph()
@@ -78,7 +78,7 @@ if mode.include?('fetch')
       is_paginated: is_paginated,
       offset: offset,
       page_fetcher: page_fetcher,
-      robots_txt_ruleset: Helper.get_robots_txt_ruleset(base_url: base_url, page_fetcher: page_fetcher)
+      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, page_fetcher: page_fetcher)
     )
 
     entity_urls = url_fetcher.fetch_urls()

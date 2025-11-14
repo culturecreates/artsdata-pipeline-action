@@ -51,7 +51,7 @@ module Helper
     end
   end
 
-  def self.get_url_fetcher(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:, robots_txt_ruleset:)
+  def self.get_url_fetcher(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:, robots_txt_content:)
     UrlFetcherService::UrlFetcher.new(
       page_url: page_url,
       base_url: base_url,
@@ -59,7 +59,7 @@ module Helper
       is_paginated: is_paginated,
       offset: offset,
       page_fetcher: page_fetcher,
-      robots_txt_ruleset: robots_txt_ruleset
+      robots_txt_content: robots_txt_content
     )
   end
 
@@ -92,12 +92,12 @@ module Helper
     )
   end
 
-  def self.get_spider_crawler(url:, page_fetcher:, sparql_path:, robots_txt_ruleset:)
+  def self.get_spider_crawler(url:, page_fetcher:, sparql_path:, robots_txt_content:)
     SpiderCrawlerService::SpiderCrawler.new(
       url: url,
       page_fetcher: page_fetcher,
       sparql: SparqlService::Sparql.new(sparql_path),
-      robots_txt_ruleset: robots_txt_ruleset
+      robots_txt_content: robots_txt_content
     )
   end
 
@@ -105,10 +105,20 @@ module Helper
     graph.query([nil, RDF.type, nil]).map(&:object).uniq
   end
 
-  def self.get_robots_txt_ruleset(base_url: , page_fetcher: )
+  def self.get_robots_txt_content(base_url: , page_fetcher: )
     robots_txt_url = URI.join(base_url, '/robots.txt').to_s
     puts "Fetching robots.txt from #{robots_txt_url}..."
     robots_txt_data, _ = page_fetcher.fetcher_with_retry(page_url: robots_txt_url)
     RobotsTxtParser.parse(robots_txt_data)
+  end
+
+  def self.get_page_type(content_type)
+    if content_type&.include?('xml')
+      :xml
+    elsif content_type&.include?('html')
+      :html
+    else
+      :unknown
+    end
   end
 end

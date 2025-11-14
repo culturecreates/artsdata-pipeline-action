@@ -1,78 +1,29 @@
 module SpiderCrawlerService
   class SpiderCrawler
-    def initialize(url:, page_fetcher:, sparql:, robots_txt_ruleset:)
+    def initialize(url:, page_fetcher:, sparql:, robots_txt_content:)
       @url = url
       @page_fetcher = page_fetcher
       @sparql = sparql
-      @robots_txt_ruleset = robots_txt_ruleset
+      @robots_txt_content = robots_txt_content
       @graph = RDF::Graph.new
       @base_url = URI.parse(url[0]).scheme + "://" + URI.parse(url[0]).host
       @atleast_one_page_loaded = false
+      @visited = Set.new
+      @max_depth = 5
     end
 
 
-    def crawl()
-      visited = Set.new
-      max_depth = 5
-      user_agent = @page_fetcher.get_user_agent
-      
-      queue = @url.map { |u| [u, 10, 0] }
-
-      until queue.empty?
-        queue.sort_by! { |_, score, _| -score }
-
-        link, score, depth = queue.shift
-        if !@robots_txt_ruleset.allowed?(user_agent, link.delete(@base_url))
-          puts "Skipping disallowed link by robots.txt: #{link}"
-          next
-        end
-        next if visited.include?(link)
-        next if depth > max_depth
-
-        puts "Crawling link: #{link} (score: #{score}, depth: #{depth})"
-        puts "Queue size: #{queue.length}, Visited size: #{visited.length}"
-        visited.add(link)
-
-        page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: link)
-        if !page_data.nil?
-          @atleast_one_page_loaded = true
-        end
-        if content_type.nil? || (!content_type.include?('html') && !content_type.include?('xml'))
-          puts "Skipping non-HTML/XML content at #{link} (content type: #{content_type})"
-          next
-        end
-        nokogiri_doc = Nokogiri::HTML(page_data)
-
-        new_links = fetch_links(nokogiri_doc: nokogiri_doc)
-        loaded_graph = fetch_graph(page_url: link, page_data: page_data)
-        if !loaded_graph.empty?
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', link)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', link)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", @base_url)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql")
-        else
-          puts "No RDF data found at #{link}, skipping SPARQL transformations." 
-        end
-
-        @graph << loaded_graph
-
-        new_links.each do |new_link|
-          if !new_link.start_with?@base_url
-            next
-          end
-          next if visited.include?(new_link) || queue.any? { |q_link, _, _| q_link == new_link }
-
-          new_score = calculate_score(new_link, loaded_graph)
-          if new_score > 1
-            queue << [new_link, new_score, depth + 1]
-          end
-        end
+    def crawl()      
+      sitemaps = @robots_txt_content.sitemaps
+      if sitemaps.empty?
+        sitemaps = [@base_url + '/sitemap.xml']
       end
+      queue = sitemaps.map { |sitemap_url| [sitemap_url, 10, 0] }
+      puts "Starting crawl with sitemaps: #{sitemaps.join(', ')}"
+      crawl_queue(queue: queue, sitemap: true)
+      puts "Continuing crawl with starting URLs."
+      queue = @url.map { |u| [u, 10, 0] }
+      crawl_queue(queue: queue)
       if !@atleast_one_page_loaded
         notification_message = 'No pages were loaded. Check your starting URL. Exiting...'
         puts notification_message
@@ -94,12 +45,70 @@ module SpiderCrawlerService
       end
     end
 
+    def crawl_queue(queue:, sitemap: false)
+      user_agent = @page_fetcher.get_user_agent
+      until queue.empty?
+        queue.sort_by! { |_, score, _| -score }
+
+        link, score, depth = queue.shift
+        if !@robots_txt_content.allowed?(user_agent, link.delete(@base_url))
+          puts "Skipping disallowed link by robots.txt: #{link}"
+          next
+        end
+        next if @visited.include?(link)
+        next if depth > @max_depth
+
+        puts "Crawling link: #{link} (score: #{score}, depth: #{depth})"
+        puts "Queue size: #{queue.length}, Visited size: #{@visited.length}"
+        @visited.add(link)
+
+        page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: link)
+        if !page_data.nil?
+          @atleast_one_page_loaded = true
+        end
+        page_type = Helper.get_page_type(content_type)
+        nokogiri_doc = Nokogiri::HTML(page_data)
+        if page_type == :unknown
+          puts "Skipping non-HTML/XML content at #{link} (content type: #{content_type})"
+        end
+
+        new_links = fetch_links(nokogiri_doc: nokogiri_doc, page_type: page_type)
+        loaded_graph = fetch_graph(page_url: link, page_data: page_data)
+        if !loaded_graph.empty?
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', link)
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', link)
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", @base_url)
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
+          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql")
+          @graph << loaded_graph
+        else
+          puts "No RDF data found at #{link}, skipping SPARQL transformations." 
+        end
+
+        new_links.each do |new_link|
+          if !new_link.start_with?@base_url
+            next
+          end
+          next if @visited.include?(new_link) || queue.any? { |q_link, _, _| q_link == new_link }
+
+          new_score = calculate_score(url: new_link, graph: loaded_graph, is_sitemap_url: sitemap)
+          if new_score > 1
+            queue << [new_link, new_score, depth + 1]
+          end
+        end
+      end
+    end
+
     def get_graph()
       @graph
     end
 
 
-    def calculate_score(url, graph)
+    def calculate_score(url:, graph:, is_sitemap_url: false)
       exclusion_terms    = ['mailto']
       down = url.downcase
       return 0 if exclusion_terms.any? { |term| down.include?(term) }
@@ -111,6 +120,7 @@ module SpiderCrawlerService
       place_count  = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Place]).count
 
       scoring_terms = [
+        'sitemap',
         'calendar',
         'calendrier',
         'event',
@@ -139,6 +149,8 @@ module SpiderCrawlerService
 
       url_ends_score = scoring_terms.any? { |term| normalized_end.end_with?(term) } ? 5 : 0
 
+      sitemap_bonus = is_sitemap_url ? 5 : 0
+
       score =
         1 +
         (3 * event_count) +
@@ -146,20 +158,21 @@ module SpiderCrawlerService
         (1 * org_count) +
         (2 * place_count) +
         url_contains_score +
-        url_ends_score
-
+        url_ends_score +
+        sitemap_bonus
       score
     end
 
 
     private
-    def fetch_links(nokogiri_doc:)
+    def fetch_links(nokogiri_doc:, page_type:)
       links = []
-      nokogiri_doc.css('a').each do |link|
-        href = link['href']
-        next if href.nil? || href.empty?
-        href.strip!
-        full_url = href.start_with?('http') ? href : @base_url + (href.start_with?('/') ? href : "/#{href}")
+      identifier = page_type == :xml ? 'loc' : 'a'
+      nokogiri_doc.css(identifier).each do |link|
+        url = page_type == :xml ? link.content : link['href']
+        next if url.nil? || url.empty?
+        url.strip!
+        full_url = url.start_with?('http') ? url : @base_url + (url.start_with?('/') ? url : "/#{url}")
         links << full_url
       end
       links.uniq

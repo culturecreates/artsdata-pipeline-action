@@ -1,14 +1,14 @@
 require 'nokogiri'
-
+require_relative '../lib/helper'
 module UrlFetcherService
   class UrlFetcher
-    def initialize(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:, robots_txt_ruleset:)
+    def initialize(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:, robots_txt_content:)
       @base_url = base_url
       @identifier_mapping = create_url_identifier_mapping(page_url, entity_identifier)
       @is_paginated = is_paginated
       @offset = get_offset(offset)
       @page_fetcher = page_fetcher
-      @robots_txt_ruleset = robots_txt_ruleset
+      @robots_txt_content = robots_txt_content
       @urls = []
       @atleast_one_page_loaded = false
     end
@@ -24,7 +24,7 @@ module UrlFetcherService
           if !page_data.nil? 
             @atleast_one_page_loaded = true
           end
-          page_type = get_page_type(content_type)
+          page_type = Helper.get_page_type(content_type)
           main_doc = Nokogiri::HTML(page_data)
           number_of_entities = @urls.length
           @urls.concat(fetch_url_from_page_data(page_data: main_doc, page_type: page_type, entity_identifier: identifier))
@@ -62,13 +62,13 @@ module UrlFetcherService
         end
         entities_data.each do |entity|
           if(page_type == :xml)
-            url = entity.child.to_s
+            url = entity.content
           else
             href = entity['href']
             url = (href.start_with?('http') ? href : @base_url + (href.start_with?('/') ? href : "/#{href}"))
           end
           path = URI.parse(url).path
-          if !@robots_txt_ruleset.allowed?(@page_fetcher.get_user_agent, path)
+          if !@robots_txt_content.allowed?(@page_fetcher.get_user_agent, path)
             puts "Skipping disallowed URL by robots.txt: #{url}"
             next
           end
@@ -105,15 +105,6 @@ module UrlFetcherService
       page_url.each { |url| mapping[url] = entity_identifier }
     
       mapping
-    end
-
-    private
-    def get_page_type(content_type)
-      if content_type&.include?('xml')
-        :xml
-      else
-        :html
-      end
     end
 
     private
