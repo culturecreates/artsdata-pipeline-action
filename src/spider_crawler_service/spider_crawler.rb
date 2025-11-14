@@ -109,7 +109,10 @@ module SpiderCrawlerService
 
 
     def calculate_score(url:, graph:, is_sitemap_url: false)
-      exclusion_terms    = ['mailto']
+      exclusion_terms = [
+        'mailto', 
+        'timestamp'
+      ]
       down = url.downcase
       return 0 if exclusion_terms.any? { |term| down.include?(term) }
       return 0 if down.length > 200
