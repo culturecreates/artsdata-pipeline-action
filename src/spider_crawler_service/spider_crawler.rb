@@ -12,7 +12,7 @@ module SpiderCrawlerService
       @max_depth = 5
     end
 
-
+    public
     def crawl()      
       sitemaps = @robots_txt_content.sitemaps
       if sitemaps.empty?
@@ -45,6 +45,7 @@ module SpiderCrawlerService
       end
     end
 
+    private
     def crawl_queue(queue:, sitemap: false)
       user_agent = @page_fetcher.get_user_agent
       until queue.empty?
@@ -74,7 +75,10 @@ module SpiderCrawlerService
 
         new_links = fetch_links(nokogiri_doc: nokogiri_doc, page_type: page_type)
         loaded_graph = fetch_graph(page_url: link, page_data: page_data)
-        if !loaded_graph.empty?
+        graph_score = calculate_graph_score(graph: loaded_graph)
+        if graph_score == 0 || loaded_graph.empty?
+          puts "No relevant RDF data found at #{link}, the graph will not be loaded." 
+        else
           loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', link)
           loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', link)
           loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
@@ -85,8 +89,6 @@ module SpiderCrawlerService
           loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
           loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql")
           @graph << loaded_graph
-        else
-          puts "No RDF data found at #{link}, skipping SPARQL transformations." 
         end
 
         new_links.each do |new_link|
@@ -95,7 +97,7 @@ module SpiderCrawlerService
           end
           next if @visited.include?(new_link) || queue.any? { |q_link, _, _| q_link == new_link }
 
-          new_score = calculate_score(url: new_link, graph: loaded_graph, is_sitemap_url: sitemap)
+          new_score = calculate_score(url: new_link, graph_score: graph_score, is_sitemap_url: sitemap)
           if new_score > 1
             queue << [new_link, new_score, depth + 1]
           end
@@ -103,24 +105,34 @@ module SpiderCrawlerService
       end
     end
 
+    public
     def get_graph()
       @graph
     end
 
+    private
+    def calculate_graph_score(graph:)
+      event_count  = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).count
+      person_count = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Person]).count
+      org_count    = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Organization]).count
+      place_count  = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Place]).count
 
-    def calculate_score(url:, graph:, is_sitemap_url: false)
+      3*event_count + 1*person_count + 1*org_count + 2*place_count
+    end
+
+    private
+    def calculate_score(url:, graph_score:, is_sitemap_url: false)
       exclusion_terms = [
         'mailto', 
         'timestamp'
       ]
       down = url.downcase
-      return 0 if exclusion_terms.any? { |term| down.include?(term) }
-      return 0 if down.length > 200
-
-      event_count  = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).count
-      person_count = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Person]).count
-      org_count    = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Organization]).count
-      place_count  = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Place]).count
+      return 0 if (
+        exclusion_terms.any? { |term| down.include?(term) } ||
+        down.length > 100 ||
+        down.count('/') > 7 ||
+        down.count('?') > 1
+      )
 
       scoring_terms = [
         'sitemap',
@@ -156,10 +168,7 @@ module SpiderCrawlerService
 
       score =
         1 +
-        (3 * event_count) +
-        (1 * person_count) +
-        (1 * org_count) +
-        (2 * place_count) +
+        graph_score +
         url_contains_score +
         url_ends_score +
         sitemap_bonus

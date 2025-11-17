@@ -39,6 +39,9 @@ module FileSaverService
           content,
           author: @author
         )
+      rescue StandardError => e
+        puts "Error saving file to GitHub: #{e.message}"
+        exit(1)
       end
       owner, repo = @repository.split("/")
       branch = response[:content][:branch] || "main"
