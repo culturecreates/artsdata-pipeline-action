@@ -43,6 +43,11 @@ module SpiderCrawlerService
       else
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
+      event_count = @graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).count
+      max_event_count = 1500
+      if event_count > max_event_count
+        limit_events_by_date(max_event_count)
+      end
     end
 
     private
@@ -101,6 +106,47 @@ module SpiderCrawlerService
           if new_score > 1
             queue << [new_link, new_score, depth + 1]
           end
+        end
+      end
+    end
+
+    private
+    def limit_events_by_date(max_limit)
+      event_class      = RDF::Vocab::SCHEMA.Event
+      start_date_pred  = RDF::Vocab::SCHEMA.startDate
+
+      events_with_dates = @graph.query([nil, RDF.type, event_class]).map do |solution|
+        event = solution.subject
+        date_literal = @graph.query([event, start_date_pred, nil]).first&.object
+        next nil unless date_literal
+        begin
+          date = DateTime.parse(date_literal.to_s)
+        rescue ArgumentError
+          next nil
+        end
+        { event: event, date: date }
+      end.compact
+
+      sorted = events_with_dates.sort_by { |h| h[:date] }.reverse
+      events_to_delete = sorted.drop(max_limit).map { |h| h[:event] }
+      nodes_to_delete = Set.new
+      events_to_delete.each do |event|
+        collect_connected_entities(event, nodes_to_delete)
+      end
+
+      to_delete = @graph.statements.select { |st| nodes_to_delete.include?(st.subject) }
+      @graph.delete(*to_delete)
+    end
+
+    private
+    def collect_connected_entities(node, accumulator)
+      return if accumulator.include?(node)
+      accumulator.add(node)
+
+      @graph.query([node, nil, nil]).each do |st|
+        obj = st.object
+        if obj.resource?
+          collect_connected_entities(obj, accumulator)
         end
       end
     end
