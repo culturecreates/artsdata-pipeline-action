@@ -43,6 +43,9 @@ module RobotsTxtParser
     #
     # Returns `self` to allow method chaining.
     def parse(content)
+      if content.nil? || content.strip.empty?
+        return self
+      end
       current_agents = []
       previous_line_was_agent = false
 
