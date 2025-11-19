@@ -44,8 +44,9 @@ module SpiderCrawlerService
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
       event_count = @graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).count
-      max_event_count = 1500
+      max_event_count = 1200
       if event_count > max_event_count
+        puts "Limiting events from #{event_count} to #{max_event_count} based on start date."
         limit_events_by_date(max_event_count)
       end
     end
@@ -53,7 +54,7 @@ module SpiderCrawlerService
     private
     def crawl_queue(queue:, sitemap: false)
       user_agent = @page_fetcher.get_user_agent
-      until queue.empty?
+      until queue.empty? || @visited.size >= 3000 do
         queue.sort_by! { |_, score, _| -score }
 
         link, score, depth = queue.shift
@@ -132,6 +133,10 @@ module SpiderCrawlerService
       nodes_to_delete = Set.new
       events_to_delete.each do |event|
         collect_connected_entities(event, nodes_to_delete)
+        parents = @graph.query([nil, nil, event]).map { |st| st.subject }
+        parents.each do |parent|
+          collect_connected_entities(parent, nodes_to_delete)
+        end
       end
 
       to_delete = @graph.statements.select { |st| nodes_to_delete.include?(st.subject) }
