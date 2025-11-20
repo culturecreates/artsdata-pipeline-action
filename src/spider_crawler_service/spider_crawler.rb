@@ -1,3 +1,4 @@
+require_relative '../config/spider_config'
 module SpiderCrawlerService
   class SpiderCrawler
     def initialize(url:, page_fetcher:, sparql:, robots_txt_content:)
@@ -9,20 +10,21 @@ module SpiderCrawlerService
       @base_url = URI.parse(url[0]).scheme + "://" + URI.parse(url[0]).host
       @atleast_one_page_loaded = false
       @visited = Set.new
-      @max_depth = 5
+      @max_depth = Config::SPIDER_CRAWLER[:default_max_depth]
     end
 
     public
-    def crawl()      
+    def crawl()    
+      starting_score = Config::SPIDER_CRAWLER[:starting_url_initial_score]  
       sitemaps = @robots_txt_content.sitemaps
       if sitemaps.empty?
         sitemaps = [@base_url + '/sitemap.xml']
       end
-      queue = sitemaps.map { |sitemap_url| [sitemap_url, 10, 0] }
+      queue = sitemaps.map { |sitemap_url| [sitemap_url, starting_score, 0] }
       puts "Starting crawl with sitemaps: #{sitemaps.join(', ')}"
       crawl_queue(queue: queue, sitemap: true)
       puts "Continuing crawl with starting URLs."
-      queue = @url.map { |u| [u, 10, 0] }
+      queue = @url.map { |u| [u, starting_score, 0] }
       crawl_queue(queue: queue)
       if !@atleast_one_page_loaded
         notification_message = 'No pages were loaded. Check your starting URL. Exiting...'
@@ -44,7 +46,7 @@ module SpiderCrawlerService
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
       event_count = @graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).count
-      max_event_count = 1200
+      max_event_count = Config::SPIDER_CRAWLER[:max_event_count]
       if event_count > max_event_count
         puts "Limiting events from #{event_count} to #{max_event_count} based on start date."
         limit_events_by_date(max_event_count)
@@ -54,7 +56,7 @@ module SpiderCrawlerService
     private
     def crawl_queue(queue:, sitemap: false)
       user_agent = @page_fetcher.get_user_agent
-      until queue.empty? || @visited.size >= 3000 do
+      until queue.empty? || @visited.size >= Config::SPIDER_CRAWLER[:max_pages_to_crawl] do
         queue.sort_by! { |_, score, _| -score }
 
         link, score, depth = queue.shift
@@ -180,9 +182,9 @@ module SpiderCrawlerService
       down = url.downcase
       return 0 if (
         exclusion_terms.any? { |term| down.include?(term) } ||
-        down.length > 100 ||
-        down.count('/') > 7 ||
-        down.count('?') > 1
+        down.length > Config::SPIDER_CRAWLER[:max_url_length] ||
+        down.count('/') > Config::SPIDER_CRAWLER[:max_forward_slashes] ||
+        down.count('?') > Config::SPIDER_CRAWLER[:max_query_params]
       )
 
       scoring_terms = [
@@ -211,11 +213,11 @@ module SpiderCrawlerService
 
       normalized_end = down.gsub(/[\W_]+$/, '')
 
-      url_contains_score = scoring_terms.sum { |term| down.scan(term).length * 3 }
+      url_contains_score = scoring_terms.sum { |term| down.scan(term).length * Config::SPIDER_CRAWLER[:url_contains_score_weight] }
 
-      url_ends_score = scoring_terms.any? { |term| normalized_end.end_with?(term) } ? 5 : 0
+      url_ends_score = scoring_terms.any? { |term| normalized_end.end_with?(term) } ? Config::SPIDER_CRAWLER[:url_ends_score_weight] : 0
 
-      sitemap_bonus = is_sitemap_url ? 5 : 0
+      sitemap_bonus = is_sitemap_url ? Config::SPIDER_CRAWLER[:sitemap_bonus_score] : 0
 
       score =
         1 +
