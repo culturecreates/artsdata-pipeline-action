@@ -45,11 +45,57 @@ module SpiderCrawlerService
       else
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
-      event_count = @graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).count
+      shrink_graph()
+    end
+
+    private
+    def shrink_graph()
+      event_count = @sparql.query_graph(@graph, "event_count.sparql").first[:count].to_i
       max_event_count = Config::SPIDER_CRAWLER[:max_event_count]
       if event_count > max_event_count
         puts "Limiting events from #{event_count} to #{max_event_count} based on start date."
         limit_events_by_date(max_event_count)
+      end
+
+      organization_count = @sparql.query_graph(@graph, "organization_count.sparql").first[:count].to_i
+      max_organization_count = Config::SPIDER_CRAWLER[:max_organization_count]
+      if organization_count > max_organization_count
+        puts "Limiting organizations from #{organization_count} to #{max_organization_count}"
+        limit_entities_by_count(
+          max_organization_count, 
+          [
+            RDF::Vocab::SCHEMA.Organization, 
+            RDF::Vocab::SCHEMA.LocalBusiness
+          ]
+        )
+      end
+
+      place_count = @sparql.query_graph(@graph, "place_count.sparql").first[:count].to_i
+      max_place_count = Config::SPIDER_CRAWLER[:max_place_count]
+      if place_count > max_place_count
+        puts "Limiting places from #{place_count} to #{max_place_count}"
+        limit_entities_by_count(
+          max_place_count, 
+          [
+            RDF::Vocab::SCHEMA.Place, 
+            RDF::Vocab::SCHEMA.PerformingArtsTheater, 
+            RDF::Vocab::SCHEMA.MusicVenue, 
+            RDF::Vocab::SCHEMA.CivicStructure, 
+            RDF::Vocab::SCHEMA.MovieTheater
+          ]
+        )
+      end
+
+      person_count = @sparql.query_graph(@graph, "person_count.sparql").first[:count].to_i
+      max_person_count = Config::SPIDER_CRAWLER[:max_person_count]
+      if person_count > max_person_count
+        puts "Limiting people from #{person_count} to #{max_person_count}"
+        limit_entities_by_count(
+          max_person_count, 
+          [
+            RDF::Vocab::SCHEMA.Person
+          ]
+        )
       end
     end
 
@@ -60,7 +106,7 @@ module SpiderCrawlerService
         queue.sort_by! { |_, score, _| -score }
 
         link, score, depth = queue.shift
-        if !@robots_txt_content.allowed?(user_agent, link.delete(@base_url))
+        if !@robots_txt_content.allowed?(user_agent, link.sub(@base_url, ''))
           puts "Skipping disallowed link by robots.txt: #{link}"
           next
         end
@@ -100,7 +146,15 @@ module SpiderCrawlerService
         end
 
         new_links.each do |new_link|
-          if !new_link.start_with?@base_url
+          begin
+            new_link = URI::DEFAULT_PARSER.escape(new_link)
+            new_link_host = URI.parse(new_link).host
+            base_url_host = URI.parse(@base_url).host
+            if !normalize_host(new_link_host).downcase.eql?(normalize_host(base_url_host).downcase)
+              next
+            end
+          rescue StandardError => e
+            puts "Error parsing URL #{new_link}: #{e.message}, skipping."
             next
           end
           next if @visited.include?(new_link) || queue.any? { |q_link, _, _| q_link == new_link }
@@ -114,20 +168,53 @@ module SpiderCrawlerService
     end
 
     private
+    def normalize_host(host)
+      host.sub(/^www\./i, '')
+    end
+
+    private
+    def limit_entities_by_count(max_limit, classes)
+      types = [RDF::Vocab::SCHEMA.Organization, RDF::Vocab::SCHEMA.LocalBusiness]
+      entities_to_delete = Set.new
+      entities = []
+      types.each do |type|
+        entities.concat(@graph.query([nil, RDF.type, type]).map { |solution| solution.subject })
+      end
+      if entities.length > max_limit
+        to_delete = entities.drop(max_limit)
+        to_delete.each do |org|
+          collect_connected_entities(org, entities_to_delete)
+          @graph.delete(*@graph.query([nil, nil, org]))
+        end
+      end
+      to_delete = @graph.statements.select { |st| entities_to_delete.include?(st.subject) }
+      @graph.delete(*to_delete)
+    end
+
+    private
     def limit_events_by_date(max_limit)
-      event_class      = RDF::Vocab::SCHEMA.Event
       start_date_pred  = RDF::Vocab::SCHEMA.startDate
 
-      events_with_dates = @graph.query([nil, RDF.type, event_class]).map do |solution|
-        event = solution.subject
-        date_literal = @graph.query([event, start_date_pred, nil]).first&.object
-        next nil unless date_literal
-        begin
-          date = DateTime.parse(date_literal.to_s)
-        rescue ArgumentError
-          next nil
+      event_types = [
+        RDF::Vocab::SCHEMA.Event,
+        RDF::Vocab::SCHEMA.TheaterEvent,
+        RDF::Vocab::SCHEMA.MusicEvent,
+        RDF::Vocab::SCHEMA.Festival
+      ]
+
+      events_with_dates = event_types.flat_map do |event_type|
+        @graph.query([nil, RDF.type, event_type]).map do |solution|
+          event = solution.subject
+          date_literal = @graph.query([event, start_date_pred, nil]).first&.object
+          next nil unless date_literal
+
+          begin
+            date = DateTime.parse(date_literal.to_s)
+          rescue ArgumentError
+            next nil
+          end
+          { event: event, date: date }
         end
-        { event: event, date: date }
       end.compact
 
       sorted = events_with_dates.sort_by { |h| h[:date] }.reverse
@@ -208,7 +295,9 @@ module SpiderCrawlerService
         'tickets',
         'billet',
         'billets',
-        'designer'
+        'designer',
+        'entertainment',
+        'divertissement'
       ]
 
       normalized_end = down.gsub(/[\W_]+$/, '')

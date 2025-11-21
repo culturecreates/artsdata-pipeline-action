@@ -1,0 +1,14 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX schema: <http://schema.org/>
+
+SELECT (COUNT(?event) AS ?count)
+WHERE {
+  VALUES ?class { 
+    schema:Event 
+    schema:TheaterEvent 
+    schema:MusicEvent 
+    schema:Festival 
+  }
+  ?event a ?class .
+}
+
