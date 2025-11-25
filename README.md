@@ -65,8 +65,8 @@ artsdata-pipeline:
 
 | Name                                  | Description      |
 | ------------------------------------- | -------------------------- |
-| `mode`                             | **required**: Mode to run the workflow in. MUST be one of `fetch \| fetch-test \| push \| fetch-push`. Defaults to `push`.  
-| `artifact`                         | **required**: Name of the artifact (required for push and fetch-push modes).
+| `artifact`                         | **required**: Name of the artifact. When fetching data, the artifact is used in the filename, and when data is pushed to Artsdata, the artifact is the last part of the graph URI. Example: `http://kg.artsdata.ca/account/group/artifact`
+| `mode`                             | Mode to run the workflow in. MUST be one of `fetch \| fetch-test \| push \| fetch-push`. Defaults to `push`.  
 | `downloadFile`                      | Optional filename override with extension and path. When using fetch and fetch-push modes, the data will be saved to the Github repo calling the action. If not provided, it will be set to `output/[artifact].jsonld`.
 | `report-callback-url`               | Optional URL to send back the data validation report asynchronously using POST "Content-Type: application/json". 
 
@@ -75,8 +75,8 @@ artsdata-pipeline:
 | Name                                  | Description      |
 | ------------------------------------- | -------------------------- |
 | `page-url`                          | **required**: URL of the page to crawl (required for fetch and fetch-push modes).
-| `entity-identifier`                 | Identifier of the entity to fetch URL, defaults to spider mode if not provided.
 | `token`                             | **required**: GitHub token (required for fetch and fetch-push modes, secret).
+| `entity-identifier`                 | Identifier of the entity to fetch URL, defaults to spider mode if not provided.
 | `headless`                          | Whether to run in headless mode (optional, defaults to false).
 | `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(optional, defaults to false).
 | `is-paginated`                      | Whether the page is paginated (optional, defaults to false).
@@ -104,11 +104,11 @@ html-extract-config format:
 
 | Name                                  | Description         |
 | ------------------------------------- | -------------------------- |
-| `publisher`                         | **required**: URI of the publisher (required for push and fetch-push modes). This must be a URI registered with one of the [Artsdata Databus team](https://github.com/orgs/artsdata-stewards/teams/databus/teams) accounts. If you are on a team you can use the format `https://https://github.com/{{your_github_handle}}#this`
-| `downloadUrl`                       | **required**: URL of the file to download (required for push mode).
+| `publisher`                         | **required**: URI of the publisher. This must be a URI registered with one of the [Artsdata Databus team](https://github.com/orgs/artsdata-stewards/teams/databus/teams) accounts. If you are on a team you can use the format `https://https://github.com/{{your_github_handle}}#this`
+| `downloadUrl`                       | URL of the file to download. Default is set to `https://[current repo raw path]/output/[artifact].jsonld`.
 | `group`                             | Group of artifacts/versions. Use unreserved characters. (If not provided, group will be set as your repository name).
-| `version`                           | Version of the artifact. Usually a date (e.g., 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date).
-| `comment`                           | Comment about the artifact push (optional)
+| `version`                           | Version of the artifact. Usually a date (e.g. 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date-time).
+| `comment`                           | Comment about the artifact push (optional, default - url of the workflow YAML file.)
 | `shacl`                             | URL to the SHACL file to perform validations (optional)
 | `custom-databus-url`                | Custom databus URL to push the data to (optional, default - http://api.artsdata.ca/databus/)
 
