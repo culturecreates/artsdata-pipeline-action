@@ -21,7 +21,7 @@ jobs:
           artifact: "my-artifact-name"
           publisher: "http://my-publisher-uri"
           page-url: "https://website-to-crawl"
-          token: "${{ secrets.GITHUB_TOKEN }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Usage 
@@ -75,7 +75,7 @@ artsdata-pipeline:
 | Name                                  | Description      |
 | ------------------------------------- | -------------------------- |
 | `page-url`                          | **required**: URL of the page to crawl (required for fetch and fetch-push modes).
-| `token`                             | **required**: GitHub token (required for fetch and fetch-push modes, secret).
+| `token`                             | **required**: Constant. Must be set to `${{ secrets.GITHUB_TOKEN }}`. [Automatic GitHub token](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token) generated with each run of the workflow. Needed for the action to save the crawled data to your repo.
 | `entity-identifier`                 | Identifier of the entity to fetch URL, defaults to spider mode if not provided.
 | `headless`                          | Whether to run in headless mode (optional, defaults to false).
 | `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(optional, defaults to false).
