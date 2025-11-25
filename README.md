@@ -104,7 +104,7 @@ html-extract-config format:
 
 | Name                                  | Description         |
 | ------------------------------------- | -------------------------- |
-| `publisher`                         | **required**: URI of the publisher (required for push and fetch-push modes).
+| `publisher`                         | **required**: URI of the publisher (required for push and fetch-push modes). This must be a URI registered with one of the [Artsdata Databus team](https://github.com/orgs/artsdata-stewards/teams/databus/teams) accounts. If you are on a team you can use the format `https://https://github.com/{{your_github_handle}}#this`
 | `downloadUrl`                       | **required**: URL of the file to download (required for push mode).
 | `group`                             | Group of artifacts/versions. Use unreserved characters. (If not provided, group will be set as your repository name).
 | `version`                           | Version of the artifact. Usually a date (e.g., 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date).
