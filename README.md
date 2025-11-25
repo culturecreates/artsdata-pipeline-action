@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  artsdata-fetch-and-push:
+  artsdata-pipeline:
     runs-on: ubuntu-latest
     steps:
       - name: Action setup
@@ -26,10 +26,10 @@ jobs:
 
 ## Usage 
 
-To use this action, add the following YAML configuration to your GitHub Actions workflow file (workflow.yml):
+To use this action, add the following YAML configuration to your GitHub Actions workflow file:
 
 ```yml
-artsdata-push:
+artsdata-pipeline:
   runs-on: ubuntu-latest
   needs: fetch-and-commit-data
   steps:
@@ -65,7 +65,7 @@ artsdata-push:
 
 | Name                                  | Description      |
 | ------------------------------------- | -------------------------- |
-| `mode`                             | **required**: Mode to run the workflow in. MUST be one of `fetch \| push \| fetch-push`. Defaults to `push`.  
+| `mode`                             | **required**: Mode to run the workflow in. MUST be one of `fetch \| fetch-test \| push \| fetch-push`. Defaults to `push`.  
 | `artifact`                         | **required**: Name of the artifact (required for push and fetch-push modes).
 | `downloadFile`                      | Optional filename override with extension and path. When using fetch and fetch-push modes, the data will be saved to the Github repo calling the action. If not provided, it will be set to `output/[artifact].jsonld`.
 | `report-callback-url`               | Optional URL to send back the data validation report asynchronously using POST "Content-Type: application/json". 
