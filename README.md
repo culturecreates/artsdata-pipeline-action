@@ -1,5 +1,28 @@
 # artsdata-pipeline-action
-Action to manage the data pipeline for Artsdata
+Action to manage the data pipeline for Artsdata.
+
+Use this Github action from your Github project repo. 
+
+Example:
+```
+name: My data
+
+on:
+  workflow_dispatch:
+
+jobs:
+  artsdata-fetch-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Action setup
+        uses: culturecreates/artsdata-pipeline-action@v3
+        with:
+          mode: "fetch-test"
+          artifact: "my-artifact-name"
+          publisher: "http://my-publisher-uri"
+          page-url: "https://website-to-crawl"
+          token: "${{ secrets.GITHUB_TOKEN }}"
+```
 
 ## Usage 
 
