@@ -1,7 +1,7 @@
 # artsdata-pipeline-action
 Action to manage the data pipeline for Artsdata.
 
-Use this Github action from your Github project repo. 
+Use this Github action from your Github project repo with mode `push` to send your data to the Artsdata databus. Use the mode `fetch-push` to first crawl a website, extract strucutred data, and then push to Artsdata.
 
 Example:
 ```
