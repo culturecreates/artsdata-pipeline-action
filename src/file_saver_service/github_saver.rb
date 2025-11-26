@@ -61,43 +61,5 @@ module FileSaverService
       branch = response[:content][:branch] || "main"
       "https://raw.githubusercontent.com/#{owner}/#{repo}/#{branch}/#{@path}"
     end
-
-    def concat(new_content)
-      if(!@access_token)
-        puts("Access token is not provided. Cannot save to GitHub.")
-        exit(0)
-      end
-
-      begin
-        existing_file = @client.contents(@repository, path: @path)
-        sha = existing_file.sha
-        current_content = Base64.decode64(existing_file.content)
-        updated_content = current_content + new_content
-
-        response = @client.update_contents(
-          @repository,
-          @path,
-          @message,
-          sha,
-          updated_content,
-          author: @author
-        )
-      rescue Octokit::NotFound
-        response = @client.create_contents(
-          @repository,
-          @path,
-          @message,
-          new_content,
-          author: @author
-        )
-      rescue StandardError => e
-        puts "Error concatenating file in GitHub: #{e.message}"
-        exit(1)
-      end
-
-      owner, repo = @repository.split("/")
-      branch = response[:content][:branch] || "main"
-      "https://raw.githubusercontent.com/#{owner}/#{repo}/#{branch}/#{@path}"
-    end
   end
 end

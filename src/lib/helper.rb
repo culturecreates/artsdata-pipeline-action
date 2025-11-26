@@ -192,6 +192,10 @@ module Helper
       ]
     }
 
-    JSON.pretty_generate(jsonld)
+    graph = RDF::Graph.new
+    JSON::LD::API.toRdf(jsonld) do |statement|
+      graph << statement
+    end
+    graph
   end
 end

@@ -214,15 +214,28 @@ if mode.include?('push')
 
   if metadata_exists
     metadata_content['databus_id'] = response[:dataset]
-    metadata_file_content = Helper.generate_metadata_file_content(metadata_content)
-    download_file ||= "metadata/#{metadata_content['file_name']}"
+    metadata_graph = Helper.generate_metadata_file_content(metadata_content)
+    download_file = "metadata/#{metadata_content['file_name']}"
     github_saver = Helper.get_github_saver(
       repository: repository,
       file_name: download_file,
       token: token,
     )
-    github_saver.save_graph_to_file(file_name: download_file, graph: metadata_file_content)
-    github_saver.concat(File.read(download_file))
+
+    existing_metadata = github_saver.get_file_content(download_file)
+
+    if existing_metadata
+      puts "Metadata file already exists in the repository: #{download_file}, merging graphs"
+
+      existing_json = JSON.parse(existing_metadata)
+
+      JSON::LD::API.toRdf(existing_json) do |statement|
+        metadata_graph << statement
+      end
+    end
+
+    github_saver.save_graph_to_file(file_name: download_file, graph: metadata_graph)
+    download_url = github_saver.save(File.read(download_file))
 
     databus_service = Helper.get_databus_service(
       artifact: metadata_content['metadata_artifact'],
@@ -230,6 +243,28 @@ if mode.include?('push')
       repository: repository,
       databus_url: databus_url 
     )
+
+    response = databus_service.send(
+      download_url: download_url,
+      download_file: download_file,
+      version: version,
+      comment: comment,
+      group: group
+    )
+
+    case response[:status]
+    when :success
+      notification_instance.send_notification(stage: 'databus_push', message: response[:message])
+    when :error
+      notification_instance.send_notification(stage: 'databus_push', message: "Error occurred: #{response[:message]}")
+      exit(1)
+    when :exception
+      notification_instance.send_notification(stage: 'databus_push', message: "Exception occurred: #{response[:message]}")
+      exit(1)
+    else
+      notification_instance.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
+      exit(1)
+    end
   end
 end
 
