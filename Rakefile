@@ -8,7 +8,7 @@ require 'rake/testtask'
 # The test_files variable is set to a FileList object that contains the list of test files
 Rake::TestTask.new(:test) do |t|
   t.libs << 'tests'
-  t.test_files = FileList['test/*_test.rb'] 
+  t.test_files = FileList['test/**/*_test.rb'] 
   t.warning = false
 end
 
