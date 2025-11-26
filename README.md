@@ -123,7 +123,7 @@ Remember to use only unreserved characters ([0-9a-zA-Z-._]) for input variables 
 Follow these instructions to make a new release.
 
 ## Steps
-1. Run tests with `> rake` and ensure all pass
+1. Run tests with `rake` and ensure all pass
 2. Update file `action.yml` with the new version vX.X.X (2 different places in file)
 3. Commit changes
 4. Create a new Github **release** with the new version tag vX.X.X
