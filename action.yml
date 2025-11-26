@@ -47,6 +47,8 @@ inputs:
     default: 'http://api.artsdata.ca/databus/'
   html-extract-config:
     description: 'Custom HTML configuration as JSON'
+  metadata-config:
+    description: 'metadata for spider as JSON'
 
 runs: 
   using: 'composite'
@@ -85,15 +87,23 @@ runs:
           ${{ inputs.html-extract-config }}
         EOF
 
-        mkdir -p output
+        cat <<EOF > metadata-file.json
+          ${{ inputs.metadata-config }}
+        EOF
 
-        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.6.9
+        mkdir -p output
+        mkdir -p metadata
+
+        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.6.10
         docker run --shm-size=1g \
           -v $(pwd)/config.yml:/usr/src/app/config.yml:ro \
           -v $(pwd)/html-extract-config.json:/usr/src/app/html-extract-config.json:ro \
+          -v $(pwd)/metadata-file.json:/usr/src/app/metadata-file.json:ro \
+          -v $(pwd)/metadata:/usr/src/app/metadata \
           -v $(pwd)/output:/usr/src/app/output \
-          ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.6.9\
-          config.yml\
-          html-extract-config.json
+          ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.6.10 \
+          /usr/src/app/config.yml \
+          /usr/src/app/html-extract-config.json \
+          /usr/src/app/metadata-file.json
 
       shell: bash

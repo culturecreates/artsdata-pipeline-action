@@ -25,7 +25,6 @@ module NotificationService
 
     def send_notification(stage:, message:)
       if @webhook_url.nil? || @webhook_url.empty?
-        puts "No webhook URL provided. Skipping notification."
         return
       end
       uri = URI.parse(@webhook_url)

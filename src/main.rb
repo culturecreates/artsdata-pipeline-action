@@ -7,6 +7,9 @@ if config_file.nil?
   exit(1)
 end
 html_extract_config_file = ARGV[1]
+puts "HTML Extract Config File: #{html_extract_config_file}"
+metadata_file = ARGV[2]
+puts "Metadata File: #{metadata_file}"
 
 config = YAML.load_file(config_file)
 
@@ -43,6 +46,22 @@ if html_extract_config_file && File.exist?(html_extract_config_file)
   end
 end
 
+metadata_exists = false
+
+if metadata_file && File.exist?(metadata_file)
+  begin
+    metadata_content = JSON.parse(File.read(metadata_file))
+    if metadata_content['file_name'] && metadata_content['metadata_artifact']
+      metadata_exists = true
+    end
+    puts "Loaded metadata content: #{metadata_content}"
+  rescue JSON::ParserError => e
+    metadata_content = nil
+  end
+else
+  puts "No metadata file provided or file does not exist."
+end
+
 Helper.check_mode_requirements(mode, config)
 
 NotificationService::WebhookNotification.setup(
@@ -66,8 +85,15 @@ if mode.include?('fetch')
       sparql_path: "./sparql/",
       robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, page_fetcher: page_fetcher)
     )
+    start_time = Time.now.utc.iso8601
     crawler.crawl()
     graph = crawler.get_graph()
+    end_time = Time.now.utc.iso8601
+    if metadata_exists
+      metadata_content['start_time'] = start_time
+      metadata_content['end_time'] = end_time
+      metadata_content['url_count'] = crawler.get_visited_count()
+    end
   else
     # Use UrlFetcher and GraphFetcher when entity identifier is provided
     page_fetcher = Helper.get_page_fetcher(is_headless: fetch_urls_headlessly, headers: headers)
@@ -183,6 +209,26 @@ if mode.include?('push')
   else
     notification_instance.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
     exit(1)
+  end
+
+  if metadata_exists
+    metadata_content['databus_id'] = response[:dataset]
+    metadata_file_content = Helper.generate_metadata_file_content(metadata_content)
+    download_file ||= "metadata/#{metadata_content['file_name']}"
+    github_saver = Helper.get_github_saver(
+      repository: repository,
+      file_name: download_file,
+      token: token,
+    )
+    github_saver.save_graph_to_file(file_name: download_file, graph: metadata_file_content)
+    github_saver.concat(File.read(download_file))
+
+    databus_service = Helper.get_databus_service(
+      artifact: metadata_content['metadata_artifact'],
+      publisher: publisher,
+      repository: repository,
+      databus_url: databus_url 
+    )
   end
 end
 

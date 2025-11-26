@@ -14,6 +14,11 @@ module SpiderCrawlerService
     end
 
     public
+    def get_visited_count()
+      @visited.size
+    end
+
+    public
     def crawl()    
       starting_score = Config::SPIDER_CRAWLER[:starting_url_initial_score]  
       sitemaps = @robots_txt_content.sitemaps
