@@ -8,7 +8,7 @@ class CreateEventSeriesTest < Minitest::Test
 
   def test_create_eventseries
     sparql = SPARQL.parse(File.read(@sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_create-eventseries.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_create-eventseries.jsonld")
     graph.query(sparql)
     assert_equal(
       4,

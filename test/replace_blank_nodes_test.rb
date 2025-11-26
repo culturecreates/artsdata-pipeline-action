@@ -10,7 +10,7 @@ class ReplaceBlankNodesTest < Minitest::Test
   # check that the blank node is replaced
   def test_blank_node_replaced
     sparql = SPARQL.parse(File.read(@replace_blank_nodes_sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_blank_nodes.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_blank_nodes.jsonld")
     # puts "before: #{graph.dump(:jsonld)}"
     graph.query(sparql)
     # puts "after: #{graph.dump(:jsonld)}"

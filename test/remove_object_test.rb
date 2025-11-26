@@ -8,7 +8,7 @@ class RemoveObjectTest < Minitest::Test
 
   def test_remove_object
     sparql = SPARQL.parse(File.read(@remove_object_sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_remove_object.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_remove_object.jsonld")
     
     graph.query(sparql)
 

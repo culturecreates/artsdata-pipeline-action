@@ -8,7 +8,7 @@ class CopySubeventDataToEventSeriesTest < Minitest::Test
 
   def test_copy_subevent_data_to_eventseries
     sparql = SPARQL.parse(File.read(@sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_copy_subevent_data_to_eventseries.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_copy_subevent_data_to_eventseries.jsonld")
     graph.query(sparql)
     assert_equal(
       ["2024-12-01T18:00:00", "2024-12-02T20:00:00"],

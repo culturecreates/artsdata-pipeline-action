@@ -10,7 +10,7 @@ class FixDateTimezoneTest < Minitest::Test
 
   # Check that date timezone is fixed and retains data type
   def test_fix_timezone
-    graph = RDF::Graph.load("./tests/fixtures/test_date_timezone_fix.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_date_timezone_fix.jsonld")
     graph.query(@sparql)
 
     # Test event1
@@ -40,7 +40,7 @@ class FixDateTimezoneTest < Minitest::Test
   end
 
   def test_skip_dates_without_timezone
-    graph = RDF::Graph.load("./tests/fixtures/test_date_witout_timezone.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_date_witout_timezone.jsonld")
     graph.query(@sparql)
 
     # Test event5

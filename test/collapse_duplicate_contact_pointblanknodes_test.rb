@@ -8,7 +8,7 @@ class CollapseDuplicateContactPointBlankNodesTest < Minitest::Test
 
   def test_collapse_duplicate_contact_pointblanknodes
     sparql = SPARQL.parse(File.read(@sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_collapse_duplicate_contact_pointblanknodes.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_collapse_duplicate_contact_pointblanknodes.jsonld")
     graph.query(sparql)
     assert_equal(
       1,

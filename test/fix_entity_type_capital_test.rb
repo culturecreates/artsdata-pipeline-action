@@ -10,7 +10,7 @@ class FixEntityTypeCapitalTest < Minitest::Test
   # check that the type object is fixed
   def test_capitalized_first_letter
     sparql = SPARQL.parse(File.read(@fix_entity_type_sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_capital_types.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_capital_types.jsonld")
     # puts "before: #{graph.dump(:jsonld)}"
     graph.query(sparql)
     # puts "after: #{graph.dump(:jsonld)}"

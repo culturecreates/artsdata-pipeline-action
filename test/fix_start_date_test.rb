@@ -10,7 +10,7 @@ class FixStartDateTest < Minitest::Test
   def test_fix_start_date
     sparql_file = File.read(@fix_start_date_sparql_file)
     sparql = SPARQL.parse(sparql_file, update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_fix_start_date.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_fix_start_date.jsonld")
     # puts "before: #{graph.dump(:jsonld)}"
     graph.query(sparql)
     # puts "after: #{graph.dump(:jsonld)}"

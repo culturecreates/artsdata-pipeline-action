@@ -10,7 +10,7 @@ class FixMalformedUrlsTest < Minitest::Test
   # check that the blank node is replaced
   def test_fix_malformed_urls
     sparql = SPARQL.parse(File.read(@fix_malformed_urls_sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_fix_malformed_urls.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_fix_malformed_urls.jsonld")
     graph.query(sparql)
     assert graph.has_statement?(RDF::Statement.new(RDF::URI("http://example.com/123"), RDF::Vocab::SCHEMA.url, RDF::URI("https://example.com/?post_type=event&p=12292")))
   end

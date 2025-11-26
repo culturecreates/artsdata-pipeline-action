@@ -8,7 +8,7 @@ class FixWikidataUriTest < Minitest::Test
 
   def test_fix_wikidata_uri
     sparql = SPARQL.parse(File.read(@sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_fix_wikidata_uri.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_fix_wikidata_uri.jsonld")
     graph.query(sparql)
     assert_equal(
       RDF::URI("http://www.wikidata.org/entity/Q42"),

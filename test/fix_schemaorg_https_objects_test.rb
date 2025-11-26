@@ -8,7 +8,7 @@ class FixSchemaOrgHttpsObjectsTest < Minitest::Test
 
   def test_fix_schemaorg_https_objects
     sparql = SPARQL.parse(File.read(@sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_fix_schemaorg_https_objects.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_fix_schemaorg_https_objects.jsonld")
     graph.query(sparql)
     assert_equal(
       RDF::URI("http://schema.org/Example1"),

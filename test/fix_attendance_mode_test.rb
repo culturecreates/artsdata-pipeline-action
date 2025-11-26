@@ -8,7 +8,7 @@ class FixAttendanceModeTest < Minitest::Test
 
   def test_fix_attendance_mode
     sparql = SPARQL.parse(File.read(@sparql_file), update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_fix_attendance_mode.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_fix_attendance_mode.jsonld")
     # puts "before: #{graph.dump(:jsonld)}"
     graph.query(sparql)
     # puts "after: #{graph.dump(:jsonld)}"

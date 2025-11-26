@@ -11,7 +11,7 @@ class AddDerivedFromTest < Minitest::Test
     sparql_file = File.read(@add_derived_from_sparql_file)
     sparql_file = sparql_file.gsub("subject_url", "www.example-uri.com")
     sparql = SPARQL.parse(sparql_file, update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_add_derived_from.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_add_derived_from.jsonld")
     # puts "before: #{graph.dump(:jsonld)}"
     graph.query(sparql)
     # puts "after: #{graph.dump(:jsonld)}"

@@ -10,7 +10,7 @@ class AddMissingSecondsTest < Minitest::Test
   def test_add_missing_seconds
     sparql_file = File.read(@add_missing_seconds_sparql_file)
     sparql = SPARQL.parse(sparql_file, update: true)
-    graph = RDF::Graph.load("./tests/fixtures/test_date_missing_seconds.jsonld")
+    graph = RDF::Graph.load("./test/fixtures/test_date_missing_seconds.jsonld")
     # puts "before: #{graph.dump(:jsonld)}"
     graph.query(sparql)
     # puts "after: #{graph.dump(:jsonld)}"
