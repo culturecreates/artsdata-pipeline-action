@@ -15,6 +15,8 @@ require_relative '../spider_crawler_service/spider_crawler'
 require_relative '../url_fetcher_service/url_fetcher'
 require_relative '../robots_txt_parser_service/robots_txt_parser'
 
+require 'securerandom'
+
 module Helper
   def self.check_mode_requirements(mode, config)
     required_map = {
@@ -120,5 +122,76 @@ module Helper
     else
       :unknown
     end
+  end
+
+  def self.generate_metadata_file_content(metadata_content)
+    uuid_org   = SecureRandom.uuid
+    uuid_crawl = SecureRandom.uuid
+
+    # data from the caller workflow 
+    datafeed_uri = metadata_content['datafeed_uri']
+    datafeed_url = metadata_content['datafeed_url']
+    datafeed_title = metadata_content['datafeed_title']
+    datafeed_name = metadata_content['datafeed_name']
+    same_as = metadata_content['same_as']
+
+    # data to be fetched during the crawl
+    databus_id = metadata_content['databus_id']
+    url_count = metadata_content['url_count']
+    start_time = metadata_content['start_time']
+    end_time = metadata_content['end_time']
+
+    crawl_uri = "urn:crawl:#{uuid_crawl}"
+    org_uri = "urn:organization:#{uuid_org}"
+
+    jsonld = {
+      "@context" => {
+        "schema" => "http://schema.org/",
+        "prov"   => "http://www.w3.org/ns/prov#",
+        "adr"    => "http://kg.artsdata.ca/"
+      },
+      "@graph" => [
+        {
+          "@id"   => datafeed_uri,
+          "@type" => "schema:DataFeed",
+          "schema:name" => datafeed_title,
+          "schema:datafeedElement" => datafeed_url
+        },
+        {
+          "@id" => org_uri,
+          "@type" => "schema:Organization",
+          "schema:name" => datafeed_name,
+          "schema:sameAs" => same_as,
+          "schema:url" => datafeed_url
+        },
+        {
+          "@id" => crawl_uri,
+          "@type" => "prov:Activity",
+          "prov:used" => datafeed_url,
+          "prov:startedAtTime" => start_time,
+          "prov:endedAtTime" => end_time,
+          "prov:wasInformedBy" => "http://kg.artsdata.ca/resource/SpiderActivity",
+          "schema:additionalProperty" => {
+            "@type" => "schema:PropertyValue",
+            "schema:name" => "urlsCrawledCount",
+            "schema:value" => url_count
+          }
+        },
+        {
+          "@id" => databus_id,
+          "@type" => "prov:Entity",
+          "prov:wasGeneratedBy" => crawl_uri
+        },
+        {
+          "@id" => "adr:SpiderActivity",
+          "@type" => "prov:Activity",
+          "schema:name" => "Spider crawl",
+          "schema:description" =>
+            "A crawl using the Artsdata-pipeline-action without a CSS selector resulting in a site wide crawl."
+        }
+      ]
+    }
+
+    JSON.pretty_generate(jsonld)
   end
 end

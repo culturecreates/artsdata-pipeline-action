@@ -10,6 +10,10 @@ module FileSaverService
       raise NotImplementedError, "Subclasses must implement the save method"
     end
 
+    def concat
+      raise NotImplementedError, "Subclasses must implement the get_file_content method"
+    end
+
     def save_graph_to_file(file_name:, graph:)
       FileUtils.mkdir_p(File.dirname(file_name))
 
