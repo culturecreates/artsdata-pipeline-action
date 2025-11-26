@@ -4,7 +4,7 @@ require_relative '../src/robots_txt_parser_service/robots_txt_parser'
 # this test file follows google's robots.txt specification derived from RFC 9309 Robots Exclusion Protocol
 # https://github.com/google/robotstxt/blob/master/robots_test.cc
 
-class RobotsTxtParserTests < Minitest::Test
+class RobotsTxtParserTest < Minitest::Test
   def isAllowed?(robots_txt_content, user_agent, path)
     ruleset = RobotsTxtParser.parse(robots_txt_content)
     ruleset.allowed?(user_agent, path)
