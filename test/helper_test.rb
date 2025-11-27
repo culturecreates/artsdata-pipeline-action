@@ -17,6 +17,21 @@ class HelperTest < Minitest::Test
 			'start_time'    => '2025-11-26T10:00:00Z',
 			'end_time'      => '2025-11-26T11:00:00Z'
 		}
+
+    @skipped_metadata_content = {
+			'datafeed_uri'   => 'http://example.com/datafeed',
+			'datafeed_url'  => 'http://example.com/feed',
+			'datafeed_title'=> 'Test Feed',
+			'datafeed_name' => 'Test Organization',
+			'same_as'       => ['http://example.com/org'],
+			'databus_id'    => 'http://example.com/databus',
+			'url_count'     => 0,
+			'start_time'    => '2025-11-26T10:00:00Z',
+			'end_time'      => '2025-11-26T11:00:00Z',
+      'skip_crawl'    => true,
+      'crawl_name'    => 'Website skipped',
+      'crawl_description' => 'Skipped crawl because website is already loaded by another activity.'
+		}
   end
 	def test_generate_metadata_file_content
 		graph = Helper.generate_metadata_file_content(@metadata_content)
@@ -38,7 +53,7 @@ class HelperTest < Minitest::Test
 
   def test_datafeedElement
     graph = Helper.generate_metadata_file_content(@metadata_content)
-    solution = graph.query([nil, RDF::URI("https://schema.org/dataFeedElement"), nil])
+    solution = graph.query([nil, RDF::URI("http://schema.org/dataFeedElement"), nil])
     assert_equal RDF::URI, solution.first&.object&.class, "Expected schema:datafeedElement object to be of type RDF::URI"
   end
 
@@ -60,5 +75,16 @@ class HelperTest < Minitest::Test
     assert_equal RDF::Literal::DateTime, solution.first.object.class, "Expected prov:startedAtTime object to be of type RDF::Literal::DateTime"
   end
 
+  def test_crawl_name_does_not_exist_when_not_skipped
+    graph = Helper.generate_metadata_file_content(@metadata_content)
+    solution = graph.query([nil, RDF::Vocab::SCHEMA.name, RDF::Literal.new(@skipped_metadata_content['crawl_name'])]).size
+    assert_equal 0, solution, "Did not expect to find schema:name with the crawl_name value"
+  end
+
+  def test_crawl_name
+    graph = Helper.generate_metadata_file_content(@skipped_metadata_content)
+    solution = graph.query([nil, RDF::Vocab::SCHEMA.name, RDF::Literal.new(@skipped_metadata_content['crawl_name'])]).size
+    assert_equal 1, solution, "Expected to find one schema:name with the crawl_name value"
+  end
 
 end

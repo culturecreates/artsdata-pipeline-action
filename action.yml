@@ -94,14 +94,14 @@ runs:
         mkdir -p output
         mkdir -p metadata
 
-        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.6.12
+        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.6.13
         docker run --shm-size=1g \
           -v $(pwd)/config.yml:/usr/src/app/config.yml:ro \
           -v $(pwd)/html-extract-config.json:/usr/src/app/html-extract-config.json:ro \
           -v $(pwd)/metadata-file.json:/usr/src/app/metadata-file.json:ro \
           -v $(pwd)/metadata:/usr/src/app/metadata \
           -v $(pwd)/output:/usr/src/app/output \
-          ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.6.12 \
+          ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:v3.6.13 \
           /usr/src/app/config.yml \
           /usr/src/app/html-extract-config.json \
           /usr/src/app/metadata-file.json

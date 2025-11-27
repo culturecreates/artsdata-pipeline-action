@@ -87,13 +87,21 @@ if mode.include?('fetch')
       robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, page_fetcher: page_fetcher)
     )
     start_time = Time.now.utc.iso8601
-    crawler.crawl()
-    graph = crawler.get_graph()
-    end_time = Time.now.utc.iso8601
+    if metadata_content['skip_crawl']
+      puts "Skipping crawl as per metadata file instruction."
+      graph = RDF::Graph.new
+      end_time = start_time
+      visited_count = 0
+    else
+      crawler.crawl()
+      graph = crawler.get_graph()
+      end_time = Time.now.utc.iso8601
+      visited_count = crawler.get_visited_count()
+    end
     if metadata_exists
       metadata_content['start_time'] = start_time
       metadata_content['end_time'] = end_time
-      metadata_content['url_count'] = crawler.get_visited_count()
+      metadata_content['url_count'] = visited_count
     end
   else
     # Use UrlFetcher and GraphFetcher when entity identifier is provided
@@ -150,13 +158,15 @@ if mode.include?('fetch')
   )
 
   if graph.size == 0
-    notification_message = 'No RDF data extracted. Exiting...'
+    notification_message = 'No RDF data extracted'
     puts notification_message
     notification_instance.send_notification(
       stage: 'graph_fetched',
       message: notification_message
     )
-    exit(1)
+    if !metadata_exists
+      exit(1)
+    end
   end 
 
   entity_types = Helper.fetch_types(graph: graph)
@@ -165,7 +175,7 @@ if mode.include?('fetch')
     message: 'entity types fetched: ' + entity_types.map(&:to_s).join(', ')
   )
 
-  if !mode.include?('test')
+  if !mode.include?('test') && graph.size != 0
     download_file ||= "output/#{artifact}.jsonld"
     github_saver = Helper.get_github_saver(
       repository: repository,
@@ -183,37 +193,31 @@ if mode.include?('fetch')
 end
 
 if mode.include?('push')
-  databus_service = Helper.get_databus_service(
-    artifact: artifact,
-    publisher: publisher,
-    repository: repository,
-    databus_url: databus_url 
-  )
+  if download_url
+    databus_service = Helper.get_databus_service(
+      artifact: artifact,
+      publisher: publisher,
+      repository: repository,
+      databus_url: databus_url 
+    )
 
-  response = databus_service.send(
-    download_url: download_url,
-    download_file: download_file,
-    version: version,
-    comment: comment,
-    group: group
-  )
-
-  case response[:status]
-  when :success
-    notification_instance.send_notification(stage: 'databus_push', message: response[:message])
-  when :error
-    notification_instance.send_notification(stage: 'databus_push', message: "Error occurred: #{response[:message]}")
-    exit(1)
-  when :exception
-    notification_instance.send_notification(stage: 'databus_push', message: "Exception occurred: #{response[:message]}")
-    exit(1)
-  else
-    notification_instance.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
-    exit(1)
+    response = databus_service.send(
+      download_url: download_url,
+      download_file: download_file,
+      version: version,
+      comment: comment,
+      group: group
+    )
+    dataset = response[:dataset] || nil
+    Helper.send_databus_notification(notification_instance, response)
   end
 
   if metadata_exists
-    metadata_content['databus_id'] = response[:dataset]
+    metadata_content['databus_id'] = dataset
+    if graph.size == 0 && !metadata_content['skip_crawl']
+      metadata_content['crawl_name'] = 'Empty Graph'
+      metadata_content['crawl_description'] = 'This crawl resulted in an empty graph.'
+    end
     metadata_graph = Helper.generate_metadata_file_content(metadata_content)
     download_file = "metadata/#{metadata_content['file_name']}"
     github_saver = Helper.get_github_saver(
@@ -252,19 +256,7 @@ if mode.include?('push')
       group: group
     )
 
-    case response[:status]
-    when :success
-      notification_instance.send_notification(stage: 'databus_push', message: response[:message])
-    when :error
-      notification_instance.send_notification(stage: 'databus_push', message: "Error occurred: #{response[:message]}")
-      exit(1)
-    when :exception
-      notification_instance.send_notification(stage: 'databus_push', message: "Exception occurred: #{response[:message]}")
-      exit(1)
-    else
-      notification_instance.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
-      exit(1)
-    end
+    Helper.send_databus_notification(notification_instance, response)
   end
 end
 

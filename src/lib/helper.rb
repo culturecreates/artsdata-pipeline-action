@@ -133,6 +133,8 @@ module Helper
     datafeed_url = metadata_content['datafeed_url']
     datafeed_title = metadata_content['datafeed_title']
     datafeed_name = metadata_content['datafeed_name']
+    crawl_name = metadata_content['crawl_name']
+    crawl_description = metadata_content['crawl_description']
     same_as = metadata_content['same_as']
 
     # data to be fetched during the crawl
@@ -148,36 +150,39 @@ module Helper
       "@context" => {
         "schema" => "http://schema.org/",
         "prov"   => "http://www.w3.org/ns/prov#",
-        "adr"    => "http://kg.artsdata.ca/"
+        "adr"    => "http://kg.artsdata.ca/",
+        "xsd"    => "http://www.w3.org/2001/XMLSchema#"
       },
       "@graph" => [
         {
           "@id"   => datafeed_uri,
           "@type" => "schema:DataFeed",
           "schema:name" => datafeed_title,
-          "schema:datafeedElement" => datafeed_url
+          "schema:dataFeedElement" => { "@id" => datafeed_url }
         },
         {
           "@id" => org_uri,
           "@type" => "schema:Organization",
           "schema:name" => datafeed_name,
           "schema:sameAs" => same_as,
-          "schema:url" => datafeed_url
+          "schema:url" => { "@id" => datafeed_url }
         },
         {
           "@id" => crawl_uri,
           "@type" => "prov:Activity",
-          "prov:used" => datafeed_url,
-          "prov:startedAtTime" => start_time,
-          "prov:endedAtTime" => end_time,
-          "prov:wasInformedBy" => "http://kg.artsdata.ca/resource/SpiderActivity",
+          "schema:name" => crawl_name,
+          "schema:description" => crawl_description,
+          "prov:used" => { "@id" => datafeed_url },
+          "prov:startedAtTime" => { "@value" => start_time, "@type" => "xsd:dateTime" },
+          "prov:endedAtTime"   => { "@value" => end_time,   "@type" => "xsd:dateTime" },
+          "prov:wasInformedBy" => { "@id" => "http://kg.artsdata.ca/resource/SpiderActivity"},
           "schema:additionalProperty" => {
             "@type" => "schema:PropertyValue",
             "schema:name" => "urlsCrawledCount",
             "schema:value" => url_count
           }
         },
-        {
+          databus_id && {
           "@id" => databus_id,
           "@type" => "prov:Entity",
           "prov:wasGeneratedBy" => crawl_uri
@@ -197,5 +202,21 @@ module Helper
       graph << statement
     end
     graph
+  end
+
+  def self.send_databus_notification(notification_instance, response)
+    case response[:status]
+    when :success
+      notification_instance.send_notification(stage: 'databus_push', message: response[:message])
+    when :error
+      notification_instance.send_notification(stage: 'databus_push', message: "Error occurred: #{response[:message]}")
+      exit(1)
+    when :exception
+      notification_instance.send_notification(stage: 'databus_push', message: "Exception occurred: #{response[:message]}")
+      exit(1)
+    else
+      notification_instance.send_notification(stage: 'databus_push', message: "Unknown status: #{response[:status]}")
+      exit(1)
+    end
   end
 end
