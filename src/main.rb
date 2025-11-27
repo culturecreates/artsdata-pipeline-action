@@ -215,7 +215,7 @@ if mode.include?('push')
   if metadata_exists
     metadata_content['databus_id'] = dataset
     if graph.size == 0 && !metadata_content['skip_crawl']
-      metadata_content['crawl_name'] = 'Empty Graph'
+      metadata_content['crawl_name'] = 'No Structured Data Found'
       metadata_content['crawl_description'] = 'This crawl resulted in an empty graph.'
     end
     metadata_graph = Helper.generate_metadata_file_content(metadata_content)
