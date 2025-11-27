@@ -179,10 +179,9 @@ module SpiderCrawlerService
 
     private
     def limit_entities_by_count(max_limit, classes)
-      types = [RDF::Vocab::SCHEMA.Organization, RDF::Vocab::SCHEMA.LocalBusiness]
       entities_to_delete = Set.new
       entities = []
-      types.each do |type|
+      classes.each do |type|
         entities.concat(@graph.query([nil, RDF.type, type]).map { |solution| solution.subject })
       end
       if entities.length > max_limit
