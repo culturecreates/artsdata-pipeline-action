@@ -150,7 +150,7 @@ module Helper
       "@context" => {
         "schema" => "http://schema.org/",
         "prov"   => "http://www.w3.org/ns/prov#",
-        "adr"    => "http://kg.artsdata.ca/",
+        "adr"    => "http://kg.artsdata.ca/resource/",
         "xsd"    => "http://www.w3.org/2001/XMLSchema#"
       },
       "@graph" => [
@@ -185,7 +185,7 @@ module Helper
           databus_id && {
           "@id" => databus_id,
           "@type" => "prov:Entity",
-          "prov:wasGeneratedBy" => crawl_uri
+          "prov:wasGeneratedBy" => { "@id" => crawl_uri }
         },
         {
           "@id" => "adr:SpiderActivity",
