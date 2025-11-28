@@ -90,15 +90,18 @@ if mode.include?('fetch')
     if metadata_content['skip_crawl']
       puts "Skipping crawl as per metadata file instruction."
       graph = RDF::Graph.new
+      structured_score = 0
       end_time = start_time
       visited_count = 0
     else
       crawler.crawl()
       graph = crawler.get_graph()
+      structured_score = crawler.get_structured_score()
       end_time = Time.now.utc.iso8601
       visited_count = crawler.get_visited_count()
     end
     if metadata_exists
+      metadata_content['structured_score'] = structured_score
       metadata_content['start_time'] = start_time
       metadata_content['end_time'] = end_time
       metadata_content['url_count'] = visited_count

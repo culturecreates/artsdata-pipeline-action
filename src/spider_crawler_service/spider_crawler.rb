@@ -11,11 +11,17 @@ module SpiderCrawlerService
       @atleast_one_page_loaded = false
       @visited = Set.new
       @max_depth = Config::SPIDER_CRAWLER[:default_max_depth]
+      @structured_score = 0.0
     end
 
     public
     def get_visited_count()
       @visited.size
+    end
+
+    public
+    def get_structured_score()
+      @structured_score
     end
 
     public
@@ -32,25 +38,31 @@ module SpiderCrawlerService
       queue = @url.map { |u| [u, starting_score, 0] }
       crawl_queue(queue: queue)
       if !@atleast_one_page_loaded
-        notification_message = 'No pages were loaded. Check your starting URL. Exiting...'
+        notification_message = 'No pages were loaded. Check your starting URL.'
         puts notification_message
         NotificationService::WebhookNotification.instance.send_notification(
           stage: 'spider_crawling',
           message: notification_message
         )
-        exit(1)
+        return
       end
       if !@graph.empty?
-        @graph = @sparql.perform_sparql_transformation(@graph, "fix_entity_type_capital.sparql")
-        @graph = @sparql.perform_sparql_transformation(@graph, "fix_address_country_name.sparql")
-        @graph = @sparql.perform_sparql_transformation(@graph, "fix_malformed_urls.sparql")
-        @graph = @sparql.perform_sparql_transformation(@graph, "fix_wikidata_uri.sparql")
-        @graph = @sparql.perform_sparql_transformation(@graph, "fix_isni.sparql")
-        @graph = @sparql.perform_sparql_transformation(@graph, "collapse_duplicate_contact_pointblanknodes.sparql")
+        transformations = [
+          "fix_entity_type_capital.sparql",
+          "fix_address_country_name.sparql",
+          "fix_malformed_urls.sparql",
+          "fix_wikidata_uri.sparql",
+          "fix_isni.sparql",
+          "collapse_duplicate_contact_pointblanknodes.sparql"
+        ]
+        transformations.each do |file|
+          @graph = @sparql.perform_sparql_transformation(@graph, file)
+        end
       else
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
       shrink_graph()
+      @structured_score = @sparql.query_graph(@graph, "score_algorithm.sparql").first.object.to_f
     end
 
     private
@@ -68,10 +80,7 @@ module SpiderCrawlerService
         puts "Limiting organizations from #{organization_count} to #{max_organization_count}"
         limit_entities_by_count(
           max_organization_count, 
-          [
-            RDF::Vocab::SCHEMA.Organization, 
-            RDF::Vocab::SCHEMA.LocalBusiness
-          ]
+          Config::SPIDER_CRAWLER[:organization_types]
         )
       end
 
@@ -81,13 +90,7 @@ module SpiderCrawlerService
         puts "Limiting places from #{place_count} to #{max_place_count}"
         limit_entities_by_count(
           max_place_count, 
-          [
-            RDF::Vocab::SCHEMA.Place, 
-            RDF::Vocab::SCHEMA.PerformingArtsTheater, 
-            RDF::Vocab::SCHEMA.MusicVenue, 
-            RDF::Vocab::SCHEMA.CivicStructure, 
-            RDF::Vocab::SCHEMA.MovieTheater
-          ]
+          Config::SPIDER_CRAWLER[:place_types]
         )
       end
 
@@ -97,9 +100,7 @@ module SpiderCrawlerService
         puts "Limiting people from #{person_count} to #{max_person_count}"
         limit_entities_by_count(
           max_person_count, 
-          [
-            RDF::Vocab::SCHEMA.Person
-          ]
+          Config::SPIDER_CRAWLER[:person_types]
         )
       end
     end
@@ -134,19 +135,24 @@ module SpiderCrawlerService
 
         new_links = fetch_links(nokogiri_doc: nokogiri_doc, page_type: page_type)
         loaded_graph = fetch_graph(page_url: link, page_data: page_data)
-        graph_score = calculate_graph_score(graph: loaded_graph)
-        if graph_score == 0 || loaded_graph.empty?
+        event_count = @sparql.query_graph(loaded_graph, "event_count.sparql").first[:count].to_i
+        if event_count == 0 || loaded_graph.empty?
           puts "No relevant RDF data found at #{link}, the graph will not be loaded." 
         else
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', link)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', link)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", @base_url)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql")
+          transformations = [
+            ['add_derived_from.sparql', 'subject_url', link],
+            ['add_language.sparql', 'subject_url', link],
+            ['remove_objects.sparql'],
+            ['replace_blank_nodes.sparql', 'domain_name', @base_url],
+            ['fix_date_timezone.sparql'],
+            ['fix_schemaorg_https_objects.sparql'],
+            ['fix_date.sparql'],
+            ['fix_attendance_mode.sparql'],
+            ['fix_date_missing_seconds.sparql']
+          ]
+          transformations.each do |args|
+            loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, *args)
+          end
           @graph << loaded_graph
         end
 
@@ -164,7 +170,11 @@ module SpiderCrawlerService
           end
           next if @visited.include?(new_link) || queue.any? { |q_link, _, _| q_link == new_link }
 
-          new_score = calculate_score(url: new_link, graph_score: graph_score, is_sitemap_url: sitemap)
+          new_score = calculate_score(
+            url: new_link, 
+            graph_score: calculate_graph_score(graph: loaded_graph), 
+            is_sitemap_url: sitemap
+          )
           if new_score > 1
             queue << [new_link, new_score, depth + 1]
           end
@@ -199,12 +209,7 @@ module SpiderCrawlerService
     def limit_events_by_date(max_limit)
       start_date_pred  = RDF::Vocab::SCHEMA.startDate
 
-      event_types = [
-        RDF::Vocab::SCHEMA.Event,
-        RDF::Vocab::SCHEMA.TheaterEvent,
-        RDF::Vocab::SCHEMA.MusicEvent,
-        RDF::Vocab::SCHEMA.Festival
-      ]
+      event_types = Config::SPIDER_CRAWLER[:event_types]
 
       events_with_dates = event_types.flat_map do |event_type|
         @graph.query([nil, RDF.type, event_type]).map do |solution|
@@ -266,10 +271,7 @@ module SpiderCrawlerService
 
     private
     def calculate_score(url:, graph_score:, is_sitemap_url: false)
-      exclusion_terms = [
-        'mailto', 
-        'timestamp'
-      ]
+      exclusion_terms = Config::SPIDER_CRAWLER[:exclusion_terms]
       down = url.downcase
       return 0 if (
         exclusion_terms.any? { |term| down.include?(term) } ||
@@ -278,31 +280,7 @@ module SpiderCrawlerService
         down.count('?') > Config::SPIDER_CRAWLER[:max_query_params]
       )
 
-      scoring_terms = [
-        'sitemap',
-        'calendar',
-        'calendrier',
-        'event',
-        'events',
-        'evenement',
-        'evenements',
-        'spectacle',
-        'spectacles',
-        'exposition',
-        'season',
-        'members',
-        'performance',
-        'performances',
-        'programmation',
-        'programme',
-        'ticket',
-        'tickets',
-        'billet',
-        'billets',
-        'designer',
-        'entertainment',
-        'divertissement'
-      ]
+      scoring_terms = Config::SPIDER_CRAWLER[:scoring_terms]
 
       normalized_end = down.gsub(/[\W_]+$/, '')
 

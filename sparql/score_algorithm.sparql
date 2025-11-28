@@ -1,0 +1,328 @@
+PREFIX schema: <http://schema.org/>
+PREFIX ex: <http://example.org/>
+PREFIX sh: <http://www.w3.org/ns/shacl#> 
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+CONSTRUCT {
+   # Returns a single triple with the average score of the dataset
+   _:dataset  ex:averageScorePercent ?averageScore .
+}
+WHERE {
+  {
+    SELECT (AVG(?normalizedScore) as ?averageScore)
+    where {
+      # TODO: use inferencing to get all Event sub-classes
+      values ?event_type { schema:Event schema:TheaterEvent schema:MusicEvent schema:EventSeries}
+      ?event a ?event_type .
+      # Nest DatasetBreakdown
+      BIND(BNODE() as ?DatasetBreakdown) .
+
+
+      ########################
+      # startDate: 12 points
+      ########################
+
+      OPTIONAL {
+        ?event schema:startDate ?startDate .
+        OPTIONAL {
+          ?warning_startDate sh:focusNode ?event ; sh:resultPath schema:startDate .
+        }
+        filter(!BOUND(?warning_startDate))
+      }
+      BIND(IF(BOUND(?startDate),12,0) as ?startDate_score)
+
+
+      ########################
+      # Required properties: 8 points
+      ########################
+
+      # event name
+      OPTIONAL {
+        ?event schema:name ?name .
+        FILTER (?name != "")
+      }
+      BIND(IF(BOUND(?name),8,0) as ?name_score)
+
+      # location type
+      OPTIONAL {
+        ?event schema:location ?loc .
+        ?loc a ?location_type . 
+      }
+      BIND(IF(BOUND(?location_type),8,0) as ?location_type_score)
+
+
+      ########################
+      # Disambiguation properties: 4 points
+      ########################
+      
+      # location name
+      OPTIONAL {
+        ?event schema:location/schema:name ?location_name . 
+        FILTER (?location_name != "")
+      }
+      BIND(IF(BOUND(?location_name),4,0) as ?location_name_score)
+
+      # location postalCode
+      OPTIONAL {
+        ?event schema:location/schema:address? ?postal_address .
+        ?postal_address schema:postalCode ?location_postalCode .
+        OPTIONAL {
+          ?warning_postalCode sh:focusNode ?postal_address ; sh:resultPath schema:postalCode .
+        }
+        filter(!BOUND(?warning_postalCode))
+      }
+      BIND(IF(BOUND(?location_postalCode),4,0) as ?location_postalCode_score)
+
+      # location sameAs
+      OPTIONAL {
+        ?event schema:location ?loc .
+        ?loc schema:sameAs ?location_sameAs .
+        OPTIONAL {
+          ?warning sh:focusNode ?loc ; sh:resultPath schema:location .
+        }
+        filter(!BOUND(?warning))
+      }
+      BIND(IF(BOUND(?location_sameAs),4,0) as ?location_sameAs_score)
+
+      ########################
+      # 2 points - Recommended properties
+      ########################
+
+      # event id 
+      OPTIONAL {
+        # check if the event has an @id
+        ?warning_id sh:focusNode ?event ;   sh:sourceConstraintComponent sh:NodeKindConstraintComponent .
+      }
+      OPTIONAL {
+        # check if the event @id is the same as the URL
+        ?event schema:url ?url_is_event_id .
+        filter(?event = ?url_is_event_id)
+      }
+      # if the event has an @id and it is not the same as the URL, then give 2 points
+      BIND(IF(!BOUND(?warning_id) && !BOUND(?url_is_event_id),2,0) as ?event_id_score)
+      
+      # url
+      OPTIONAL {
+        ?event schema:url ?url .
+      }
+      BIND(IF(BOUND(?url),2,0) as ?url_score)
+
+      # additionalType
+      OPTIONAL {
+        ?event schema:additionalType ?additionalType .
+      }
+      BIND(IF(BOUND(?additionalType),2,0) as ?additionalType_score)
+      
+      # description
+      OPTIONAL {
+        ?event schema:description ?description .
+        filter(?description != "")
+      }
+      BIND(IF(BOUND(?description),2,0) as ?description_score)
+      
+      # image with a proper url value OR nested ImageObject with a proper image.url value
+      OPTIONAL {
+        ?event schema:image  ?image_url .
+        OPTIONAL {
+          ?warning_image sh:focusNode ?event ; sh:resultPath schema:image .
+        }
+        filter(!BOUND(?warning_image))
+        filter(str(?image_url) != "")
+      }
+      BIND(IF(BOUND(?image_url),2,0) as ?image_url_score)
+
+      # organizer.type with expected object value for the property
+      OPTIONAL {
+        ?event schema:organizer ?organizer .
+        ?organizer a ?organizer_type . 
+      }
+      BIND(IF(BOUND(?organizer_type),2,0) as ?organizer_type_score)
+
+      # organizer.sameAs with a URI constituting a unique identifier for the object
+      OPTIONAL {
+        ?event schema:organizer ?organizer .
+        ?organizer schema:sameAs ?organizer_sameAs . 
+      }
+      BIND(IF(BOUND(?organizer_sameAs),2,0) as ?organizer_sameAs_score)
+      
+      # performer.type with expected object value for the property
+      OPTIONAL {
+        ?event schema:performer ?performer .
+        ?performer a ?performer_type . 
+      }
+      BIND(IF(BOUND(?performer_type),2,0) as ?performer_type_score)
+
+      # performer.sameAs with a URI constituting a unique identifier for the object
+      OPTIONAL {
+        ?event schema:performer ?performer .
+        ?performer schema:sameAs ?performer_sameAs . 
+      }
+      BIND(IF(BOUND(?performer_sameAs),2,0) as ?performer_sameAs_score)
+
+      # offers.type with expected object value for the property (Offer or AggregateOffer)
+      OPTIONAL {
+        ?event schema:offers ?offer .
+        ?offer a schema:Offer .
+      }
+      OPTIONAL {
+        ?event schema:offers ?offer .
+        ?offer a schema:AggregateOffer .
+      }
+      BIND(IF(BOUND(?offer),2,0) as ?offer_type_score)
+
+      # offers.url
+      OPTIONAL {
+        ?event schema:offers ?offer .
+        ?offer schema:url ?offer_url .
+      }
+      BIND(IF(BOUND(?offer_url),2,0) as ?offer_url_score)
+
+
+      ########################
+      # 1 point
+      ########################
+      # schema:location.address.type
+      OPTIONAL {
+        ?event schema:location/schema:address/a ?location_address_type .
+      }
+      BIND(IF(BOUND(?location_address_type),1,0) as ?location_address_type_score)
+
+      # schema:location.url
+      OPTIONAL {
+        ?event schema:location/schema:url  ?location_url .
+      }
+      BIND(IF(BOUND(?location_url),1,0) as ?location_url_score)
+
+      # schema:location.address.streetAddress
+      OPTIONAL {
+        ?event schema:location/schema:address/schema:streetAddress  ?location_address_streetAddress .
+        filter(?location_address_streetAddress != "")
+      }
+      BIND(IF(BOUND(?location_address_streetAddress),1,0) as ?location_address_streetAddress_score)
+      
+      # schema:location.address.addressLocality
+      OPTIONAL {
+        ?event schema:location/schema:address/schema:addressLocality  ?location_address_addressLocality .
+        filter(?location_address_addressLocality != "")
+      }
+      BIND(IF(BOUND(?location_address_addressLocality),1,0) as ?location_address_addressLocality_score)
+
+      # schema:location.address.addressRegion
+      OPTIONAL {
+        ?event schema:location/schema:address/schema:addressRegion  ?location_address_addressRegion .
+        filter(?location_address_addressRegion != "")
+      }
+      BIND(IF(BOUND(?location_address_addressRegion),1,0) as ?location_address_addressRegion_score)
+
+      # schema:location.address.addressCountry
+      OPTIONAL {
+        ?event schema:location/schema:address/schema:addressCountry  ?location_address_addressCountry .
+        filter(?location_address_addressCountry != "")
+      }
+      BIND(IF(BOUND(?location_address_addressCountry),1,0) as ?location_address_addressCountry_score)
+
+      # schema:endDate
+      OPTIONAL {
+        ?event schema:endDate  ?endDate .
+        OPTIONAL {
+          ?warning_endDate sh:focusNode ?event ; sh:resultPath schema:endDate .
+        }
+        filter(!BOUND(?warning_endDate))
+      }
+      BIND(IF(BOUND(?endDate),1,0) as ?endDate_score)
+
+      # schema:eventStatus
+      OPTIONAL {
+        ?event schema:eventStatus ?eventStatus .
+        OPTIONAL {
+          ?warning_eventStatus sh:focusNode ?event ; sh:resultPath schema:eventStatus .
+        }
+        filter(!BOUND(?warning_eventStatus))
+      }
+      BIND(IF(BOUND(?eventStatus),1,0) as ?eventStatus_score)
+
+      # schema:eventAttendanceMode
+      OPTIONAL {
+        ?event schema:eventStatus ?eventAttendanceMode .
+        OPTIONAL {
+          ?warning_eventAttendanceMode sh:focusNode ?event ; sh:resultPath schema:eventAttendanceMode .
+        }
+        filter(!BOUND(?warning_eventAttendanceMode))
+      }
+      BIND(IF(BOUND(?eventAttendanceMode),1,0) as ?eventAttendanceMode_score)
+
+      # schema:doorTime
+      OPTIONAL {
+        ?event schema:doorTime ?doorTime .
+      }
+      BIND(IF(BOUND(?doorTime),1,0) as ?doorTime_score)
+
+      # schema:duration
+      OPTIONAL {
+        ?event schema:duration ?duration .
+      }
+      BIND(IF(BOUND(?duration),1,0) as ?duration_score)
+
+      # schema:mainEntityOfPage.url
+      OPTIONAL {
+        ?event schema:mainEntityOfPage/schema:url  ?mainEntityOfPage_url .
+      }
+      BIND(IF(BOUND(?mainEntityOfPage_url),1,0) as ?mainEntityOfPage_url_score)
+
+
+      ########################
+      # required properties 
+      # - defined in SHACL
+      # - if required properties are present, 
+      # - then add up the scores
+      ########################
+      OPTIONAL {
+        ?violation sh:focusNode ?event ; sh:resultSeverity sh:Violation .
+      }
+      BIND( IF(BOUND(?violation),0, 
+        ?startDate_score + 
+        ?name_score + 
+        ?location_type_score + 
+        ?location_name_score + 
+        ?location_postalCode_score +
+        ?location_sameAs_score + 
+        ?url_score +
+        ?additionalType_score +
+        ?description_score +
+        ?image_url_score +
+        ?organizer_type_score +
+        ?organizer_sameAs_score + 
+        ?performer_type_score +
+        ?performer_sameAs_score +
+        ?offer_type_score + 
+        ?event_id_score + 
+        ?offer_url_score +
+        ?location_address_type_score +
+        ?location_url_score +
+        ?location_address_streetAddress_score +
+        ?location_address_addressLocality_score +
+        ?location_address_addressRegion_score+
+        ?location_address_addressCountry_score +
+        ?endDate_score +
+        ?eventStatus_score +
+        ?eventAttendanceMode_score +
+        ?doorTime_score +
+        ?duration_score +
+        ?mainEntityOfPage_url_score 
+        ) as ?totalScore)
+      
+      # See https://github.com/culturecreates/artsdata-data-model/discussions/120#discussioncomment-10606358
+      # transform the 74-point score into a 100-point score for human 
+      # interpretation. No decimals are needed (you may round it to the integer). 
+      # Rather than giving the minimal qualification score 
+      # (28 for all three required property) a percentage of 39 (i.e. 28/74), 
+      # we would like this qualification score to be ascribed a percentage 
+      # value of 50 (and all higher scores distributed between 50 and 100).
+      # (((score-28)/46)*50) + 50
+      BIND( IF(BOUND(?violation),0,((((?totalScore - 28)/46)*50) + 50)) as ?normalizedScore)
+      
+
+      
+    }
+  }
+}

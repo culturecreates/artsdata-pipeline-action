@@ -32,6 +32,8 @@ class HelperTest < Minitest::Test
       'crawl_name'    => 'Website skipped',
       'crawl_description' => 'Skipped crawl because website is already loaded by another activity.'
 		}
+
+    @metadata_content_with_score = @metadata_content.merge({'structured_score' => 85.0})
   end
 	def test_generate_metadata_file_content
 		graph = Helper.generate_metadata_file_content(@metadata_content)
@@ -85,6 +87,19 @@ class HelperTest < Minitest::Test
     graph = Helper.generate_metadata_file_content(@skipped_metadata_content)
     solution = graph.query([nil, RDF::Vocab::SCHEMA.name, RDF::Literal.new(@skipped_metadata_content['crawl_name'])]).size
     assert_equal 1, solution, "Expected to find one schema:name with the crawl_name value"
+  end
+
+  def test_structured_score_included
+    graph = Helper.generate_metadata_file_content(@metadata_content_with_score)
+    additional_properties = graph.query([nil, RDF::Vocab::SCHEMA.additionalProperty, nil])
+    additional_properties.each do |property|
+      value = graph.query([property.object, RDF::Vocab::SCHEMA.name, nil]).first&.object
+      if value == RDF::Literal.new('structuredScore')
+        score_value = graph.query([property.object, RDF::Vocab::SCHEMA.value, nil]).first.object.to_s
+        assert_equal "85.0", score_value, "Expected structuredScore value to be 85"
+        return
+      end
+    end
   end
 
 end

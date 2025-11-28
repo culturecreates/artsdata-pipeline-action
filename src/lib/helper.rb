@@ -125,7 +125,6 @@ module Helper
   end
 
   def self.generate_metadata_file_content(metadata_content)
-    uuid_org   = SecureRandom.uuid
     uuid_crawl = SecureRandom.uuid
 
     # data from the caller workflow 
@@ -142,9 +141,10 @@ module Helper
     url_count = metadata_content['url_count']
     start_time = metadata_content['start_time']
     end_time = metadata_content['end_time']
+    structured_score = metadata_content['structured_score'].to_s
 
     crawl_uri = "urn:crawl:#{uuid_crawl}"
-    org_uri = "urn:organization:#{uuid_org}"
+    org_uri = "urn:organization:#{datafeed_url.split('//').last}"
 
     jsonld = {
       "@context" => {
@@ -176,11 +176,18 @@ module Helper
           "prov:startedAtTime" => { "@value" => start_time, "@type" => "xsd:dateTime" },
           "prov:endedAtTime"   => { "@value" => end_time,   "@type" => "xsd:dateTime" },
           "prov:wasInformedBy" => { "@id" => "http://kg.artsdata.ca/resource/SpiderActivity"},
-          "schema:additionalProperty" => {
+          "schema:additionalProperty" => [
+            {
             "@type" => "schema:PropertyValue",
             "schema:name" => "urlsCrawledCount",
             "schema:value" => url_count
-          }
+            },
+            {
+            "@type" => "schema:PropertyValue",
+            "schema:name" => "structuredScore",
+            "schema:value" => structured_score
+            }
+          ],
         },
           databus_id && {
           "@id" => databus_id,
