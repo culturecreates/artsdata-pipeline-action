@@ -33,7 +33,7 @@ class HelperTest < Minitest::Test
       'crawl_description' => 'Skipped crawl because website is already loaded by another activity.'
 		}
 
-    @metadata_content_with_score = @metadata_content.merge({'structured_score' => 85.0})
+    @metadata_content_with_score = @metadata_content.merge({'structured_score' => 85.12345})
   end
 	def test_generate_metadata_file_content
 		graph = Helper.generate_metadata_file_content(@metadata_content)
@@ -96,7 +96,7 @@ class HelperTest < Minitest::Test
       value = graph.query([property.object, RDF::Vocab::SCHEMA.name, nil]).first&.object
       if value == RDF::Literal.new('structuredScore')
         score_value = graph.query([property.object, RDF::Vocab::SCHEMA.value, nil]).first.object.to_s
-        assert_equal "85.0", score_value, "Expected structuredScore value to be 85"
+        assert_equal "85.12345", score_value, "Expected structuredScore value to be 85"
         return
       end
     end

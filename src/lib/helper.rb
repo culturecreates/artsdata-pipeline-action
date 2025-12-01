@@ -135,6 +135,7 @@ module Helper
     crawl_name = metadata_content['crawl_name']
     crawl_description = metadata_content['crawl_description']
     same_as = metadata_content['same_as']
+    artsdara_uri = metadata_content['artsdata_uri']
 
     # data to be fetched during the crawl
     databus_id = metadata_content['databus_id']
@@ -144,7 +145,7 @@ module Helper
     structured_score = metadata_content['structured_score'].to_s
 
     crawl_uri = "urn:crawl:#{uuid_crawl}"
-    org_uri = "urn:organization:#{datafeed_url.split('//').last}"
+    org_uri = "urn:organization:#{same_as.first.split('/').last}"
 
     jsonld = {
       "@context" => {
@@ -165,7 +166,11 @@ module Helper
           "@type" => "schema:Organization",
           "schema:name" => datafeed_name,
           "schema:sameAs" => same_as,
-          "schema:url" => { "@id" => datafeed_url }
+          "schema:url" => { "@id" => datafeed_url, "@type" => "schema:Website" }
+        },
+        artsdara_uri && {
+          "@id" => org_uri,
+          "schema:sameAs" => { "@id" => artsdara_uri }
         },
         {
           "@id" => crawl_uri,
@@ -185,7 +190,10 @@ module Helper
             {
             "@type" => "schema:PropertyValue",
             "schema:name" => "structuredScore",
-            "schema:value" => structured_score
+            "schema:value" => {
+              "@value" => structured_score,
+              "@type"  => "xsd:decimal"
+            }
             }
           ],
         },
