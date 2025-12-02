@@ -145,7 +145,7 @@ module Helper
     structured_score = metadata_content['structured_score'].to_s
 
     crawl_uri = "urn:crawl:#{uuid_crawl}"
-    org_uri = "urn:organization:#{same_as.first.split('/').last}"
+    org_uri = "urn:organization:#{same_as.split('/').last}"
 
     jsonld = {
       "@context" => {
@@ -165,7 +165,7 @@ module Helper
           "@id" => org_uri,
           "@type" => "schema:Organization",
           "schema:name" => datafeed_name,
-          "schema:sameAs" => same_as,
+          "schema:sameAs" => { "@id" => same_as },
           "schema:url" => { "@id" => datafeed_url, "@type" => "schema:Website" }
         },
         artsdara_uri && {
