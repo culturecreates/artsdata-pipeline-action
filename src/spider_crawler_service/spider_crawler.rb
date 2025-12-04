@@ -153,7 +153,7 @@ module SpiderCrawlerService
           transformations.each do |args|
             loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, *args)
           end
-          @graph << loaded_graph
+          @graph = Helper.merge_graph(@graph, loaded_graph)
         end
 
         new_links.each do |new_link|
@@ -230,28 +230,15 @@ module SpiderCrawlerService
       events_to_delete = sorted.drop(max_limit).map { |h| h[:event] }
       nodes_to_delete = Set.new
       events_to_delete.each do |event|
-        collect_connected_entities(event, nodes_to_delete)
+        Helper.collect_connected_entities(@graph, event, nodes_to_delete)
         parents = @graph.query([nil, nil, event]).map { |st| st.subject }
         parents.each do |parent|
-          collect_connected_entities(parent, nodes_to_delete)
+          Helper.collect_connected_entities(@graph, parent, nodes_to_delete)
         end
       end
 
       to_delete = @graph.statements.select { |st| nodes_to_delete.include?(st.subject) }
       @graph.delete(*to_delete)
-    end
-
-    private
-    def collect_connected_entities(node, accumulator)
-      return if accumulator.include?(node)
-      accumulator.add(node)
-
-      @graph.query([node, nil, nil]).each do |st|
-        obj = st.object
-        if obj.resource?
-          collect_connected_entities(obj, accumulator)
-        end
-      end
     end
 
     public

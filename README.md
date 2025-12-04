@@ -115,6 +115,81 @@ html-extract-config format:
 
 <br>
 
+## Test Mode
+
+Test mode can be activated by setting the mode as `fetch-test` which limits the maximum URLs that can be crawled to 5 and does not save the data. Useful if you are experimenting with the entity-identifier input. 
+
+## Spider Crawler
+
+The spider crawler kicks in when the entity identifier is not provided. The system starts from the base url and works its way up to find relevant event, place, organization and person data. 
+
+### Pseudo Code for spider
+
+1. Initialize
+    - Set an initial score for the base URL.
+    - Create an empty graph and an empty priority queue for discovered URLs.
+
+2. Robots.txt Handling
+    - Check if robots.txt exists for the base domain.
+    - If it exists, parse and extract:
+        - Allowed and disallowed paths per user-agent
+        - Sitemap URLs
+        - Crawl rules relevant to the configured user-agent
+
+    - If it does not exist, assume all paths are allowed.
+
+3. Identify Starting Sitemap
+    - Determine initial sitemap source:
+        - Use sitemap URLs found in robots.txt, or
+        - Use default location: base_url/sitemap.xml
+
+4. Crawl Sitemap
+    - Extract URLs from the sitemap.
+    - For each discovered URL:
+        - Validate the URL using allowed/disallowed paths and exclusion keywords.
+        - Load and parse linked data found on the page.
+        - Apply SPARQL transformations and insert results into the main RDF graph.
+        - Compute URL score based on:
+            1. Graph score - derived from counts of Events, Organizations, Places, and People
+            2. URL score - based on scoring terms in configuration
+            3. Sitemap bonus - if URL came from a sitemap
+        - Add the URL to the priority queue (sorted by score).
+
+5. Queue-Driven Crawl
+    - Continuously dequeue the highest-scored URL.
+    - Repeat the URL processing steps (validation, loading, scoring, graph merge).
+    - Stop when:
+        1. Maximum crawl URL limit is reached, or
+        2. The queue becomes empty.
+
+6. Fallback Crawl
+    - After sitemap-based crawling completes, repeat the queue process starting directly from the base URL.
+
+7. Graph Optimization
+    - Reduce / trim the graph data based on configured maximum counts for Events, Organizations, Places, and People.
+
+8. Finalize Output
+    - Push the resulting optimized graph to the Databus.
+
+### Robots.txt parsing
+
+RobotsTxtParser parses and evaluates robots.txt files according to the Robots Exclusion Protocol (REP). 
+
+It defines a `RobotsTxt` class that:
+- Parses a robots.txt file and organizes its directives (User-agent, Allow, Disallow, Sitemap)
+  into a structured set of rules grouped by user agent.
+- Normalizes and escapes rule paths safely, handling both encoded and unencoded inputs.
+- Converts robots.txt wildcard patterns (`*`) and end markers (`$`) into
+  Ruby-compatible regular expressions for matching URLs.
+- Implements user-agent matching logic that follows the "longest match wins" rule.
+- Provides a method `parse` which parses the contents of a robots.txt file and builds a mapping of crawl rules (Allow/Disallow) for each user agent and fetches the common sitemap URLs.
+- Provides a method `allowed?` to determine if a specific URL path is allowed
+  for a given user agent.
+- Rules applied:
+    - Uses the longest matching rule wins principle.
+    - If two rules match with equal length, Allow overrides Disallow.
+    - If no rules match, the path is allowed by default.
+    
 ## Potential Issues
 
 Remember to use only unreserved characters ([0-9a-zA-Z-._]) for input variables where mentioned.
@@ -124,7 +199,7 @@ Follow these instructions to make a new release.
 
 ## Steps
 1. Run tests with `rake` and ensure all pass
-2. Update file `action.yml` with the new version vX.X.X (2 different places in file)
+2. Update file `action.yml` with the new version vX.X.X
 3. Commit changes
 4. Create a new Github **release** with the new version tag vX.X.X
 

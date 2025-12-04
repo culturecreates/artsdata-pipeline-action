@@ -1,9 +1,9 @@
 require 'minitest/autorun'
-require_relative '../src/lib/helper'
+require_relative '../../src/lib/helper'
 require 'json/ld'
 require 'rdf'
 
-class HelperTest < Minitest::Test
+class MetadataCreationTest < Minitest::Test
 
   def setup
     @metadata_content = {
@@ -36,6 +36,9 @@ class HelperTest < Minitest::Test
     @metadata_content_with_score = @metadata_content.merge({'structured_score' => 85.12345})
 
     @metadata_content_with_artsdata_uri = @metadata_content.merge({'artsdata_uri' => 'http://kg.artsdata.ca/resource/org/TestOrganization'})
+
+    @existing_graph = RDF::Graph.load('./test/fixtures/test_helper_duplicate_event_graph.jsonld')
+    @new_graph = RDF::Graph.load('./test/fixtures/test_helper_new_event_graph.jsonld')
   end
 	def test_generate_metadata_file_content
 		graph = Helper.generate_metadata_file_content(@metadata_content)
@@ -109,5 +112,4 @@ class HelperTest < Minitest::Test
     solution = graph.query([nil, RDF::Vocab::SCHEMA.sameAs, RDF::URI(@metadata_content_with_artsdata_uri['artsdata_uri'])]).size
     assert_equal 1, solution, "Expected to find one schema:sameAs with the artsdata_uri value"
   end
-
 end

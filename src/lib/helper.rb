@@ -234,4 +234,116 @@ module Helper
       exit(1)
     end
   end
+
+  def self.get_nested_object(graph, subject, property_path)
+    for property in property_path
+      next_subject = nil
+      graph.query([subject, property, nil]).each do |st|
+        next_subject = st.object
+        break
+      end
+      return nil if next_subject.nil?
+      subject = next_subject
+    end
+    subject
+  end
+
+  def self.merge_graph(graph, new_graph)
+    new_graph.each_statement do |stmt|
+        graph << stmt
+    end
+
+    new_events = new_graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).subjects
+
+    new_events.each do |event|
+      name = new_graph.query([event, RDF::Vocab::SCHEMA.name, nil]).first&.object
+      start_date = new_graph.query([event, RDF::Vocab::SCHEMA.startDate, nil]).first&.object
+      end_date = new_graph.query([event, RDF::Vocab::SCHEMA.endDate, nil]).first&.object
+      location_name = self.get_nested_object(
+        new_graph, 
+        event, 
+        [
+          RDF::Vocab::SCHEMA.location, 
+          RDF::Vocab::SCHEMA.name
+        ]
+      )
+      postal_code = self.get_nested_object(
+        new_graph, 
+        event, 
+        [
+          RDF::Vocab::SCHEMA.location, 
+          RDF::Vocab::SCHEMA.address, 
+          RDF::Vocab::SCHEMA.postalCode
+        ]
+      )
+
+      duplicates = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).subjects.select do |existing_event|
+        existing_name = graph.query([existing_event, RDF::Vocab::SCHEMA.name, nil]).first&.object
+        existing_start_date = graph.query([existing_event, RDF::Vocab::SCHEMA.startDate, nil]).first&.object
+        existing_end_date = graph.query([existing_event, RDF::Vocab::SCHEMA.endDate, nil]).first&.object
+        existing_location_name = self.get_nested_object(
+          graph, 
+          existing_event, 
+          [
+            RDF::Vocab::SCHEMA.location, 
+            RDF::Vocab::SCHEMA.name
+          ]
+        )
+        existing_postal_code = self.get_nested_object(
+          graph, 
+          existing_event, 
+          [
+            RDF::Vocab::SCHEMA.location, 
+            RDF::Vocab::SCHEMA.address, 
+            RDF::Vocab::SCHEMA.postalCode
+          ]
+        )
+        existing_name == name &&
+        existing_start_date == start_date &&
+        (existing_end_date.nil? || end_date.nil? || existing_end_date == end_date) &&
+        (existing_location_name.nil? || location_name.nil? || existing_location_name == location_name) &&
+        (existing_postal_code.nil? || postal_code.nil? || existing_postal_code == postal_code)
+      end
+
+      next if duplicates.empty?
+
+
+      chosen = ([event] + duplicates).max_by do |e|
+        uri = e.to_s
+        score = 0
+        score += 2 unless e.node?
+        score += 1 unless uri.include?("temporary")
+        score
+      end
+
+
+      all_duplicates = duplicates + [event]
+      to_remove = all_duplicates - [chosen]
+
+      puts "Removing duplicate events: #{to_remove.map(&:to_s).join(', ')}"
+      puts "Keeping event: #{chosen.to_s}"
+
+      to_remove.each do |bad_event|
+        connected_entities = Set.new
+        collect_connected_entities(graph, bad_event, connected_entities)
+        to_delete = graph.statements.select { |st| connected_entities.include?(st.subject) }
+        graph.delete(*to_delete)
+      end
+
+    end
+    graph
+  end
+
+  def self.collect_connected_entities(graph, node, accumulator)
+    return if accumulator.include?(node)
+    accumulator.add(node)
+
+    graph.query([node, nil, nil]).each do |st|
+      obj = st.object
+      if obj.node?
+        collect_connected_entities(graph, obj, accumulator)
+      end
+    end
+  end
+
 end

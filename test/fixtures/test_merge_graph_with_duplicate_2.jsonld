@@ -1,0 +1,21 @@
+{
+  "@context": "http://schema.org/",
+  "@graph": [
+    {
+      "@id": "http://example.com/resource/event-abc123",
+      "@type": "Event",
+      "name": "Test Duplicate Event",
+      "startDate": "2025-01-10T20:00:00Z",
+      "endDate": "2025-01-10T22:00:00Z",
+      "organizer": {
+        "@type": "Organization",
+        "name": "Arts Data Organization"
+      },
+      "location": {
+        "@id": "http://example.com/resource/place-venue457",
+        "@type": "Place",
+        "name": "Arts Venue"
+      }
+    }
+  ]
+}
