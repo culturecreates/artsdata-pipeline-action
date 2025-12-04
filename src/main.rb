@@ -87,7 +87,7 @@ if mode.include?('fetch')
       robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, page_fetcher: page_fetcher)
     )
     start_time = Time.now.utc.iso8601
-    if metadata_content&.[]('skip_crawl')
+    if metadata_content&.[]('skip_crawl') == "true"
       puts "Skipping crawl as per metadata file instruction."
       graph = RDF::Graph.new
       structured_score = 0
@@ -217,7 +217,7 @@ if mode.include?('push')
 
   if metadata_exists
     metadata_content['databus_id'] = dataset
-    if graph.size == 0 && !metadata_content['skip_crawl']
+    if graph.size == 0 && metadata_content['skip_crawl'] != "true"
       metadata_content['crawl_name'] = 'No Structured Data Found'
       metadata_content['crawl_description'] = 'This crawl resulted in an empty graph.'
     end
