@@ -249,9 +249,7 @@ module Helper
   end
 
   def self.merge_graph(graph, new_graph)
-    new_graph.each_statement do |stmt|
-        graph << stmt
-    end
+    graph << new_graph
 
     new_events = new_graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).subjects
 
@@ -319,6 +317,10 @@ module Helper
 
       all_duplicates = duplicates + [event]
       to_remove = all_duplicates - [chosen]
+
+      if to_remove.empty?
+        next
+      end
 
       puts "Removing duplicate events: #{to_remove.map(&:to_s).join(', ')}"
       puts "Keeping event: #{chosen.to_s}"

@@ -197,7 +197,7 @@ module SpiderCrawlerService
       if entities.length > max_limit
         to_delete = entities.drop(max_limit)
         to_delete.each do |org|
-          collect_connected_entities(org, entities_to_delete)
+          Helper.collect_connected_entities(org, entities_to_delete)
           @graph.delete(*@graph.query([nil, nil, org]))
         end
       end
