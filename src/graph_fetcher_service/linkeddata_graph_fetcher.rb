@@ -49,7 +49,7 @@ module GraphFetcherService
           puts "No RDF data found at #{entity_url}, skipping SPARQL transformations." 
         end
 
-        graph = Helper.merge_graph(@graph, loaded_graph)
+        graph = Helper.merge_graph(graph, loaded_graph)
       end
       if !graph.empty?
         graph = @sparql.perform_sparql_transformation(graph, "fix_entity_type_capital.sparql")
