@@ -128,10 +128,16 @@ module SpiderCrawlerService
           @atleast_one_page_loaded = true
         end
         page_type = Helper.get_page_type(content_type)
-        nokogiri_doc = Nokogiri::HTML(page_data)
-        if page_type == :unknown
-          puts "Skipping non-HTML/XML content at #{link} (content type: #{content_type})"
-        end
+        nokogiri_doc =
+          case page_type
+          when :xml
+            Nokogiri::XML(page_data)
+          when :html
+            Nokogiri::HTML(page_data)
+          else
+            puts "Skipping non-HTML/XML content at #{link} (content type: #{content_type})"
+            next
+          end
 
         new_links = fetch_links(nokogiri_doc: nokogiri_doc, page_type: page_type)
         loaded_graph = fetch_graph(page_url: link, page_data: page_data)

@@ -25,7 +25,16 @@ module UrlFetcherService
             @atleast_one_page_loaded = true
           end
           page_type = Helper.get_page_type(content_type)
-          main_doc = Nokogiri::HTML(page_data)
+          main_doc =
+            case page_type
+            when :xml
+              Nokogiri::XML(page_data)
+            when :html
+              Nokogiri::HTML(page_data)
+            else
+              puts "Skipping non-HTML/XML content at #{link} (content type: #{content_type})"
+              next
+            end
           number_of_entities = @urls.length
           @urls.concat(fetch_url_from_page_data(page_data: main_doc, page_type: page_type, entity_identifier: identifier))
           @urls = @urls.uniq
