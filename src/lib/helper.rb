@@ -248,10 +248,21 @@ module Helper
     subject
   end
 
+  def self.get_subjects_multitype(graph, types)
+    subjects = Set.new
+    types.each do |type|
+      graph.query([nil, RDF.type, type]).each do |st|
+        subjects.add(st.subject)
+      end
+    end
+    subjects
+  end
+
+
   def self.merge_graph(graph, new_graph)
     graph << new_graph
 
-    new_events = new_graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).subjects
+    new_events = self.get_subjects_multitype(new_graph, Config::SPIDER_CRAWLER[:event_types])
 
     new_events.each do |event|
       name = new_graph.query([event, RDF::Vocab::SCHEMA.name, nil]).first&.object
@@ -275,7 +286,9 @@ module Helper
         ]
       )
 
-      duplicates = graph.query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).subjects.select do |existing_event|
+      original_graph_events = self.get_subjects_multitype(graph, Config::SPIDER_CRAWLER[:event_types])
+
+      duplicates = original_graph_events.select do |existing_event|
         existing_name = graph.query([existing_event, RDF::Vocab::SCHEMA.name, nil]).first&.object
         existing_start_date = graph.query([existing_event, RDF::Vocab::SCHEMA.startDate, nil]).first&.object
         existing_end_date = graph.query([existing_event, RDF::Vocab::SCHEMA.endDate, nil]).first&.object
