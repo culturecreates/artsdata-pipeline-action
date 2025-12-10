@@ -32,7 +32,7 @@ module UrlFetcherService
             when :html
               Nokogiri::HTML(page_data)
             else
-              puts "Skipping non-HTML/XML content at #{link} (content type: #{content_type})"
+              puts "Skipping non-HTML/XML content at #{url} (content type: #{content_type})"
               next
             end
           number_of_entities = @urls.length
