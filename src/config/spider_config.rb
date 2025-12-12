@@ -1,6 +1,7 @@
 module Config
   SPIDER_CRAWLER = {
     max_pages_to_crawl: 2500, # the crawl will stop when this number of pages have been visited
+    max_queue_size: 3750, # the maximum number of URLs to keep in the crawl queue, (150% of max_pages_to_crawl)
     default_max_depth: 5, # the maximum depth to crawl from the starting URLs
     starting_url_initial_score: 10, # initial score assigned to starting URLs and sitemaps
     max_event_count: 500, # maximum number of events to retain after crawling(20% of max_pages_to_crawl)

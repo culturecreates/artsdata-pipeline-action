@@ -47,6 +47,7 @@ module SpiderCrawlerService
         return
       end
       if !@graph.empty?
+        puts "Performing final SPARQL transformations on the aggregated graph."
         transformations = [
           "fix_entity_type_capital.sparql",
           "fix_address_country_name.sparql",
@@ -110,6 +111,7 @@ module SpiderCrawlerService
       user_agent = @page_fetcher.get_user_agent
       until queue.empty? || @visited.size >= Config::SPIDER_CRAWLER[:max_pages_to_crawl] do
         queue.sort_by! { |_, score, _| -score }
+        queue = queue.take(Config::SPIDER_CRAWLER[:max_queue_size])
 
         link, score, depth = queue.shift
         if !@robots_txt_content.allowed?(user_agent, link.sub(@base_url, ''))
@@ -145,6 +147,7 @@ module SpiderCrawlerService
         if event_count == 0 || loaded_graph.empty?
           puts "No relevant RDF data found at #{link}, the graph will not be loaded." 
         else
+          puts "Performing SPARQL transformations on loaded graph from #{link}."
           transformations = [
             ['add_derived_from.sparql', 'subject_url', link],
             ['add_language.sparql', 'subject_url', link],
