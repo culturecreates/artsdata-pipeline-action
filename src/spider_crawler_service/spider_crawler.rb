@@ -108,7 +108,7 @@ module SpiderCrawlerService
 
     private
     def crawl_queue(queue:, sitemap: false)
-      user_agent = @page_fetcher.get_user_agent
+      user_agent = Helper.get_user_agent()
       until queue.empty? || @visited.size >= Config::SPIDER_CRAWLER[:max_pages_to_crawl] do
         queue.sort_by! { |_, score, _| -score }
         queue = queue.take(Config::SPIDER_CRAWLER[:max_queue_size])

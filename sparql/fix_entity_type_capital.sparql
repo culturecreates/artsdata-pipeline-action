@@ -1,13 +1,14 @@
 PREFIX schema: <http://schema.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
 DELETE {
-  ?s a ?entityClass
+  ?s rdf:type ?entityClass
 }
 INSERT {
-  ?s a ?updatedEntityClass
+  ?s rdf:type ?updatedEntityClass
 }
 WHERE {
-  ?s a ?entityClass .
+  ?s rdf:type ?entityClass .
   FILTER(STRSTARTS(STR(?entityClass), STR(schema:)))
   FILTER(REGEX(SUBSTR(STRAFTER(STR(?entityClass), STR(schema:)), 1, 1), "^[a-z]"))
   BIND(URI(CONCAT(STR(schema:), UCASE(SUBSTR(STRAFTER(STR(?entityClass), STR(schema:)), 1, 1)) , SUBSTR(STRAFTER(STR(?entityClass), STR(schema:)), 2))) AS ?updatedEntityClass)

@@ -1,7 +1,6 @@
 module GraphFetcherService
   class GraphFetcher
-    def initialize(headers:, page_fetcher:, sparql:, html_extract_config:)
-      @headers = headers
+    def initialize(page_fetcher:, sparql:, html_extract_config:)
       @page_fetcher = page_fetcher
       @sparql = sparql
       @html_extract_config = html_extract_config

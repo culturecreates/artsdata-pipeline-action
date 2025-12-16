@@ -2,16 +2,16 @@ require_relative '../browser_service/browser'
 
 module PageFetcherService
   class HeadlessPageFetcher < PageFetcherService::PageFetcher
-    def initialize(headers:, browser:)
-      super(headers: headers)
-      @headers = headers
+    def initialize(browser:)
       @browser = browser
       @browser_instance = @browser.create_browser()
-      @browser_instance.headers.set(@headers) if @headers
     end
 
     def fetch_page_data(page_url:, selector:)
       timeout = 10 
+      authority = URI.parse(page_url).authority
+      headers = Helper.get_headers(authority)
+      @browser_instance.headers.set(headers)
       @browser_instance.go_to(page_url)
       start_time = Time.now
       until @browser_instance.at_css(selector)

@@ -1,28 +1,33 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX schema: <http://schema.org/>
 PREFIX schemaHttps: <https://schema.org/>
+PREFIX xhtml: <http://www.w3.org/1999/xhtml/vocab#>
 
 DELETE {
   ?s ?p ?o .
 }
 WHERE {
+  # Step 1: identify subjects to delete
   {
-    ?s a ?type ;
-       ?p ?o .
-    VALUES ?type {
-      schema:SiteNavigationElement
-      schemaHttps:SiteNavigationElement
-      schema:WPHeader
-      schema:WPFooter
-      schema:BreadcrumbList
-      schema:ListItem
+    SELECT DISTINCT ?s WHERE {
+      {
+        ?s rdf:type ?type .
+        VALUES ?type {
+          schema:SiteNavigationElement
+          schemaHttps:SiteNavigationElement
+          schema:WPHeader
+          schema:WPFooter
+          schema:BreadcrumbList
+          schema:ListItem
+        }
+      }
+      UNION
+      {
+        ?s xhtml:role ?role .
+      }
     }
   }
-  UNION
-  {
-    ?s ?predicate ?role ;
-      ?p ?o .
-    VALUES ?predicate {
-      <http://www.w3.org/1999/xhtml/vocab#role>
-    }
-  }
+
+  # Step 2: delete all triples for those subjects
+  ?s ?p ?o .
 }

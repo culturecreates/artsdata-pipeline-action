@@ -20,7 +20,7 @@ module UrlFetcherService
         loop do
           url = "#{page}#{page_number}"
           puts "Fetching entity urls from #{url}..."
-          page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: url, selector: identifier)         
+          page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: url, selector: identifier)   
           if !page_data.nil? 
             @atleast_one_page_loaded = true
           end

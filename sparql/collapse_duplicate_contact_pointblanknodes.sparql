@@ -1,26 +1,26 @@
 PREFIX schema: <http://schema.org/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 
-delete {
-    ?entity schema:contactPoint ?contactPoint .
+DELETE {
+  ?entity schema:contactPoint ?contactPoint .
 }
-insert {
-    ?entity schema:contactPoint ?prime_contactPoint .
+INSERT {
+  ?entity schema:contactPoint ?prime_contactPoint .
 }
-where {
-    ?entity a schema:Organization ;
-            schema:contactPoint ?contactPoint .
-    filter (isBLANK(?contactPoint)) 
-    filter(!isBLANK(?entity))
-    
-    # select a random blank node to use as prime
-    {
-        select ?entity (sample(?contactPoint) as ?prime_contactPoint)
-        where {
-            ?entity a schema:Organization ;
-                    schema:contactPoint ?contactPoint .
-            filter (isBLANK(?contactPoint)) 
-            filter(!isBLANK(?entity))
-        }
-        group by ?entity
+WHERE {
+  {
+    SELECT ?entity (SAMPLE(?contactPoint) AS ?prime_contactPoint)
+    WHERE {
+      ?entity a schema:Organization ;
+              schema:contactPoint ?contactPoint .
+      FILTER(isBlank(?contactPoint))
+      FILTER(!isBlank(?entity))
     }
+    GROUP BY ?entity
+  }
+
+  # only delete the other blank contactPoints
+  ?entity schema:contactPoint ?contactPoint .
+  FILTER(isBlank(?contactPoint))
+  FILTER(?contactPoint != ?prime_contactPoint)
 }

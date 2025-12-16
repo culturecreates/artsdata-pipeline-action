@@ -16,8 +16,13 @@ require_relative '../url_fetcher_service/url_fetcher'
 require_relative '../robots_txt_parser_service/robots_txt_parser'
 
 require 'securerandom'
+require 'openssl'
+require 'base64'
+require 'json'
+require 'uri'
 
 module Helper
+
   def self.check_mode_requirements(mode, config)
     required_map = {
       "fetch"      => %w[page_url],
@@ -34,9 +39,90 @@ module Helper
     end
   end
 
-  def self.get_headers(custom_user_agent)
-    linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
-    { "User-Agent" => custom_user_agent == nil ? "artsdata-crawler/#{linkeddata_version}" : custom_user_agent }
+  def self.set_custom_user_agent(user_agent)
+    ENV['CUSTOM_USER_AGENT'] = user_agent
+  end
+
+  def self.get_user_agent
+    env_user_agent = ENV['CUSTOM_USER_AGENT']
+
+    if env_user_agent && !env_user_agent.empty?
+      env_user_agent
+    else
+      linkeddata_version = Gem::Specification.find_by_name('linkeddata').version.to_s
+      "artsdata-crawler/#{linkeddata_version}"
+    end
+  end
+
+  def self.get_headers(authority)
+    headers = {}
+
+    headers["User-Agent"] = get_user_agent()
+
+    headers["Signature-Agent"] = "https://kg.artsdata.ca"
+
+    signature_headers = build_signature_headers(authority)
+    headers.merge!(signature_headers) if signature_headers
+
+    headers
+  end
+
+
+  # Functions to build JWK and calculate thumbprint for HTTP Signatures, not currently used
+  # as the keyid is hardcoded in build_signature_headers.
+  # Extract Ed25519 Public 'x' coordinate for JWK
+  def extract_ed25519_x(private_key)
+    der = private_key.public_to_der              # Convert to DER to access raw bytes
+    raw_key_bytes = der[-32..-1]                 # Extract last 32 bytes (raw public key)
+    Base64.urlsafe_encode64(raw_key_bytes, padding: false) # Return base64url encoded value
+  end
+
+  # Calculate JWK Thumbprint (keyid) for HTTP Signatures
+  def calculate_thumbprint(kty, crv, x)
+    jwk = {
+      "crv" => crv,
+      "kty" => kty,
+      "x" => x
+    }
+
+    canonical_json = JSON.generate(jwk.sort.to_h)          # Canonical JSON per RFC, sorting to ensure order of keys
+    hash = Digest::SHA256.digest(canonical_json)           # SHA-256 hash of canonical JWK
+    Base64.urlsafe_encode64(hash, padding: false)          # Base64url encode without padding
+  end
+
+  def self.build_signature_headers(authority)
+    key_path = "./private-key.pem"
+    return nil unless File.exist?(key_path)
+
+    private_key_pem = File.read(key_path)
+    private_key = OpenSSL::PKey.read(private_key_pem)
+
+    key_id = "nqBDjj0MadzG_URItCeeMStABPlylL7R_pq1aLGQCUo"
+
+    nonce   = Base64.strict_encode64(OpenSSL::Random.random_bytes(32))
+    created = Time.now.to_i
+    expires = created + 300
+
+    signature_params =
+      "(\"@authority\" \"#{authority}\");" \
+      "alg=\"ed25519\";" \
+      "keyid=\"#{key_id}\";" \
+      "nonce=\"#{nonce}\";" \
+      "created=#{created};" \
+      "expires=#{expires};" \
+      "tag=\"web-bot-auth\""
+
+    signing_base =
+      "\"@authority\": #{authority}\n" \
+      "\"@signature-params\": #{signature_params}"
+
+    signature_bytes = private_key.sign(nil, signing_base)
+    signature = Base64.strict_encode64(signature_bytes)
+
+    {
+      "Signature"       => "sig2=:#{signature}:",
+      "Signature-Input" => "sig2=#{signature_params}"
+    }
   end
 
   def self.format_urls(page_url)
@@ -45,11 +131,11 @@ module Helper
     [page_url, base_url]
   end
 
-  def self.get_page_fetcher(is_headless:, headers:)
+  def self.get_page_fetcher(is_headless:)
     if is_headless
-      PageFetcherService::HeadlessPageFetcher.new(headers: headers, browser: BrowserService::ChromeBrowser.new)
+      PageFetcherService::HeadlessPageFetcher.new(browser: BrowserService::ChromeBrowser.new)
     else
-      PageFetcherService::StaticPageFetcher.new(headers: headers)
+      PageFetcherService::StaticPageFetcher.new()
     end
   end
 
@@ -65,9 +151,8 @@ module Helper
     )
   end
 
-  def self.get_graph_fetcher(headers:, page_fetcher:, sparql_path:, html_extract_config:)
+  def self.get_graph_fetcher(page_fetcher:, sparql_path:, html_extract_config:)
     GraphFetcherService::LinkedDataGraphFetcher.new(
-      headers: headers,
       page_fetcher: page_fetcher,
       sparql: SparqlService::Sparql.new(sparql_path),
       html_extract_config: html_extract_config

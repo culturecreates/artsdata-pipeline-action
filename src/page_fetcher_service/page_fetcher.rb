@@ -1,7 +1,6 @@
 module PageFetcherService
   class PageFetcher
-    def initialize(headers:)
-      @headers = headers
+    def initialize()
     end
 
     def fetcher_with_retry(page_url:, selector: 'body')
@@ -18,7 +17,7 @@ module PageFetcherService
           notification_message =
             "Max retries reached. Unable to fetch the content for page #{page_url}, " \
             "Error: #{e.message}, " \
-            "consider passing a custom user agent instead of #{@headers['User-Agent']}"          
+            "consider passing a custom user agent instead of #{Helper.get_user_agent()}"          
           NotificationService::WebhookNotification.instance.send_notification(
             stage: 'fetching_page_data',
             message: notification_message
@@ -27,10 +26,6 @@ module PageFetcherService
         end
       end
       [data, content_type]
-    end
-
-    def get_user_agent
-      @headers['User-Agent']
     end
 
     private 

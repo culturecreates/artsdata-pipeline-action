@@ -23,6 +23,7 @@ module Config
     ],
     organization_types: [
       RDF::Vocab::SCHEMA.Organization,
+      RDF::Vocab::SCHEMA.PerformingGroup,
       RDF::Vocab::SCHEMA.LocalBusiness,     # All types of data the crawler considers worth retaining
     ],
     person_types: [

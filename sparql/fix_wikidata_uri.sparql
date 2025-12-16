@@ -7,6 +7,12 @@ INSERT {
 }
 WHERE {
     ?e schema:sameAs ?sameAs .
-    FILTER(CONTAINS(STR(?sameAs), "www.wikidata.org/wiki/Q"))
-    BIND(URI(CONCAT("http://www.wikidata.org/entity/Q", STRAFTER(STR(?sameAs), "www.wikidata.org/wiki/Q"))) AS ?fixedWikidataURI)
-}
+    FILTER(STRSTARTS(STR(?sameAs), "http://www.wikidata.org/wiki/Q"))
+    BIND(
+        IRI(REPLACE(
+            STR(?sameAs),
+            "http://www.wikidata.org/wiki/",
+            "http://www.wikidata.org/entity/"
+        )) AS ?fixedWikidataURI
+    )
+  }

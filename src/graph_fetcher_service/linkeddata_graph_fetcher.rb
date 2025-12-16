@@ -2,8 +2,8 @@ require 'linkeddata'
 
 module GraphFetcherService
   class LinkedDataGraphFetcher < GraphFetcherService::GraphFetcher
-    def initialize(headers:, page_fetcher:, sparql:, html_extract_config:)
-      super(headers: headers, page_fetcher: page_fetcher, sparql: sparql, html_extract_config: html_extract_config)
+    def initialize(page_fetcher:, sparql:, html_extract_config:)
+      super(page_fetcher: page_fetcher, sparql: sparql, html_extract_config: html_extract_config)
     end
 
     def load_with_retry(entity_urls:)

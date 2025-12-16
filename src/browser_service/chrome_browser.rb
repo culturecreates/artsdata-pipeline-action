@@ -13,7 +13,6 @@ module BrowserService
         browser_path: browser_path, headless: true, 
         pending_connection_errors: false, process_timeout: 60, 
         xvfb: true, browser_options: { 'no-sandbox': nil })
-      # browser.headers.set(@headers) if @headers
       browser
     end
   end
