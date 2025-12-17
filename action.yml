@@ -98,7 +98,7 @@ runs:
         mkdir -p output
         mkdir -p metadata
 
-        version="v3.7.2"
+        version="v3.7.3"
 
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version
         docker run --shm-size=1g \

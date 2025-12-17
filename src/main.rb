@@ -260,7 +260,8 @@ if mode.include?('push')
       download_file: download_file,
       version: version,
       comment: comment,
-      group: group
+      group: group,
+      register_only: register_only
     )
 
     Helper.send_databus_notification(notification_instance, response)
