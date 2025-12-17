@@ -1,0 +1,24 @@
+mode: "fetch-push" # other options: fetch, push, fetch-test
+page_url: https://www.example.com/ # URL of the page to crawl
+entity_identifier: div.item.event a # CSS/XPath selector to identify entity links
+is_paginated: false # true if the page is paginated
+headless: false # true to run the crawler in headless mode
+fetch_urls_headlessly: false # true to fetch the entity URLs headlessly
+offset: 1 # Offset for paginated pages
+custom_user_agent: test-bot # Custom user agent string, default is artsdata-crawler
+callback_url: https://www.example.com/ # webhook URL to send notifications
+workflow_id: Get Events # GitHub workflow ID, set automatically in actions
+actor: github-actions[bot] # GitHub actor, set automatically in actions
+token: test-token # GitHub token for authentication, passed from calling workflow
+repository: test-organization/test-repository # GitHub repository, set automatically in actions
+artifact: alianait-ca # Name of the artifact to upload to artsdata
+publisher: http://example-publisher.org # Publisher URI for databus
+reference: refs/heads/main # Git reference, set automatically in actions
+version: "2025-01-01" # Version of the artifact, default is current date
+comment: "sample comment" # Comment for the upload, default is "Published by #{group} on #{version}"
+group: "test-repository" # Group of artifacts/versions, default is calling repository name
+download_file: "file.jsonld" # File to upload to artsdata, default is #{artifact}.jsonld
+download_url: "https://www.example.com/file.jsonld" # URL of the file to upload to artsdata
+shacl: https://www.example.com/shacl.ttl # URL to the SHACL file, not currently implemented
+databus: http://staging.api.artsdata.ca/databus/ # Custom Databus URL, default is http://api.artsdata.ca/databus/
+register_only: false # If true, upload to databus in register-only mode

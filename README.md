@@ -34,7 +34,7 @@ artsdata-pipeline:
   needs: fetch-and-commit-data
   steps:
     - name: Action setup
-      uses: culturecreates/artsdata-pipeline-action@v1.1.0
+      uses: culturecreates/artsdata-pipeline-action@v3
       with:
         mode: 
         page-url:
@@ -56,9 +56,18 @@ artsdata-pipeline:
         custom-user-agent:
         custum-databus-url:
         html-extract-config:
+        register-only:
 ```
 
 <br>
+
+To run locally
+
+1. ``` cp sample.config.yml config.yml ``` 
+2. Update config.yml to provide inputs mentioned [here.](https://github.com/culturecreates/artsdata-pipeline-action/tree/v3.7.1?tab=readme-ov-file#inputs)
+3. ``` bundle install ```
+4. ``` bundle exec ruby src/main.rb config.yml ```
+
 
 ## Inputs
 ### All modes
@@ -111,6 +120,7 @@ html-extract-config format:
 | `comment`                           | Comment about the artifact push (optional, default - url of the workflow YAML file.)
 | `shacl`                             | URL to the SHACL file to perform validations (optional)
 | `custom-databus-url`                | Custom databus URL to push the data to (optional, default - http://api.artsdata.ca/databus/)
+| `register-only`                     | Set as true to push to artsdata in register only
 
 
 <br>

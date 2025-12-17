@@ -37,6 +37,7 @@ download_file = config['download_file']
 download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
+register_only = config['register_only'] == 'true'
 
 if html_extract_config_file && File.exist?(html_extract_config_file)
   begin
@@ -93,18 +94,21 @@ if mode.include?('fetch')
       structured_score = 0
       end_time = start_time
       visited_count = 0
+      event_count = 0
     else
       crawler.crawl()
       graph = crawler.get_graph()
       structured_score = crawler.get_structured_score()
       end_time = Time.now.utc.iso8601
       visited_count = crawler.get_visited_count()
+      event_count = crawler.get_event_count()
     end
     if metadata_exists
       metadata_content['structured_score'] = structured_score
       metadata_content['start_time'] = start_time
       metadata_content['end_time'] = end_time
       metadata_content['url_count'] = visited_count
+      metadata_content['event_count'] = event_count
     end
   else
     # Use UrlFetcher and GraphFetcher when entity identifier is provided
@@ -200,7 +204,7 @@ if mode.include?('push')
       artifact: artifact,
       publisher: publisher,
       repository: repository,
-      databus_url: databus_url 
+      databus_url: databus_url
     )
 
     response = databus_service.send(
@@ -208,7 +212,8 @@ if mode.include?('push')
       download_file: download_file,
       version: version,
       comment: comment,
-      group: group
+      group: group,
+      register_only: register_only
     )
     dataset = response[:dataset] || nil
     Helper.send_databus_notification(notification_instance, response)

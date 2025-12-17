@@ -49,6 +49,9 @@ inputs:
     description: 'Custom HTML configuration as JSON'
   metadata-config:
     description: 'metadata for spider as JSON'
+  register-only:
+    description: 'If true, upload to databus in register-only mode'
+    default: 'false'
 
 runs: 
   using: 'composite'
@@ -81,6 +84,7 @@ runs:
           download_url: ${{ inputs.downloadUrl }}
           shacl: ${{ inputs.shacl }}
           databus: ${{ inputs.custom-databus-url }}
+          register_only: ${{ inputs.register-only }}
         EOF
 
         cat <<EOF > html-extract-config.json
@@ -94,7 +98,7 @@ runs:
         mkdir -p output
         mkdir -p metadata
 
-        version="v3.7.1"
+        version="v3.7.2"
 
         docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version
         docker run --shm-size=1g \

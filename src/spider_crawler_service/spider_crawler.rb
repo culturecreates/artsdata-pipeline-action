@@ -11,6 +11,7 @@ module SpiderCrawlerService
       @atleast_one_page_loaded = false
       @visited = Set.new
       @max_depth = Config::SPIDER_CRAWLER[:default_max_depth]
+      @event_count = 0
       @structured_score = 0.0
     end
 
@@ -63,6 +64,7 @@ module SpiderCrawlerService
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
       shrink_graph()
+      @event_count = @sparql.query_graph(@graph, "event_count.sparql").first[:count].to_i
       @structured_score = @sparql.query_graph(@graph, "score_algorithm.sparql").first.object.to_f
     end
 
@@ -253,6 +255,11 @@ module SpiderCrawlerService
     public
     def get_graph()
       @graph
+    end
+
+    public
+    def get_event_count()
+      @event_count
     end
 
     private

@@ -7,7 +7,7 @@ module DatabusService
       @databus_url = databus_url
     end
 
-    def send(download_url:, download_file:, version:, comment:, group:)
+    def send(download_url:, download_file:, version:, comment:, group:, register_only: false)
       group ||= @repository.split('/').last
       version ||= Time.now.strftime("%Y-%m-%dT%H:%M:%S").gsub(':', '_')
       comment ||= "Published by #{group} on #{version}"
@@ -19,7 +19,8 @@ module DatabusService
         version: version,
         downloadUrl: download_url,
         downloadFile: download_file&.split('/')&.last || download_url.split('/')&.last, 
-        comment: comment
+        comment: comment,
+        register_only: register_only
       }
 
       data = JSON.generate(data_hash)
