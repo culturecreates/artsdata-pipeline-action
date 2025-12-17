@@ -77,7 +77,7 @@ module UrlFetcherService
             url = (href.start_with?('http') ? href : @base_url + (href.start_with?('/') ? href : "/#{href}"))
           end
           path = URI.parse(url).path
-          if !@robots_txt_content.allowed?(@page_fetcher.get_user_agent, path)
+          if !@robots_txt_content.allowed?(Helper.get_user_agent, path)
             puts "Skipping disallowed URL by robots.txt: #{url}"
             next
           end
