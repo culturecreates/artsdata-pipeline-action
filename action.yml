@@ -100,7 +100,11 @@ runs:
 
         version="v3.7.4"
 
-        docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version
+        for i in {1..5}; do
+          docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version && break
+          echo "Retry $i/5..."
+          sleep 10
+        done
         docker run --shm-size=1g \
           -v $(pwd)/config.yml:/usr/src/app/config.yml:ro \
           -v $(pwd)/html-extract-config.json:/usr/src/app/html-extract-config.json:ro \
