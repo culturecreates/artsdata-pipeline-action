@@ -33,6 +33,9 @@ module FileSaverService
       if(!@access_token)
         puts("Access token is not provided. Cannot save to GitHub.")
         exit(0)
+
+      max_retries = 3
+      retries = 0
       end
       begin
         existing_file = @client.contents(@repository, path: @path)
@@ -53,10 +56,16 @@ module FileSaverService
           content,
           author: @author
         )
-      rescue StandardError => e
-        puts "Error saving file to GitHub: #{e.message}"
-        exit(1)
+      rescue Octokit::Conflict
+        retries += 1
+        if retries <= max_retries
+          sleep(0.5)
+          retry
+        else
+          raise
+        end
       end
+
       owner, repo = @repository.split("/")
       branch = response[:content][:branch] || "main"
       "https://raw.githubusercontent.com/#{owner}/#{repo}/#{branch}/#{@path}"
