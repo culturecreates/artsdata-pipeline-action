@@ -39,6 +39,7 @@ module DatabusService
         response_body = JSON.parse(response.body)
         if response.code.to_i == 201
           puts("Data posted successfully.")
+          puts "Response: #{response.body}"
           return { status: :success, message: response_body['message'] || 'Data posted successfully.', dataset: response_body['dataset'] }
         else
           puts("Error posting data: #{response.code} - #{response.body}")

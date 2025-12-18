@@ -60,10 +60,10 @@ module SpiderCrawlerService
         transformations.each do |file|
           @graph = @sparql.perform_sparql_transformation(@graph, file)
         end
+        shrink_graph()
       else
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
-      shrink_graph()
       @event_count = @sparql.query_graph(@graph, "event_count.sparql").first[:count].to_i
       @structured_score = @sparql.query_graph(@graph, "score_algorithm.sparql").first.object.to_f
     end

@@ -15,7 +15,6 @@ module SparqlService
     end
 
     def query_graph(graph, sparql_file)
-      puts "Querying graph with SPARQL file: #{sparql_file}"
       file = File.read(@sparql_directory + sparql_file)
       begin
         result = graph.query(SPARQL.parse(file))

@@ -53,8 +53,9 @@ if metadata_file && File.exist?(metadata_file)
   puts "Loading metadata file: #{metadata_file}"
   begin
     metadata_content = JSON.parse(File.read(metadata_file))
-    if metadata_content['file_name'] && metadata_content['metadata_artifact']
+    if metadata_content['file_name']
       metadata_exists = true
+      puts "Metadata file will be saved as: #{metadata_content['file_name']}"
     end
     puts "Loaded metadata content: #{metadata_content}"
   rescue JSON::ParserError => e
