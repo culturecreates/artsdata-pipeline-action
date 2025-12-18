@@ -37,7 +37,7 @@ download_file = config['download_file']
 download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
-register_only = config['register_only'] == 'true'
+register_only = config['register_only'] == true
 
 if html_extract_config_file && File.exist?(html_extract_config_file)
   begin
@@ -233,38 +233,8 @@ if mode.include?('push')
       token: token,
     )
 
-    existing_metadata = github_saver.get_file_content(download_file)
-
-    if existing_metadata
-      puts "Metadata file already exists in the repository: #{download_file}, merging graphs"
-
-      existing_json = JSON.parse(existing_metadata)
-
-      JSON::LD::API.toRdf(existing_json) do |statement|
-        metadata_graph << statement
-      end
-    end
-
     github_saver.save_graph_to_file(file_name: download_file, graph: metadata_graph)
     download_url = github_saver.save(File.read(download_file))
-
-    databus_service = Helper.get_databus_service(
-      artifact: metadata_content['metadata_artifact'],
-      publisher: publisher,
-      repository: repository,
-      databus_url: databus_url 
-    )
-
-    response = databus_service.send(
-      download_url: download_url,
-      download_file: download_file,
-      version: version,
-      comment: comment,
-      group: group,
-      register_only: register_only
-    )
-
-    Helper.send_databus_notification(notification_instance, response)
   end
 end
 
