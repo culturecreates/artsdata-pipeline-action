@@ -7,7 +7,7 @@ module DatabusService
       @databus_url = databus_url
     end
 
-    def send(download_url:, download_file:, version:, comment:, group:, register_only: false)
+    def send(download_url:, download_file:, version:, comment:, group:, register_only: false, page_url: nil)
       group ||= @repository.split('/').last
       version ||= Time.now.strftime("%Y-%m-%dT%H:%M:%S").gsub(':', '_')
       comment ||= "Published by #{group} on #{version}"
@@ -22,6 +22,8 @@ module DatabusService
         comment: comment,
         register_only: register_only
       }
+
+      @databus_url = "#{@databus_url}?derivedFromUrl=#{URI.encode_www_form_component(page_url)}" if page_url
 
       data = JSON.generate(data_hash)
 

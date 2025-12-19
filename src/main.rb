@@ -214,7 +214,8 @@ if mode.include?('push')
       version: version,
       comment: comment,
       group: group,
-      register_only: register_only
+      register_only: register_only,
+      page_url: page_url
     )
     dataset = response[:dataset] || nil
     Helper.send_databus_notification(notification_instance, response)
