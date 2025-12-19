@@ -351,6 +351,21 @@ module Helper
 
 
   def self.merge_graph(graph, new_graph)
+    original_graph_events = self.get_subjects_multitype(graph, Config::SPIDER_CRAWLER[:event_types])
+    new_graph_events = self.get_subjects_multitype(new_graph, Config::SPIDER_CRAWLER[:event_types])
+
+    common_events = original_graph_events & new_graph_events
+
+    if !common_events.empty?
+      puts "Found #{common_events.size} duplicate events with same URI between existing and new graph. Removing duplicates from new graph."
+      common_events.each do |common_event|
+          connected_entities = Set.new
+          collect_connected_entities(new_graph, common_event, connected_entities)
+          to_delete = new_graph.statements.select { |st| connected_entities.include?(st.subject) }
+          new_graph.delete(*to_delete)
+      end
+    end
+
     graph << new_graph
 
     new_events = self.get_subjects_multitype(new_graph, Config::SPIDER_CRAWLER[:event_types])

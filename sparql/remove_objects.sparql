@@ -5,9 +5,10 @@ PREFIX xhtml: <http://www.w3.org/1999/xhtml/vocab#>
 
 DELETE {
   ?s ?p ?o .
+  ?s2 ?p2 ?s .
 }
 WHERE {
-  # Step 1: identify subjects to delete
+  # Step 1: identify resources to delete
   {
     SELECT DISTINCT ?s WHERE {
       {
@@ -19,6 +20,10 @@ WHERE {
           schema:WPFooter
           schema:BreadcrumbList
           schema:ListItem
+          schema:SearchAction
+          schema:EntryPoint
+          schema:PropertyValueSpecification
+          schema:CollectionPage
         }
       }
       UNION
@@ -28,6 +33,13 @@ WHERE {
     }
   }
 
-  # Step 2: delete all triples for those subjects
-  ?s ?p ?o .
+  # Step 2a: triples where the resource is subject
+  OPTIONAL {
+    ?s ?p ?o .
+  }
+
+  # Step 2b: triples where the resource is object
+  OPTIONAL {
+    ?s2 ?p2 ?s .
+  }
 }

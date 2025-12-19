@@ -14,6 +14,7 @@ module Config
     url_contains_score_weight: 3, # score weight for each occurrence of scoring terms in URL
     url_ends_score_weight: 5, # score weight if URL ends with any scoring term
     sitemap_bonus_score: 5, # bonus score for URLs identified as sitemaps
+    number_of_events_to_score: 20, # number of events to sample for URL scoring
     place_types: [
       RDF::Vocab::SCHEMA.Place, 
       RDF::Vocab::SCHEMA.PerformingArtsTheater, 

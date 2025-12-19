@@ -65,7 +65,44 @@ module SpiderCrawlerService
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
       @event_count = @sparql.query_graph(@graph, "event_count.sparql").first[:count].to_i
-      @structured_score = @sparql.query_graph(@graph, "score_algorithm.sparql").first.object.to_f
+      to_score_events = get_first_n_entities(Config::SPIDER_CRAWLER[:number_of_events_to_score], Config::SPIDER_CRAWLER[:event_types])
+      subgraph = extract_subgraph(to_score_events)
+      @structured_score = @sparql.query_graph(subgraph, "score_algorithm.sparql").first.object.to_f
+      puts "Crawl completed. Visited #{@visited.size} pages, found #{@event_count} events, structured score: #{@structured_score}."
+    end
+
+    private
+    def get_first_n_entities(n, entity_types)
+      entities = []
+      entity_types.each do |type|
+        entities.concat(@graph.query([nil, RDF.type, type]).map { |solution| solution.subject })
+      end
+      entities.uniq.take(n)
+    end
+
+    private
+    def extract_subgraph(roots)
+      result  = RDF::Graph.new
+      visited = {}
+
+      queue = roots.dup
+
+      until queue.empty?
+        subject = queue.shift
+        next if visited[subject]
+
+        visited[subject] = true
+
+        @graph.query([subject, nil, nil]).each do |stmt|
+          result << stmt
+
+          obj = stmt.object
+          if obj.is_a?(RDF::Resource) && !visited[obj]
+            queue << obj
+          end
+        end
+      end
+      result
     end
 
     private
