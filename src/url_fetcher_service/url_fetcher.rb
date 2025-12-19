@@ -60,6 +60,7 @@ module UrlFetcherService
 
     private
     def fetch_url_from_page_data(page_data:, page_type:, entity_identifier:)
+      return [] if page_data.nil?
       page_urls = []
       begin
         identifier_type = detect_identifier_type(entity_identifier)
