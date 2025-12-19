@@ -20,10 +20,9 @@ module DatabusService
         downloadUrl: download_url,
         downloadFile: download_file&.split('/')&.last || download_url.split('/')&.last, 
         comment: comment,
-        register_only: register_only
+        register_only: register_only,
+        derivedFromUrl: page_url
       }
-
-      @databus_url = "#{@databus_url}?derivedFromUrl=#{URI.encode_www_form_component(page_url)}" if page_url
 
       data = JSON.generate(data_hash)
 
