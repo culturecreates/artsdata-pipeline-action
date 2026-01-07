@@ -68,6 +68,7 @@ To run locally
 3. ``` bundle install ```
 4. ``` bundle exec ruby src/main.rb config.yml ```
 
+Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser sessions. On macOS, Xvfb is not available by default. To resolve this on macOS, you should install XQuartz, which provides X11 support (including Xvfb-like functionality): `brew install --cask xquartz`
 
 ## Inputs
 ### All modes
