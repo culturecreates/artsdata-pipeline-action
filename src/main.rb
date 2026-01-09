@@ -38,6 +38,10 @@ download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
 register_only = config['register_only'] == true
+enable_signing = config['enable_cloudflare_signing'] || false
+private_key_path = config['private_key_path']
+key_directory_url = config['key_directory_url']
+
 
 if html_extract_config_file && File.exist?(html_extract_config_file)
   begin
@@ -79,8 +83,27 @@ if mode.include?('fetch')
   page_url, base_url = Helper.format_urls(page_url)
   Helper.set_custom_user_agent(custom_user_agent)
 
+  
+  authority = URI.parse(page_url.first).host
+  headers = Helper.get_headers(authority)
+
+  page_fetcher = Helper.get_page_fetcher_with_signing(
+    is_headless: headless, 
+    headers: headers,
+    enable_signing: enable_signing,
+    private_key_path: private_key_path,
+    key_directory_url: key_directory_url
+  )
+  
   if entity_identifier.nil? || entity_identifier.strip.empty?
-    page_fetcher = Helper.get_page_fetcher(is_headless: headless)
+    if enable_signing && page_url.first.include?('crawltest.com')
+      # Use signed fetcher for Cloudflare test
+      puts "Using CloudflareSignedPageFetcher for Cloudflare test"
+      # page_fetcher is already created on line 85 with signing
+    else
+      # Use regular fetcher for normal crawling (existing behavior)
+      page_fetcher = Helper.get_page_fetcher(is_headless: headless)
+    end
     # Use SpiderCrawler when no entity identifier is provided
     crawler = Helper.get_spider_crawler(
       url: page_url,

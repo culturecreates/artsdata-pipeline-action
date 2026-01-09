@@ -1,6 +1,7 @@
 require_relative '../page_fetcher_service/page_fetcher'
 require_relative '../page_fetcher_service/static_page_fetcher'
 require_relative '../page_fetcher_service/headless_page_fetcher'
+require_relative '../page_fetcher_service/cloudflare_signed_page_fetcher'
 require_relative '../graph_fetcher_service/graph_fetcher'
 require_relative '../graph_fetcher_service/linkeddata_graph_fetcher'
 require_relative '../browser_service/browser'
@@ -464,6 +465,23 @@ module Helper
       if obj.node?
         collect_connected_entities(graph, obj, accumulator)
       end
+    end
+  end
+
+  def self.get_page_fetcher_with_signing(is_headless:, headers: {}, enable_signing: false, private_key_path: nil, key_directory_url: nil)
+    if is_headless
+      PageFetcherService::HeadlessPageFetcher.new(
+        headers: headers, 
+        browser: BrowserService::ChromeBrowser.new
+      )
+    elsif enable_signing && private_key_path && key_directory_url
+      PageFetcherService::CloudflareSignedPageFetcher.new(
+        headers: headers,
+        private_key_path: private_key_path,
+        key_directory_url: key_directory_url
+      )
+    else
+      PageFetcherService::StaticPageFetcher.new(headers: headers)
     end
   end
 
