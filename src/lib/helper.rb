@@ -468,21 +468,16 @@ module Helper
     end
   end
 
-  def self.get_page_fetcher_with_signing(is_headless:, headers: {}, enable_signing: false, private_key_path: nil, key_directory_url: nil)
-    if is_headless
-      PageFetcherService::HeadlessPageFetcher.new(
-        headers: headers, 
-        browser: BrowserService::ChromeBrowser.new
-      )
-    elsif enable_signing && private_key_path && key_directory_url
-      PageFetcherService::CloudflareSignedPageFetcher.new(
-        headers: headers,
-        private_key_path: private_key_path,
-        key_directory_url: key_directory_url
-      )
-    else
-      PageFetcherService::StaticPageFetcher.new(headers: headers)
-    end
+def self.get_page_fetcher_with_signing(is_headless:, enable_signing: false, private_key_path: nil, key_directory_url: nil)
+  if is_headless
+    PageFetcherService::HeadlessPageFetcher.new(browser: BrowserService::ChromeBrowser.new)
+  elsif enable_signing && private_key_path && key_directory_url
+    PageFetcherService::CloudflareSignedPageFetcher.new(
+      private_key_path: private_key_path,
+      key_directory_url: key_directory_url
+    )
+  else
+    PageFetcherService::StaticPageFetcher.new()
   end
-
+end
 end
