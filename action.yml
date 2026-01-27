@@ -52,6 +52,13 @@ inputs:
   register-only:
     description: 'If true, upload to databus in register-only mode'
     default: 'false'
+  cloudflare-private-key:
+    description: 'Ed25519 private key for Cloudflare signing (PEM format content)'
+    required: false
+  key-directory-url:
+    description: 'URL to key directory for Cloudflare signing'
+    required: false
+    default: 'https://kg.artsdata.ca'
 
 runs: 
   using: 'composite'
@@ -85,6 +92,8 @@ runs:
           shacl: ${{ inputs.shacl }}
           databus: ${{ inputs.custom-databus-url }}
           register_only: ${{ inputs.register-only }}
+          cloudflare_private_key: ${{ inputs.cloudflare-private-key }}
+          key_directory_url: ${{ inputs.key-directory-url }}
         EOF
 
         cat <<EOF > html-extract-config.json
@@ -98,7 +107,7 @@ runs:
         mkdir -p output
         mkdir -p metadata
 
-        version="v3.7.6"
+        version="v3.8.0"
 
         for i in {1..5}; do
           docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version && break
