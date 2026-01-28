@@ -38,6 +38,8 @@ download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
 register_only = config['register_only'] == true
+cloudflare_private_key = config['cloudflare_private_key']
+
 
 if html_extract_config_file && File.exist?(html_extract_config_file)
   begin
@@ -80,7 +82,8 @@ if mode.include?('fetch')
   Helper.set_custom_user_agent(custom_user_agent)
 
   if entity_identifier.nil? || entity_identifier.strip.empty?
-    page_fetcher = Helper.get_page_fetcher(is_headless: headless)
+    # Check if testing Cloudflare
+    page_fetcher = Helper.get_page_fetcher(is_headless: headless, private_key_content: cloudflare_private_key)
     # Use SpiderCrawler when no entity identifier is provided
     crawler = Helper.get_spider_crawler(
       url: page_url,
@@ -113,7 +116,10 @@ if mode.include?('fetch')
     end
   else
     # Use UrlFetcher and GraphFetcher when entity identifier is provided
-    page_fetcher = Helper.get_page_fetcher(is_headless: fetch_urls_headlessly)
+    page_fetcher = Helper.get_page_fetcher(
+      is_headless: fetch_urls_headlessly,
+      private_key_content: cloudflare_private_key
+    )
     url_fetcher = Helper.get_url_fetcher(
       page_url: page_url,
       base_url: base_url,
@@ -151,7 +157,10 @@ if mode.include?('fetch')
     )
 
     graph_fetcher = Helper.get_graph_fetcher(
-      page_fetcher: Helper.get_page_fetcher(is_headless: headless),
+      page_fetcher: Helper.get_page_fetcher(
+        is_headless: headless,
+        private_key_content: cloudflare_private_key
+      ),
       sparql_path: "./sparql/",
       html_extract_config: html_extract_config
     )

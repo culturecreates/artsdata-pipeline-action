@@ -54,14 +54,14 @@ module Helper
     end
   end
 
-  def self.get_headers(authority)
+  def self.get_headers(authority, private_key_content = nil)
     headers = {}
 
     headers["User-Agent"] = get_user_agent()
 
     headers["Signature-Agent"] = "https://kg.artsdata.ca"
 
-    signature_headers = build_signature_headers(authority)
+    signature_headers = build_signature_headers(authority, private_key_content)
     headers.merge!(signature_headers) if signature_headers
 
     headers
@@ -90,12 +90,16 @@ module Helper
     Base64.urlsafe_encode64(hash, padding: false)          # Base64url encode without padding
   end
 
-  def self.build_signature_headers(authority)
-    key_path = "./private-key.pem"
-    return nil unless File.exist?(key_path)
+  def self.build_signature_headers(authority, private_key_content = nil)
+    # If no private key content provided, return nil (no signing)
+    return nil if private_key_content.nil? || private_key_content.empty?
 
-    private_key_pem = File.read(key_path)
-    private_key = OpenSSL::PKey.read(private_key_pem)
+    begin
+      private_key = OpenSSL::PKey.read(private_key_content)
+    rescue => e
+      puts "Warning: Could not load private key: #{e.message}"
+      return nil
+    end
 
     key_id = "nqBDjj0MadzG_URItCeeMStABPlylL7R_pq1aLGQCUo"
 
@@ -131,11 +135,16 @@ module Helper
     [page_url, base_url]
   end
 
-  def self.get_page_fetcher(is_headless:)
+  def self.get_page_fetcher(is_headless:, private_key_content: nil)
     if is_headless
-      PageFetcherService::HeadlessPageFetcher.new(browser: BrowserService::ChromeBrowser.new)
+      PageFetcherService::HeadlessPageFetcher.new(
+        browser: BrowserService::ChromeBrowser.new, 
+        private_key_content: private_key_content
+      )
     else
-      PageFetcherService::StaticPageFetcher.new()
+      PageFetcherService::StaticPageFetcher.new(
+        private_key_content: private_key_content
+      )
     end
   end
 
@@ -466,5 +475,4 @@ module Helper
       end
     end
   end
-
 end

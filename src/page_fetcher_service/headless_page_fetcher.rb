@@ -2,15 +2,16 @@ require_relative '../browser_service/browser'
 
 module PageFetcherService
   class HeadlessPageFetcher < PageFetcherService::PageFetcher
-    def initialize(browser:)
+    def initialize(browser:, private_key_content: nil)
       @browser = browser
       @browser_instance = @browser.create_browser()
+      @private_key_content = private_key_content
     end
 
     def fetch_page_data(page_url:, selector:)
       timeout = 10 
       authority = URI.parse(page_url).authority
-      headers = Helper.get_headers(authority)
+      headers = Helper.get_headers(authority, @private_key_content)
       @browser_instance.headers.set(headers)
       @browser_instance.go_to(page_url)
       start_time = Time.now

@@ -88,7 +88,7 @@ GEM
       yaml-ld (~> 0.0)
     logger (1.6.1)
     matrix (0.4.2)
-    minitest (5.25.1)
+    minitest (5.27.0)
     mocha (2.5.0)
       ruby2_keywords (>= 0.0.5)
     multi_json (1.15.0)
@@ -217,7 +217,7 @@ GEM
     sparql-client (3.3.0)
       net-http-persistent (~> 4.0, >= 4.0.2)
       rdf (~> 3.3)
-    stringio (3.1.8)
+    stringio (3.2.0)
     sxp (1.3.0)
       matrix (~> 0.4)
       rdf (~> 3.3)
@@ -247,7 +247,6 @@ PLATFORMS
 DEPENDENCIES
   faraday-retry (~> 2.3.1)
   ferrum
-  json (~> 2.16.0)
   jsonlint (~> 0.4.0)
   linkeddata (~> 3.3)
   minitest
@@ -256,7 +255,6 @@ DEPENDENCIES
   octokit (~> 10.0.0)
   open-uri
   rake
-  stringio (~> 3.1.8)
 
 BUNDLED WITH
    2.3.22
