@@ -5,14 +5,14 @@ require 'rdf'
 
 class MergeGraphsTest < Minitest::Test
   def setup
-    @duplicate_graph_1 = RDF::Graph.load('./test/fixtures/test_merge_graph_with_duplicate_1.jsonld')
-    @duplicate_graph_2 = RDF::Graph.load('./test/fixtures/test_merge_graph_with_duplicate_2.jsonld')
+    @duplicate_graph_1 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_with_duplicate_1.jsonld', __FILE__))
+    @duplicate_graph_2 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_with_duplicate_2.jsonld', __FILE__))
 
-    @non_duplicate_postal_code_graph_1 = RDF::Graph.load('./test/fixtures/test_merge_graph_without_duplicate_postal_code_1.jsonld')
-    @non_duplicate_postal_code_graph_2 = RDF::Graph.load('./test/fixtures/test_merge_graph_without_duplicate_postal_code_2.jsonld')
+    @non_duplicate_postal_code_graph_1 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_without_duplicate_postal_code_1.jsonld', __FILE__))
+    @non_duplicate_postal_code_graph_2 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_without_duplicate_postal_code_2.jsonld', __FILE__))
 
-    @non_duplicate_place_name_graph_1 = RDF::Graph.load('./test/fixtures/test_merge_graph_without_duplicate_place_name_1.jsonld')
-    @non_duplicate_place_name_graph_2 = RDF::Graph.load('./test/fixtures/test_merge_graph_without_duplicate_place_name_2.jsonld')
+    @non_duplicate_place_name_graph_1 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_without_duplicate_place_name_1.jsonld', __FILE__))
+    @non_duplicate_place_name_graph_2 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_without_duplicate_place_name_2.jsonld', __FILE__))
   end
 
   def test_merge_graphs_remove_duplicate_events
