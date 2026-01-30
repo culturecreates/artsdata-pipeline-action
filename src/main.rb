@@ -41,6 +41,23 @@ register_only = config['register_only'] == true
 cloudflare_private_key = config['cloudflare_private_key']
 puts "cloudflare_private_key: #{cloudflare_private_key}"
 
+if cloudflare_private_key.nil?
+  puts "❌ cloudflare_private_key is NIL"
+else
+  puts "✅ cloudflare_private_key present"
+  puts "Length: #{cloudflare_private_key.length}"
+  puts "Lines: #{cloudflare_private_key.lines.count}"
+
+  first = cloudflare_private_key.lines.first&.strip
+  last = cloudflare_private_key.lines.last&.strip
+
+  puts "First line: #{first}"
+  puts "Last line: #{last}"
+
+  puts "Contains literal \\n: #{cloudflare_private_key.include?("\\n")}"
+  puts "Contains real newline: #{cloudflare_private_key.include?("\n")}"
+end
+
 if html_extract_config_file && File.exist?(html_extract_config_file)
   begin
     html_extract_config = JSON.parse(File.read(html_extract_config_file))
