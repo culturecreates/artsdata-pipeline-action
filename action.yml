@@ -87,9 +87,9 @@ runs:
           download_url: ${{ inputs.downloadUrl }}
           shacl: ${{ inputs.shacl }}
           databus: ${{ inputs.custom-databus-url }}
-          register_only: ${{ inputs.register-only }}
           cloudflare_private_key: |
             ${{ inputs.cloudflare-private-key }}
+          register_only: ${{ inputs.register-only }}
         EOF
         echo "====== DEBUG CONFIG ======"
         echo "Key present in inputs: ${{ inputs.cloudflare-private-key != '' }}"
