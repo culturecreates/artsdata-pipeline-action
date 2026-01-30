@@ -91,6 +91,7 @@ module Helper
   end
 
   def self.build_signature_headers(authority, private_key_content = nil)
+    puts "private_key_content: #{private_key_content}"
     # If no private key content provided, return nil (no signing)
     return nil if private_key_content.nil? || private_key_content.empty?
 

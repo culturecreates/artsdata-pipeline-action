@@ -39,7 +39,7 @@ shacl = config['shacl']
 databus_url = config['databus']
 register_only = config['register_only'] == true
 cloudflare_private_key = config['cloudflare_private_key']
-
+puts "cloudflare_private_key: #{cloudflare_private_key}"
 
 if html_extract_config_file && File.exist?(html_extract_config_file)
   begin
