@@ -87,28 +87,10 @@ runs:
           download_url: ${{ inputs.downloadUrl }}
           shacl: ${{ inputs.shacl }}
           databus: ${{ inputs.custom-databus-url }}
+          register_only: ${{ inputs.register-only }}
           cloudflare_private_key: |
             ${{ inputs.cloudflare-private-key }}
-          register_only: ${{ inputs.register-only }}
         EOF
-        echo "====== DEBUG CONFIG ======"
-        echo "Key present in inputs: ${{ inputs.cloudflare-private-key != '' }}"
-        echo "Config file preview (first 40 lines):"
-        sed -n '1,40p' config.yml
-
-        echo "Private key stats from config.yml:"
-        awk '
-        /cloudflare_private_key:/ {
-          print "Found cloudflare_private_key"
-          inkey=1
-          next
-        }
-        inkey && /^[^ ]/ { exit }
-        inkey {
-          print "LINE:", NR, "LEN:", length($0)
-        }
-        ' config.yml
-        echo "=========================="
         cat <<EOF > html-extract-config.json
           ${{ inputs.html-extract-config }}
         EOF
