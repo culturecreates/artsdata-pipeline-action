@@ -1,4 +1,5 @@
 .vscode
+.idea
 config.yml
 html-extract-config*
 output/
