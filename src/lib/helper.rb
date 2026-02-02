@@ -366,12 +366,20 @@ module Helper
     common_events = original_graph_events & new_graph_events
 
     if !common_events.empty?
-      puts "Found #{common_events.size} duplicate events with same URI between existing and new graph. Removing duplicates from new graph."
+      puts "Found #{common_events.size} duplicate events with same URI between existing and new graph. Merging language data."
       common_events.each do |common_event|
-          connected_entities = Set.new
-          collect_connected_entities(new_graph, common_event, connected_entities)
-          to_delete = new_graph.statements.select { |st| connected_entities.include?(st.subject) }
-          new_graph.delete(*to_delete)
+        # Copy language-tagged properties before deleting
+        [RDF::Vocab::SCHEMA.name, RDF::Vocab::SCHEMA.description].each do |property|
+          new_graph.query([common_event, property, nil]).each do |statement|
+            graph << statement  # Add to existing graph
+          end
+        end
+        
+        # Now delete from new_graph
+        connected_entities = Set.new
+        collect_connected_entities(new_graph, common_event, connected_entities)
+        to_delete = new_graph.statements.select { |st| connected_entities.include?(st.subject) }
+        new_graph.delete(*to_delete)
       end
     end
 

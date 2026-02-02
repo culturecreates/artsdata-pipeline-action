@@ -5,14 +5,14 @@ require 'rdf'
 
 class MergeGraphsTest < Minitest::Test
   def setup
-    @duplicate_graph_1 = RDF::Graph.load('./test/fixtures/test_merge_graph_with_duplicate_1.jsonld')
-    @duplicate_graph_2 = RDF::Graph.load('./test/fixtures/test_merge_graph_with_duplicate_2.jsonld')
+    @duplicate_graph_1 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_with_duplicate_1.jsonld', __FILE__))
+    @duplicate_graph_2 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_with_duplicate_2.jsonld', __FILE__))
 
-    @non_duplicate_postal_code_graph_1 = RDF::Graph.load('./test/fixtures/test_merge_graph_without_duplicate_postal_code_1.jsonld')
-    @non_duplicate_postal_code_graph_2 = RDF::Graph.load('./test/fixtures/test_merge_graph_without_duplicate_postal_code_2.jsonld')
+    @non_duplicate_postal_code_graph_1 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_without_duplicate_postal_code_1.jsonld', __FILE__))
+    @non_duplicate_postal_code_graph_2 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_without_duplicate_postal_code_2.jsonld', __FILE__))
 
-    @non_duplicate_place_name_graph_1 = RDF::Graph.load('./test/fixtures/test_merge_graph_without_duplicate_place_name_1.jsonld')
-    @non_duplicate_place_name_graph_2 = RDF::Graph.load('./test/fixtures/test_merge_graph_without_duplicate_place_name_2.jsonld')
+    @non_duplicate_place_name_graph_1 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_without_duplicate_place_name_1.jsonld', __FILE__))
+    @non_duplicate_place_name_graph_2 = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_without_duplicate_place_name_2.jsonld', __FILE__))
   end
 
   def test_merge_graphs_remove_duplicate_events
@@ -65,6 +65,26 @@ class MergeGraphsTest < Minitest::Test
     merged_graph = Helper.merge_graph(@duplicate_graph_1, @duplicate_graph_2)
 
     assert_equal false, deep_copy.equal?(merged_graph), "Merged graph should not be identical to deep copy when duplicates are present"
+  end
+  
+  def test_merge_graphs_with_multilingual_duplicates
+    duplicate_graph_fr = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_with_duplicate_1_french.jsonld', __FILE__))
+    duplicate_graph_en = RDF::Graph.load(File.expand_path('../../fixtures/test_merge_graph_with_duplicate_1_english.jsonld', __FILE__))
+
+    merged_graph = Helper.merge_graph(duplicate_graph_fr, duplicate_graph_en)
+    event_uris = merged_graph.query([nil, RDF::RDFV.type, RDF::Vocab::SCHEMA.Event]).subjects.map(&:to_s)
+    expected_uri = "http://example.com/temporary/event-temp-999"
+    assert_equal true, event_uris.include?(expected_uri), "Expected to find event URI #{expected_uri} in the merged graph"
+
+    name_solutions = merged_graph.query([RDF::URI(expected_uri), RDF::Vocab::SCHEMA.name, nil])
+    names = name_solutions.objects.map { |obj| { value: obj.value, language: obj.language } }
+
+    expected_names = [
+      { value: "Test Duplicate Multilingual Event", language: :en },
+      { value: "Test Duplicate Multilingual Event", language: :fr }
+    ]
+
+    assert_equal expected_names.sort_by { |n| n[:language].to_s }, names.sort_by { |n| n[:language].to_s }, "Expected multilingual names to be present in the merged graph"
   end
 
 end
