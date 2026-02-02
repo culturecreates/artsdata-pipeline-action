@@ -74,7 +74,11 @@ module UrlFetcherService
           if(page_type == :xml)
             url = entity.content
           else
-            href = entity['href']
+            href = entity['href'] || entity.at("a")["href"]
+            if href.nil?
+              puts "Skipping entity because the href attribute is empty"
+              next
+            end
             url = (href.start_with?('http') ? href : @base_url + (href.start_with?('/') ? href : "/#{href}"))
           end
           path = URI.parse(url).path
