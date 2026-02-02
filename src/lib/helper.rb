@@ -366,7 +366,7 @@ module Helper
     common_events = original_graph_events & new_graph_events
 
     if !common_events.empty?
-      puts "Found #{common_events.size} duplicate events with same URI between existing and new graph. Merging language data."
+      # puts "Found #{common_events.size} duplicate events with same URI between existing and new graph. Merging language data."
       common_events.each do |common_event|
         # Copy language-tagged properties before deleting
         [RDF::Vocab::SCHEMA.name, RDF::Vocab::SCHEMA.description].each do |property|
@@ -458,8 +458,8 @@ module Helper
         next
       end
 
-      puts "Removing duplicate events: #{to_remove.map(&:to_s).join(', ')}"
-      puts "Keeping event: #{chosen.to_s}"
+      # puts "Removing duplicate events: #{to_remove.map(&:to_s).join(', ')}"
+      # puts "Keeping event: #{chosen.to_s}"
 
       to_remove.each do |bad_event|
         connected_entities = Set.new
