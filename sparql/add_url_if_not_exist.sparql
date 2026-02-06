@@ -1,7 +1,6 @@
 # This SPARQL adds schema:url to events.
 
 PREFIX schema: <http://schema.org/>
-PREFIX prov: <http://www.w3.org/ns/prov#>
 
 INSERT {
   ?event_node schema:url <subject_url> .
