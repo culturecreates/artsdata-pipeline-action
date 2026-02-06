@@ -9,13 +9,26 @@ class AddUrlTest < Minitest::Test
 
   def test_add_url
     sparql_file = File.read(@add_url_sparql_file)
-    sparql_file = sparql_file.gsub("subject_url", "www.example-uri.com")
+    sparql_file = sparql_file.gsub("subject_url", "www.example-url.com")
     sparql = SPARQL.parse(sparql_file, update: true)
     graph = RDF::Graph.load("./test/fixtures/test_add_url.jsonld")
     puts "before: #{graph.dump(:jsonld)}"
     graph.query(sparql)
     puts "after: #{graph.dump(:jsonld)}"
-    assert_equal(RDF::URI("www.example-uri.com"),
+    assert_equal(RDF::URI("www.example-url.com"),
                  graph.query([nil, RDF::URI("http://schema.org/url"), nil]).each.objects.first)
   end
+
+  def test_do_not_url_if_exists
+    sparql_file = File.read(@add_url_sparql_file)
+    sparql_file = sparql_file.gsub("subject_url", "www.example-new-url.com")
+    sparql = SPARQL.parse(sparql_file, update: true)
+    graph = RDF::Graph.load("./test/fixtures/test_event_with_url.jsonld")
+    puts "before: #{graph.dump(:jsonld)}"
+    graph.query(sparql)
+    puts "after: #{graph.dump(:jsonld)}"
+    assert_equal(RDF::URI("http://www.example-url.com"),
+                 graph.query([nil, RDF::URI("http://schema.org/url"), nil]).each.objects.first)
+  end
+
 end
