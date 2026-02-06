@@ -1,0 +1,18 @@
+# This SPARQL adds schema:url to events.
+
+PREFIX schema: <http://schema.org/>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+
+INSERT {
+  ?event_node schema:url <subject_url> .
+}
+WHERE {
+  {
+    SELECT DISTINCT ?event_node
+    WHERE {
+      ?event_node a schema:Event .
+      FILTER NOT EXISTS { ?event_node schema:url ?some_object }
+    }
+  }
+  ?event_node ?p ?o
+}
