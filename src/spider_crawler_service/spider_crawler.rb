@@ -189,6 +189,7 @@ module SpiderCrawlerService
           puts "Performing SPARQL transformations on loaded graph from #{link}."
           transformations = [
             ['add_derived_from.sparql', 'subject_url', link],
+            ['add_url_if_not_exist.sparql', 'subject_url', link],
             ['add_language.sparql', 'subject_url', link],
             ['remove_objects.sparql'],
             ['replace_blank_nodes.sparql', 'domain_name', @base_url],
