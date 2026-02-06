@@ -237,7 +237,7 @@ module Helper
     start_time = metadata_content['start_time']
     end_time = metadata_content['end_time']
     structured_score = metadata_content['structured_score'].to_s
-    event_count = metadata_content['event_count'].to_s
+    event_count = metadata_content['event_count']
 
     crawl_uri = "urn:crawl:#{uuid_crawl}"
     org_uri = "urn:organization:#{same_as.split('/').last}"
@@ -285,7 +285,10 @@ module Helper
             {
             "@type" => "schema:PropertyValue",
             "schema:name" => "eventsLoadedCount",
-            "schema:value" => event_count
+            "schema:value" => {
+                "@value" => event_count.to_i,
+                "@type"  => "xsd:integer"
+              }
             },
             {
             "@type" => "schema:PropertyValue",
