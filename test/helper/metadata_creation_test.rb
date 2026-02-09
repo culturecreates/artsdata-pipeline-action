@@ -15,7 +15,8 @@ class MetadataCreationTest < Minitest::Test
 			'databus_id'    => 'http://example.com/databus',
 			'url_count'     => 42,
 			'start_time'    => '2025-11-26T10:00:00Z',
-			'end_time'      => '2025-11-26T11:00:00Z'
+			'end_time'      => '2025-11-26T11:00:00Z',
+      'event_count'   => 100
 		}
 
     @skipped_metadata_content = {
@@ -110,4 +111,33 @@ class MetadataCreationTest < Minitest::Test
     solution = graph.query([nil, RDF::Vocab::SCHEMA.sameAs, RDF::URI(@metadata_content_with_artsdata_uri['artsdata_uri'])]).size
     assert_equal 1, solution, "Expected to find one schema:sameAs with the artsdata_uri value"
   end
+
+  def test_event_count_is_xsd_integer
+    graph = Helper.generate_metadata_file_content(@metadata_content)
+    additional_properties = graph.query([nil, RDF::Vocab::SCHEMA.additionalProperty, nil])
+    event_count = nil
+    additional_properties.each do |property|
+      value = graph.query([property.object, RDF::Vocab::SCHEMA.name, nil]).first.object
+      if value == RDF::Literal.new('eventsLoadedCount')
+        event_count = graph.query([property.object, RDF::Vocab::SCHEMA.value, nil]).first
+        assert_equal RDF::Literal::Integer, event_count.object.class, "Expected schema:value for event_count to be of type RDF::Literal::Integer"
+        return
+      end
+    end
+  end
+
+  def test_url_count_is_xsd_integer
+    graph = Helper.generate_metadata_file_content(@metadata_content)
+    additional_properties = graph.query([nil, RDF::Vocab::SCHEMA.additionalProperty, nil])
+    url_count = nil
+    additional_properties.each do |property|
+      value = graph.query([property.object, RDF::Vocab::SCHEMA.name, nil]).first.object
+      if value == RDF::Literal.new('urlLoadedCount')
+        url_count = graph.query([property.object, RDF::Vocab::SCHEMA.value, nil]).first
+        assert_equal RDF::Literal::Integer, url_count.object.class, "Expected schema:value for url_count to be of type RDF::Literal::Integer"
+        return
+      end
+    end
+  end
+
 end

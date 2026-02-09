@@ -233,11 +233,11 @@ module Helper
 
     # data to be fetched during the crawl
     databus_id = metadata_content['databus_id']
-    url_count = metadata_content['url_count']
+    url_count = Integer(metadata_content['url_count']) if metadata_content['url_count']
     start_time = metadata_content['start_time']
     end_time = metadata_content['end_time']
     structured_score = metadata_content['structured_score'].to_s
-    event_count = metadata_content['event_count'].to_s
+    event_count = Integer(metadata_content['event_count']) if metadata_content['event_count']
 
     crawl_uri = "urn:crawl:#{uuid_crawl}"
     org_uri = "urn:organization:#{same_as.split('/').last}"
