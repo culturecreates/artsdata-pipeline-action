@@ -57,6 +57,7 @@ artsdata-pipeline:
         custum-databus-url:
         html-extract-config:
         register-only:
+        cloudflare-private-key:
 ```
 
 <br>
@@ -93,6 +94,8 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 | `offset`                            | Offset for pagination strategy (optinal, defaults to 1).
 | `custom-user-agent`                 | custom-user-agent for the http requests (optional, defaults to artsdata-crawler)
 | `html-extract-config`               | custom xpath-config to fetch additional_data. 
+| `cloudflare-private-key`            | Ed25519 private key in PEM format for signing HTTP requests to identify the Artsdata bot to Cloudflare-protected sites. Should be stored as an organization or repository secret. (optional)
+
 
 html-extract-config format: 
 
@@ -236,3 +239,26 @@ For larger changes or significant improvements that could impact compatibility.
 For major overhauls or breaking changes. If there's a drastic change in functionality or usage, increment to the next "big update" version.
 
 
+## Cloudflare Bot Protection
+Some websites use Cloudflare to block automated crawlers. The Artsdata pipeline supports HTTP Message Signatures (RFC 9421) to identify itself as a legitimate bot to Cloudflare-protected sites.
+
+### Setup
+
+1. **Store your Ed25519 private key as a GitHub secret:**
+   - Organization level (recommended): Settings → Secrets and variables → Actions → New organization secret
+   - Secret name: `CLOUDFLARE_PRIVATE_KEY`
+   - Value: Your Ed25519 private key in PEM format
+
+2. **Use in your workflow:**
+```yaml
+- name: Crawl Cloudflare-protected site
+  uses: culturecreates/artsdata-pipeline-action@v3
+  with:
+    mode: 'fetch-push'
+    page-url: 'https://example.com'
+    cloudflare-private-key: ${{ secrets.CLOUDFLARE_PRIVATE_KEY }}
+```
+
+
+
+The crawler will automatically sign all HTTP requests with your private key, allowing Cloudflare to verify the bot's identity.
