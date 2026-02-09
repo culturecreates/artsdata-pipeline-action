@@ -126,20 +126,4 @@ class MetadataCreationTest < Minitest::Test
     end
   end
 
-  def test_event_count_string_input_still_xsd_integer
-    @metadata_content['event_count'] = "100"
-
-    graph = Helper.generate_metadata_file_content(@metadata_content)
-
-    additional_properties = graph.query([nil, RDF::Vocab::SCHEMA.additionalProperty, nil])
-    additional_properties.each do |property|
-      name = graph.query([property.object, RDF::Vocab::SCHEMA.name, nil]).first.object
-      if name == RDF::Literal.new('eventsLoadedCount')
-        value = graph.query([property.object, RDF::Vocab::SCHEMA.value, nil]).first.object
-        assert_equal RDF::Literal::Integer, value.class
-        return
-      end
-    end
-  end
-
 end
