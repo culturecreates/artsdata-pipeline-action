@@ -187,21 +187,7 @@ module SpiderCrawlerService
           puts "No relevant RDF data found at #{link}, the graph will not be loaded." 
         else
           puts "Performing SPARQL transformations on loaded graph from #{link}."
-          transformations = [
-            ['add_derived_from.sparql', 'subject_url', link],
-            ['add_url_if_not_exist.sparql', 'subject_url', link],
-            ['add_language.sparql', 'subject_url', link],
-            ['remove_objects.sparql'],
-            ['replace_blank_nodes.sparql', 'domain_name', @base_url],
-            ['fix_date_timezone.sparql'],
-            ['fix_schemaorg_https_objects.sparql'],
-            ['fix_date.sparql'],
-            ['fix_attendance_mode.sparql'],
-            ['fix_date_missing_seconds.sparql']
-          ]
-          transformations.each do |args|
-            loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, *args)
-          end
+          loaded_graph = Helper.transform_event_graph(loaded_graph, link, @base_url)
           @graph = Helper.merge_graph(@graph, loaded_graph)
         end
 

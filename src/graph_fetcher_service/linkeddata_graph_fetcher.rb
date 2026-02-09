@@ -36,16 +36,8 @@ module GraphFetcherService
           end
         end
         if !loaded_graph.empty?
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', entity_url)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', entity_url)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", entity_urls[0].split('/')[0..2].join('/'))
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "add_url_if_not_exist.sparql", "subject_url", entity_url)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql")
+          puts "Performing SPARQL transformations on loaded graph from #{entity_url}."
+          loaded_graph = Helper.transform_event_graph(loaded_graph, entity_url, entity_urls[0].split('/')[0..2].join('/'))
         else
           puts "No RDF data found at #{entity_url}, skipping SPARQL transformations."
         end

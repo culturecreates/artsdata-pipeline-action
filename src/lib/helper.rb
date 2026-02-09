@@ -483,4 +483,24 @@ module Helper
       end
     end
   end
+
+  def self.transform_event_graph(loaded_graph, link, base_url)
+    transformations = [
+      ['add_derived_from.sparql', 'subject_url', link],
+      ['add_url_if_not_exist.sparql', 'subject_url', link],
+      ['add_language.sparql', 'subject_url', link],
+      ['remove_objects.sparql'],
+      ['replace_blank_nodes.sparql', 'domain_name', base_url],
+      ['fix_date_timezone.sparql'],
+      ['fix_schemaorg_https_objects.sparql'],
+      ['fix_date.sparql'],
+      ['fix_attendance_mode.sparql'],
+      ['fix_date_missing_seconds.sparql']
+    ]
+    sparql = SparqlService::Sparql.new('./sparql/')
+    transformations.each do |args|
+      loaded_graph = sparql.perform_sparql_transformation(loaded_graph, *args)
+    end
+    loaded_graph
+  end
 end
