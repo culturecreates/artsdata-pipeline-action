@@ -126,4 +126,18 @@ class MetadataCreationTest < Minitest::Test
     end
   end
 
+  def test_url_count_is_xsd_integer
+    graph = Helper.generate_metadata_file_content(@metadata_content)
+    additional_properties = graph.query([nil, RDF::Vocab::SCHEMA.additionalProperty, nil])
+    url_count = nil
+    additional_properties.each do |property|
+      value = graph.query([property.object, RDF::Vocab::SCHEMA.name, nil]).first.object
+      if value == RDF::Literal.new('urlLoadedCount')
+        url_count = graph.query([property.object, RDF::Vocab::SCHEMA.value, nil]).first
+        assert_equal RDF::Literal::Integer, url_count.object.class, "Expected schema:value for url_count to be of type RDF::Literal::Integer"
+        return
+      end
+    end
+  end
+
 end
