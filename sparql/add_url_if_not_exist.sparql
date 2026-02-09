@@ -9,7 +9,7 @@ WHERE {
   {
     SELECT DISTINCT ?event_node
     WHERE {
-      ?event_node a schema:Event .
+      ?event_node ?predicate ?object .
       FILTER NOT EXISTS { ?event_node schema:url ?some_object }
     }
   }
