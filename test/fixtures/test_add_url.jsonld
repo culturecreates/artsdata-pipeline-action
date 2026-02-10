@@ -1,6 +1,7 @@
 {
     "@context": "http://schema.org/",
     "@type": "schema:Event",
+    "@id": "http://event.com/1",
     "schema:name": "Art Exhibition",
     "schema:startDate": "2024-12-01T10:00:00Z",
     "schema:endDate": "2024-12-31T18:00:00Z",
