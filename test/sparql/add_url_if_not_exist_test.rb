@@ -14,7 +14,7 @@ class AddUrlIfNotExistTest < Minitest::Test
     graph = RDF::Graph.load("./test/fixtures/test_add_url.jsonld")
     graph.query(sparql)
     assert_equal(RDF::URI("www.example-url.com"),
-                 graph.query([nil, RDF::URI("http://schema.org/url"), nil]).each.objects.first)
+                 graph.query([nil, RDF::Vocab::SCHEMA.url, nil]).each.objects.first)
   end
 
   def test_do_not_url_if_exists
@@ -24,7 +24,7 @@ class AddUrlIfNotExistTest < Minitest::Test
     graph = RDF::Graph.load("./test/fixtures/test_event_with_url.jsonld")
     graph.query(sparql)
     assert_equal(RDF::URI("http://www.example-url.com"),
-                 graph.query([nil, RDF::URI("http://schema.org/url"), nil]).each.objects.first)
+                 graph.query([nil, RDF::Vocab::SCHEMA.url, nil]).each.objects.first)
   end
 
 end
