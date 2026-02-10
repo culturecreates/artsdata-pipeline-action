@@ -5,27 +5,23 @@ class AddUrlIfNotExistTest < Minitest::Test
 
   def setup
     @add_url_sparql_file = "./sparql/add_url_if_not_exist.sparql"
+    sparql_file = File.read(@add_url_sparql_file)
+    sparql_file = sparql_file.gsub("subject_url", "www.example-url.com")
+    @sparql = SPARQL.parse(sparql_file, update: true)
+    @graph = RDF::Graph.load("./test/fixtures/test_add_url.jsonld")
   end
 
   def test_add_url
-    sparql_file = File.read(@add_url_sparql_file)
-    sparql_file = sparql_file.gsub("subject_url", "www.example-url.com")
-    sparql = SPARQL.parse(sparql_file, update: true)
-    graph = RDF::Graph.load("./test/fixtures/test_add_url.jsonld")
-    graph.query(sparql)
-    result = graph.query([nil, RDF::Vocab::SCHEMA.url, nil]).first.object
+    @graph.query(@sparql)
+    result = @graph.query([nil, RDF::Vocab::SCHEMA.url, nil]).first.object
     assert result.valid? 
     assert_equal RDF::URI("www.example-url.com"),result
   end
 
   def test_do_not_add_url_if_exists
-    sparql_file = File.read(@add_url_sparql_file)
-    sparql_file = sparql_file.gsub("subject_url", "www.example-new-url.com")
-    sparql = SPARQL.parse(sparql_file, update: true)
-    graph = RDF::Graph.load("./test/fixtures/test_add_url.jsonld")
-    graph << [RDF::URI("http://event.com/1"), RDF::Vocab::SCHEMA.url, RDF::URI("http://www.example-url.com")]
-    graph.query(sparql)
-    result = graph.query([nil, RDF::Vocab::SCHEMA.url, nil]).first.object
+    @graph << [RDF::URI("http://event.com/1"), RDF::Vocab::SCHEMA.url, RDF::URI("http://www.example-url.com")]
+    @graph.query(@sparql)
+    result = @graph.query([nil, RDF::Vocab::SCHEMA.url, nil]).first.object
     assert_equal RDF::URI("http://www.example-url.com"),result
   end
 
