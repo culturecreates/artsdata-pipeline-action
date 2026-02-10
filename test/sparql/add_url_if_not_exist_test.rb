@@ -1,7 +1,7 @@
 require 'minitest/autorun'
 require 'linkeddata'
 
-class AddUrlTest < Minitest::Test
+class AddUrlIfNotExistTest < Minitest::Test
 
   def setup
     @add_url_sparql_file = "./sparql/add_url_if_not_exist.sparql"
