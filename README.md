@@ -248,6 +248,7 @@ Some websites use Cloudflare to block automated crawlers. The Artsdata pipeline 
    - Organization level (recommended): Settings → Secrets and variables → Actions → New organization secret
    - Secret name: `CLOUDFLARE_PRIVATE_KEY`
    - Value: Your Ed25519 private key in PEM format
+   - You need to paste it **with 4 spaces before every line and NO tabs:**
 
 2. **Use in your workflow:**
 ```yaml
