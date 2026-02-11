@@ -33,4 +33,12 @@ class AddUrlIfNotExistTest < Minitest::Test
     assert_equal 0, result.count
   end
 
+  def test_add_url_if_music_event
+    @graph.delete([RDF::URI("http://event.com/1"), RDF.type, RDF::Vocab::SCHEMA.Event])
+    @graph << [RDF::URI("http://event.com/1"),  RDF.type, RDF::Vocab::SCHEMA.MusicEvent]
+    @graph.query(@sparql)
+    result = @graph.query([nil, RDF::Vocab::SCHEMA.url, nil]).first.object
+    assert_equal RDF::URI("http://www.example-url.com"),result
+  end
+
 end
