@@ -1,0 +1,19 @@
+# This SPARQL adds schema:url to events that do not already have a schema:url.
+# It only targets resources of type schema:Event or listed sub types .
+
+PREFIX schema: <http://schema.org/>
+
+INSERT {
+  ?event_node schema:url <subject_url> .
+}
+WHERE {
+VALUES ?class {
+    schema:Event
+    schema:TheaterEvent
+    schema:MusicEvent
+    schema:Festival
+  }
+  ?event_node a ?class .
+  FILTER NOT EXISTS { ?event_node schema:url ?some_object }
+}
+ 

@@ -20,7 +20,7 @@ module GraphFetcherService
         rescue StandardError => e
           puts "Error loading RDFa data from #{entity_url}: #{e.message}"
         end
-        if(!@html_extract_config.nil?)
+        if (!@html_extract_config.nil?)
           entity_type = @html_extract_config['entity_type']
           entity_uri = get_uri_by_type(loaded_graph, entity_type)
           if !entity_uri.nil?
@@ -36,17 +36,10 @@ module GraphFetcherService
           end
         end
         if !loaded_graph.empty?
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_derived_from.sparql', 'subject_url', entity_url)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, 'add_language.sparql', 'subject_url', entity_url)
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "remove_objects.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "replace_blank_nodes.sparql", "domain_name", entity_urls[0].split('/')[0..2].join('/'))
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_timezone.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_schemaorg_https_objects.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_attendance_mode.sparql")
-          loaded_graph = @sparql.perform_sparql_transformation(loaded_graph, "fix_date_missing_seconds.sparql") 
+          puts "Performing SPARQL transformations on loaded graph from #{entity_url}."
+          loaded_graph = Helper.transform_event_graph(loaded_graph, entity_url, entity_urls[0].split('/')[0..2].join('/'))
         else
-          puts "No RDF data found at #{entity_url}, skipping SPARQL transformations." 
+          puts "No RDF data found at #{entity_url}, skipping SPARQL transformations."
         end
 
         graph = Helper.merge_graph(graph, loaded_graph)
@@ -72,6 +65,7 @@ module GraphFetcherService
     end
 
     private
+
     def transform_value(transform, value)
       func = transform['function']
       args = transform['args'] || {}
@@ -84,26 +78,28 @@ module GraphFetcherService
     end
 
     private
+
     def split(string, delimiter)
       return string if delimiter.nil? || delimiter.empty?
       string.split(delimiter).map(&:strip)
     end
 
     private
+
     def extract_with_xpath(uri, data, extract_logic)
       graph = RDF::Graph.new
       doc = Nokogiri::HTML(data)
 
       extract_logic.each do |predicate, config|
         xpath_expr, css_expr, transform = config.values_at('xpath', 'css', 'transform')
-        is_uri   = config['uri'].to_s.casecmp?('true')
+        is_uri = config['uri'].to_s.casecmp?('true')
         is_array = config['array'].to_s.casecmp?('true')
 
         xpath_expr ||= Nokogiri::CSS.xpath_for(css_expr)&.first
         next unless xpath_expr
 
         begin
-        nodes = doc.xpath(xpath_expr)
+          nodes = doc.xpath(xpath_expr)
         rescue => e
           puts "Error extracting for predicate '#{predicate}' with XPath '#{xpath_expr}': #{e.message}"
           next
@@ -124,6 +120,7 @@ module GraphFetcherService
     end
 
     private
+
     def extract_values(nodes, is_array)
       case nodes
       when Nokogiri::XML::NodeSet
