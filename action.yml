@@ -89,7 +89,7 @@ runs:
           databus: ${{ inputs.custom-databus-url }}
           register_only: ${{ inputs.register-only }}
           cloudflare_private_key: |
-            ${{ inputs.cloudflare-private-key }}
+            $(printf "%s" "${{ inputs.cloudflare-private-key }}" | sed 's/^/ /')
         EOF
         cat <<EOF > html-extract-config.json
           ${{ inputs.html-extract-config }}
