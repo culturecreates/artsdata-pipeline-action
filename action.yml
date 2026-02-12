@@ -88,12 +88,9 @@ runs:
           shacl: ${{ inputs.shacl }}
           databus: ${{ inputs.custom-databus-url }}
           register_only: ${{ inputs.register-only }}
-          cloudflare_private_key: |
-            $(printf "%s" "${{ inputs.cloudflare-private-key }}" | sed 's/^/ /')
         EOF
         
-        echo 'Printing config.yml'
-        cat config.yml
+        printf "%s" "${{ inputs.cloudflare-private-key }}" | sed 's/^/  /' >> config.yml  
         
         cat <<EOF > html-extract-config.json
           ${{ inputs.html-extract-config }}
