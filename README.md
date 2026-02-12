@@ -240,15 +240,38 @@ For major overhauls or breaking changes. If there's a drastic change in function
 
 
 ## Cloudflare Bot Protection
-Some websites use Cloudflare to block automated crawlers. The Artsdata pipeline supports HTTP Message Signatures (RFC 9421) to identify itself as a legitimate bot to Cloudflare-protected sites.
+Some websites use Cloudflare to block automated crawlers. The Artsdata pipeline supports HTTP Message Signatures (RFC 9421) to identify the Artsdata crawler as a legitimate bot to Cloudflare-protected sites.
 
-### Setup
+### How It Works
+
+Each HTTP request made by the Artsdata crawler is signed with an Ed25519 private key. 
+Cloudflare verifies the signature against the public key published at the Artsdata key directory URL. 
+This allows Cloudflare to identify and trust the Artsdata crawler.
+
+### Requesting Access
+
+**Only the Artsdata crawler's private key will work with this feature.** The key is 
+registered with Cloudflare under the Artsdata identity. No other key will be accepted.
+
+If your organization's website uses Cloudflare bot protection and you want the Artsdata 
+crawler to be able to crawl it, you must request the private key from the 
+[Artsdata Stewards](https://github.com/orgs/artsdata-stewards/teams). The Artsdata 
+Stewards will review your request and decide whether to share the key based on the 
+legitimacy of the crawl.
+
+To request access, open an issue in the 
+[artsdata-stewards](https://github.com/artsdata-stewards) organization and provide:
+- The URL of the Cloudflare-protected website to crawl
+- The reason for the crawl
+- The GitHub repository that will use the key
+
+
+### Setup (Once Access is Granted)
 
 1. **Store your Ed25519 private key as a GitHub secret:**
    - Organization level (recommended): Settings → Secrets and variables → Actions → New organization secret
    - Secret name: `CLOUDFLARE_PRIVATE_KEY`
-   - Value: Your Ed25519 private key in PEM format
-   - You need to paste it **with 4 spaces before every line and NO tabs:**
+   - Value: The Ed25519 private key in PEM format provided by Artsdata Stewards
 
 2. **Use in your workflow:**
 ```yaml
@@ -261,5 +284,4 @@ Some websites use Cloudflare to block automated crawlers. The Artsdata pipeline 
 ```
 
 
-
-The crawler will automatically sign all HTTP requests with your private key, allowing Cloudflare to verify the bot's identity.
+The Artsdata crawler will automatically sign all HTTP requests, allowing Cloudflare to verify the crawler's identity and grant access to the protected site.
