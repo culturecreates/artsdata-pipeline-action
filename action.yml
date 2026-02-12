@@ -91,6 +91,10 @@ runs:
           cloudflare_private_key: |
             $(printf "%s" "${{ inputs.cloudflare-private-key }}" | sed 's/^/ /')
         EOF
+        
+        echo 'Printing config.yml'
+        cat config.yml
+        
         cat <<EOF > html-extract-config.json
           ${{ inputs.html-extract-config }}
         EOF
