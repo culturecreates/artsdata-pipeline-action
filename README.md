@@ -57,6 +57,7 @@ artsdata-pipeline:
         custum-databus-url:
         html-extract-config:
         register-only:
+        cloudflare-private-key:
 ```
 
 <br>
@@ -93,6 +94,8 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 | `offset`                            | Offset for pagination strategy (optinal, defaults to 1).
 | `custom-user-agent`                 | custom-user-agent for the http requests (optional, defaults to artsdata-crawler)
 | `html-extract-config`               | custom xpath-config to fetch additional_data. 
+| `cloudflare-private-key`            | Ed25519 private key in PEM format for signing HTTP requests to identify the Artsdata bot to Cloudflare-protected sites. Should be stored as an organization or repository secret. (optional)
+
 
 html-extract-config format: 
 
@@ -236,3 +239,49 @@ For larger changes or significant improvements that could impact compatibility.
 For major overhauls or breaking changes. If there's a drastic change in functionality or usage, increment to the next "big update" version.
 
 
+## Cloudflare Bot Protection
+Some websites use Cloudflare to block automated crawlers. The Artsdata pipeline supports HTTP Message Signatures (RFC 9421) to identify the Artsdata crawler as a legitimate bot to Cloudflare-protected sites.
+
+### How It Works
+
+Each HTTP request made by the Artsdata crawler is signed with an Ed25519 private key. 
+Cloudflare verifies the signature against the public key published at the Artsdata key directory URL. 
+This allows Cloudflare to identify and trust the Artsdata crawler.
+
+### Requesting Access
+
+**Only the Artsdata crawler's private key will work with this feature.** The key is 
+registered with Cloudflare under the Artsdata identity. No other key will be accepted.
+
+If your organization's website uses Cloudflare bot protection and you want the Artsdata 
+crawler to be able to crawl it, you must request the private key from the 
+[Artsdata Stewards](https://github.com/orgs/artsdata-stewards/teams). The Artsdata 
+Stewards will review your request and decide whether to share the key based on the 
+legitimacy of the crawl.
+
+To request access, open an issue in the 
+[artsdata-stewards](https://github.com/artsdata-stewards) organization and provide:
+- The URL of the Cloudflare-protected website to crawl
+- The reason for the crawl
+- The GitHub repository that will use the key
+
+
+### Setup (Once Access is Granted)
+
+1. **Store your Ed25519 private key as a GitHub secret:**
+   - Organization level (recommended): Settings → Secrets and variables → Actions → New organization secret
+   - Secret name: `CLOUDFLARE_PRIVATE_KEY`
+   - Value: The Ed25519 private key in PEM format provided by Artsdata Stewards
+
+2. **Use in your workflow:**
+```yaml
+- name: Crawl Cloudflare-protected site
+  uses: culturecreates/artsdata-pipeline-action@v3
+  with:
+    mode: 'fetch-push'
+    page-url: 'https://example.com'
+    cloudflare-private-key: ${{ secrets.CLOUDFLARE_PRIVATE_KEY }}
+```
+
+
+The Artsdata crawler will automatically sign all HTTP requests, allowing Cloudflare to verify the crawler's identity and grant access to the protected site.
