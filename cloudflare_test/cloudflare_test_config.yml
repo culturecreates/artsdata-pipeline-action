@@ -2,3 +2,4 @@ mode: "fetch" # other options: fetch, push, fetch-test
 page_url: https://crawltest.com/cdn-cgi/web-bot-auth # URL of the page to crawl
 headless: false # true to run the crawler in headless mode
 # callback_url: https://webhook.site/2f58e5ec-327b-43ae-b6c2-f11dadd79980 # webhook URL to send notifications
+cloudflare_private_key:

@@ -1,0 +1,21 @@
+name: Test Cloudflare Bot Authentication
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-cloudflare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Run Cloudflare test
+        run: ./run_cloudflare_test.sh
+        env:
+          CLOUDFLARE_PRIVATE_KEY: ${{ secrets.CLOUDFLARE_PRIVATE_KEY }}

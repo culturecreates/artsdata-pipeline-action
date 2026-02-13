@@ -3,7 +3,24 @@
 
 echo "Running Cloudflare test..."
 
-# capture output
+# Check if CLOUDFLARE_PRIVATE_KEY environment variable is set
+if [ -z "$CLOUDFLARE_PRIVATE_KEY" ]; then
+  echo "ERROR: CLOUDFLARE_PRIVATE_KEY environment variable is not set."
+  echo "Usage: CLOUDFLARE_PRIVATE_KEY=\$(cat private-key.pem) ./run_cloudflare_test.sh"
+  exit 1
+fi
+
+# Inject private key into config file
+cat > cloudflare_test/cloudflare_test_config.yml << EOF
+mode: "fetch"
+page_url: https://crawltest.com/cdn-cgi/web-bot-auth
+headless: false
+cloudflare_private_key: |
+$(echo "$CLOUDFLARE_PRIVATE_KEY" | sed 's/^/  /')
+key_directory_url: "https://artsdata.ca/.well-known/http-message-signatures-directory"
+EOF
+
+
 output=$(bundle exec ruby src/main.rb cloudflare_test/cloudflare_test_config.yml)
 # echo "$output"
 
