@@ -15,7 +15,16 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Run Cloudflare test
-        run: ./run_cloudflare_test.sh
+      - name: Create config files
+        run: |
+          cat > config.yml << EOF
+          mode: "fetch"
+          page_url: https://crawltest.com/cdn-cgi/web-bot-auth
+          cloudflare_private_key: |
+          $(echo "$CLOUDFLARE_PRIVATE_KEY" | sed 's/^/    /')
+          EOF
         env:
           CLOUDFLARE_PRIVATE_KEY: ${{ secrets.CLOUDFLARE_PRIVATE_KEY }}
+
+      - name: Run Cloudflare test
+        run: bundle exec ruby src/main.rb config.yml
