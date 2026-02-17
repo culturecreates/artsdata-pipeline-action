@@ -1,7 +1,7 @@
 # artsdata-pipeline-action
 Action to manage the data pipeline for Artsdata.
 
-Use this Github action from your Github project repo with mode `push` to send your data to the Artsdata databus. Use the mode `fetch-push` to first crawl a website, extract strucutred data, and then push to Artsdata.
+Use this Github action from your Github project repo with mode `push` to send your data to the Artsdata databus. Use the mode `fetch-push` to first crawl a website, extract structured data, and then push to Artsdata.
 
 Example file to add to your repo .github/workflows/mydata.yml
 ```
@@ -86,7 +86,7 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 | ------------------------------------- | -------------------------- |
 | `page-url`                          | **required**: URL of the page to crawl (required for fetch and fetch-push modes).
 | `token`                             | **required**: Constant. Must be set to `${{ secrets.GITHUB_TOKEN }}`. [Automatic GitHub token](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token) generated with each run of the workflow. Needed for the action to save the crawled data to your repo.
-| `entity-identifier`                 | Identifier of the entity to fetch URL, defaults to spider mode if not provided.
+| `entity-identifier`                 | Identifier of the entity to fetch URL (optional, defaults to [spider crawler](#spider-crawler) mode if not provided).
 | `headless`                          | Whether to run in headless mode (optional, defaults to false).
 | `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(optional, defaults to false).
 | `is-paginated`                      | Whether the page is paginated (optional, defaults to false).
@@ -100,7 +100,7 @@ html-extract-config format:
       "entity_type": "type of entity you want to add additional info to, example "http://schema.org/Event", 
       "extract": { 
         "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
-        "css": "css expression, example: div.um-name", either css or xpath is required.
+        "css": "css expression, example: div.um-name",
         "isArray": "set as true if the object should be an array, default is false",
         "isUri": "set as true if the object should be a URI, default is false",
         "transform": {

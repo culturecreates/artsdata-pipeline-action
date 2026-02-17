@@ -64,33 +64,36 @@ runs:
       run: |
 
         cat <<EOF > config.yml
-          mode: ${{ inputs.mode }}
-          page_url: ${{ inputs.page-url }}
-          entity_identifier: ${{ inputs.entity-identifier }}
-          is_paginated: ${{ inputs.is-paginated }}
-          headless: ${{ inputs.headless }}
-          fetch_urls_headlessly: ${{ inputs.fetch-urls-headlessly }}
-          offset: ${{ inputs.offset || '1' }}
-          custom_user_agent: ${{ inputs.custom-user-agent || ''}}
-          callback_url: ${{ inputs.report-callback-url || '' }}
-          workflow_id: ${{ github.workflow }}
-          actor: ${{ github.actor }}
-          token: ${{ inputs.token }}
-          repository: ${{ github.repository }}
-          artifact: ${{ inputs.artifact }}
-          publisher: ${{ inputs.publisher }}
-          reference: ${{ github.ref }}
-          version: ${{ inputs.version }}
-          comment: ${{ inputs.comment || format('https://github.com/{0}/blob/{1}/{2}', github.repository, github.ref_name, github.event.workflow) }}
-          group: ${{ inputs.group }}
-          download_file: ${{ inputs.downloadFile }}
-          download_url: ${{ inputs.downloadUrl }}
-          shacl: ${{ inputs.shacl }}
-          databus: ${{ inputs.custom-databus-url }}
-          register_only: ${{ inputs.register-only }}
-          cloudflare_private_key: |
-            ${{ inputs.cloudflare-private-key }}
+        mode: ${{ inputs.mode }}
+        page_url: ${{ inputs.page-url }}
+        entity_identifier: ${{ inputs.entity-identifier }}
+        is_paginated: ${{ inputs.is-paginated }}
+        headless: ${{ inputs.headless }}
+        fetch_urls_headlessly: ${{ inputs.fetch-urls-headlessly }}
+        offset: ${{ inputs.offset || '1' }}
+        custom_user_agent: ${{ inputs.custom-user-agent || ''}}
+        callback_url: ${{ inputs.report-callback-url || '' }}
+        workflow_id: ${{ github.workflow }}
+        actor: ${{ github.actor }}
+        token: ${{ inputs.token }}
+        repository: ${{ github.repository }}
+        artifact: ${{ inputs.artifact }}
+        publisher: ${{ inputs.publisher }}
+        reference: ${{ github.ref }}
+        version: ${{ inputs.version }}
+        comment: ${{ inputs.comment || format('https://github.com/{0}/blob/{1}/{2}', github.repository, github.ref_name, github.event.workflow) }}
+        group: ${{ inputs.group }}
+        download_file: ${{ inputs.downloadFile }}
+        download_url: ${{ inputs.downloadUrl }}
+        shacl: ${{ inputs.shacl }}
+        databus: ${{ inputs.custom-databus-url }}
+        register_only: ${{ inputs.register-only }}
+        cloudflare_private_key: |
+        $(printf "%s" "${{ inputs.cloudflare-private-key  }}" | sed 's/^/ /')
         EOF
+        
+        cat config.yml
+                
         cat <<EOF > html-extract-config.json
           ${{ inputs.html-extract-config }}
         EOF
@@ -102,7 +105,7 @@ runs:
         mkdir -p output
         mkdir -p metadata
 
-        version="v3.8.2"
+        version="v3.9.5"
 
         for i in {1..5}; do
           docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version && break
