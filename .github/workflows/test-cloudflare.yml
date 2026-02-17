@@ -1,0 +1,30 @@
+name: Test Cloudflare Bot Authentication
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-cloudflare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true
+
+      - name: Create config files
+        run: |
+          cat > config.yml << EOF
+          mode: "fetch"
+          page_url: https://crawltest.com/cdn-cgi/web-bot-auth
+          cloudflare_private_key: |
+          $(echo "$CLOUDFLARE_PRIVATE_KEY" | sed 's/^/    /')
+          EOF
+        env:
+          CLOUDFLARE_PRIVATE_KEY: ${{ secrets.CLOUDFLARE_PRIVATE_KEY }}
+
+      - name: Run Cloudflare test
+        run: bundle exec ruby src/main.rb config.yml
