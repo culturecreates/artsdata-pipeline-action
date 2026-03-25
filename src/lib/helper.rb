@@ -229,7 +229,7 @@ module Helper
     crawl_name = metadata_content['crawl_name']
     crawl_description = metadata_content['crawl_description']
     same_as = metadata_content['same_as']
-    artsdara_uri = metadata_content['artsdata_uri']
+    artsdata_uri = metadata_content['artsdata_uri']
 
     # data to be fetched during the crawl
     databus_id = metadata_content['databus_id']
@@ -241,6 +241,7 @@ module Helper
 
     crawl_uri = "urn:crawl:#{uuid_crawl}"
     org_uri = "urn:organization:#{same_as.split('/').last}"
+    org_uri = same_as.present? ? "urn:organization:#{same_as.split('/').last}" : artsdata_uri
 
     jsonld = {
       "@context" => {
@@ -263,9 +264,9 @@ module Helper
           "schema:sameAs" => { "@id" => same_as },
           "schema:url" => { "@id" => datafeed_url, "@type" => "schema:Website" }
         },
-        artsdara_uri && {
+        artsdata_uri && {
           "@id" => org_uri,
-          "schema:sameAs" => { "@id" => artsdara_uri }
+          "schema:sameAs" => { "@id" => artsdata_uri }
         },
         {
           "@id" => crawl_uri,
