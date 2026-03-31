@@ -243,7 +243,7 @@ module Helper
 
     # Wikidata source: same_as is a Wikidata URI → mint a new urn: org
     # Artsdata/recrawl source: same_as is blank → org already exists, no new org needed
-    wikidata_source = same_as.present?
+    wikidata_source = !same_as.empty?
     org_uri = wikidata_source ? "urn:organization:#{same_as.split('/').last}" : nil
 
     website_entity = {
@@ -260,7 +260,7 @@ module Helper
           "schema:sameAs"  => { "@id" => same_as },
           "schema:url"     => website_entity
         },
-        artsdata_uri.present? && {
+        !artsdata_uri.nil? && !artsdata_uri.empty? && {
           "@id"           => org_uri,
           "schema:sameAs" => { "@id" => artsdata_uri }
         }
