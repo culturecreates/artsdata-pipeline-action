@@ -240,8 +240,34 @@ module Helper
     event_count = Integer(metadata_content['event_count']) if metadata_content['event_count']
 
     crawl_uri = "urn:crawl:#{uuid_crawl}"
-    org_uri = "urn:organization:#{same_as.split('/').last}"
-    org_uri = same_as.present? ? "urn:organization:#{same_as.split('/').last}" : artsdata_uri
+
+    # Wikidata source: same_as is a Wikidata URI → mint a new urn: org
+    # Artsdata/recrawl source: same_as is blank → org already exists, no new org needed
+    wikidata_source = same_as.present?
+    org_uri = wikidata_source ? "urn:organization:#{same_as.split('/').last}" : nil
+
+    website_entity = {
+      "@id"   => datafeed_url,
+      "@type" => "schema:Website"
+    }
+
+    org_entities = if wikidata_source
+      [
+        {
+          "@id"            => org_uri,
+          "@type"          => "schema:Organization",
+          "schema:name"    => datafeed_name,
+          "schema:sameAs"  => { "@id" => same_as },
+          "schema:url"     => website_entity
+        },
+        artsdata_uri.present? && {
+          "@id"           => org_uri,
+          "schema:sameAs" => { "@id" => artsdata_uri }
+        }
+      ].compact
+    else
+      [website_entity]
+    end
 
     jsonld = {
       "@context" => {
@@ -257,17 +283,7 @@ module Helper
           "schema:name" => datafeed_title,
           "schema:dataFeedElement" => { "@id" => datafeed_url }
         },
-        {
-          "@id" => org_uri,
-          "@type" => "schema:Organization",
-          "schema:name" => datafeed_name,
-          "schema:sameAs" => { "@id" => same_as },
-          "schema:url" => { "@id" => datafeed_url, "@type" => "schema:Website" }
-        },
-        artsdata_uri && {
-          "@id" => org_uri,
-          "schema:sameAs" => { "@id" => artsdata_uri }
-        },
+        *org_entities,
         {
           "@id" => crawl_uri,
           "@type" => "prov:Activity",
@@ -310,7 +326,7 @@ module Helper
           "schema:description" =>
             "A crawl using the Artsdata-pipeline-action without a CSS selector resulting in a site wide crawl."
         }
-      ]
+      ].compact
     }
 
     graph = RDF::Graph.new
