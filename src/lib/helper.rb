@@ -229,7 +229,7 @@ module Helper
     crawl_name = metadata_content['crawl_name']
     crawl_description = metadata_content['crawl_description']
     same_as = metadata_content['same_as']
-    artsdara_uri = metadata_content['artsdata_uri']
+    artsdata_uri = metadata_content['artsdata_uri']
 
     # data to be fetched during the crawl
     databus_id = metadata_content['databus_id']
@@ -240,7 +240,34 @@ module Helper
     event_count = Integer(metadata_content['event_count']) if metadata_content['event_count']
 
     crawl_uri = "urn:crawl:#{uuid_crawl}"
-    org_uri = "urn:organization:#{same_as.split('/').last}"
+
+    # Wikidata source: same_as is a Wikidata URI → mint a new urn: org
+    # Artsdata/recrawl source: same_as is blank → org already exists, no new org needed
+    wikidata_source = !same_as.empty?
+    org_uri = wikidata_source ? "urn:organization:#{same_as.split('/').last}" : nil
+
+    website_entity = {
+      "@id"   => datafeed_url,
+      "@type" => "schema:Website"
+    }
+
+    org_entities = if wikidata_source
+      [
+        {
+          "@id"            => org_uri,
+          "@type"          => "schema:Organization",
+          "schema:name"    => datafeed_name,
+          "schema:sameAs"  => { "@id" => same_as },
+          "schema:url"     => website_entity
+        },
+        !artsdata_uri.nil? && !artsdata_uri.empty? && {
+          "@id"           => org_uri,
+          "schema:sameAs" => { "@id" => artsdata_uri }
+        }
+      ].compact
+    else
+      [website_entity]
+    end
 
     jsonld = {
       "@context" => {
@@ -256,17 +283,7 @@ module Helper
           "schema:name" => datafeed_title,
           "schema:dataFeedElement" => { "@id" => datafeed_url }
         },
-        {
-          "@id" => org_uri,
-          "@type" => "schema:Organization",
-          "schema:name" => datafeed_name,
-          "schema:sameAs" => { "@id" => same_as },
-          "schema:url" => { "@id" => datafeed_url, "@type" => "schema:Website" }
-        },
-        artsdara_uri && {
-          "@id" => org_uri,
-          "schema:sameAs" => { "@id" => artsdara_uri }
-        },
+        *org_entities,
         {
           "@id" => crawl_uri,
           "@type" => "prov:Activity",
@@ -309,7 +326,7 @@ module Helper
           "schema:description" =>
             "A crawl using the Artsdata-pipeline-action without a CSS selector resulting in a site wide crawl."
         }
-      ]
+      ].compact
     }
 
     graph = RDF::Graph.new
