@@ -278,6 +278,7 @@ module SpiderCrawlerService
 
     public
     def get_graph()
+      Helper.skolemize_blank_nodes(@graph, @base_url)
       @graph
     end
 
