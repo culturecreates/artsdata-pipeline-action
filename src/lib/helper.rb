@@ -20,6 +20,7 @@ require 'openssl'
 require 'base64'
 require 'json'
 require 'uri'
+require 'digest'
 
 module Helper
 

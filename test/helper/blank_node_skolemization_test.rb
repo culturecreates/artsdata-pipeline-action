@@ -1,9 +1,7 @@
 require 'minitest/autorun'
 require 'rdf'
 require 'linkeddata'
-require 'digest'
 require_relative '../../src/lib/helper'
-require_relative '../../src/config/spider_config'
 
 class TestBlankNodeSkolemization < Minitest::Test
   
@@ -41,10 +39,6 @@ class TestBlankNodeSkolemization < Minitest::Test
     location_uri1 = skolemized1.query([event_uri, RDF::Vocab::SCHEMA.location, nil]).objects.first
     location_uri2 = skolemized2.query([event_uri, RDF::Vocab::SCHEMA.location, nil]).objects.first
     
-    puts "\n=== Skolemization Results ==="
-    puts "Location 1 URI: #{location_uri1}"
-    puts "Location 2 URI: #{location_uri2}"
-    
     # CRITICAL: Same data should produce SAME URI
     assert_equal location_uri1, location_uri2, 
       "Identical location data should produce identical URI after skolemization"
@@ -79,9 +73,6 @@ class TestBlankNodeSkolemization < Minitest::Test
     skolemized = Helper.skolemize_blank_nodes(graph, base_url)
     
     location_uris = skolemized.query([event_uri, RDF::Vocab::SCHEMA.location, nil]).objects
-    
-    puts "\n=== Different Locations ==="
-    puts "Location URIs: #{location_uris.map(&:to_s)}"
     
     # Different data should produce DIFFERENT URIs
     assert_equal 2, location_uris.size
@@ -119,8 +110,5 @@ class TestBlankNodeSkolemization < Minitest::Test
     address_uri = skolemized.query([location_uri, RDF::Vocab::SCHEMA.address, nil]).objects.first
     refute address_uri.node?, "Address should be URI"
     
-    puts "\n=== Nested Skolemization ==="
-    puts "Location URI: #{location_uri}"
-    puts "Address URI: #{address_uri}"
   end
 end
