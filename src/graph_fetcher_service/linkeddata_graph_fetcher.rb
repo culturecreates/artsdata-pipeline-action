@@ -51,9 +51,15 @@ module GraphFetcherService
         graph = @sparql.perform_sparql_transformation(graph, "fix_wikidata_uri.sparql")
         graph = @sparql.perform_sparql_transformation(graph, "fix_isni.sparql")
         graph = @sparql.perform_sparql_transformation(graph, "collapse_duplicate_contact_pointblanknodes.sparql")
+        
+        # Skolemize blank nodes before returning
+        base_url = entity_urls[0].split('/')[0..2].join('/')
+        graph = Helper.skolemize_blank_nodes(graph, base_url)
       else
         puts "No RDF data found in any of the provided URLs, skipping final SPARQL transformations."
       end
+      
+      graph
     end
 
     def get_uri_by_type(graph, type)
