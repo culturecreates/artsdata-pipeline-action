@@ -20,6 +20,7 @@ require 'openssl'
 require 'base64'
 require 'json'
 require 'uri'
+require 'digest'
 
 module Helper
 
@@ -519,5 +520,65 @@ module Helper
       loaded_graph = sparql.perform_sparql_transformation(loaded_graph, *args)
     end
     loaded_graph
+  end
+
+  # Skolemize blank nodes: convert to deterministic URIs based on content
+  # This ensures identical blank nodes across different crawls get the same URI
+  def self.skolemize_blank_nodes(graph, base_url)
+    # Map from blank node to its content hash
+    blank_node_hashes = {}
+    
+    # Step 1: Calculate content hash for each blank node
+    graph.subjects.select(&:node?).each do |blank_node|
+      # Get all triples where this blank node is the subject
+      triples = graph.query([blank_node, nil, nil]).statements.sort_by do |stmt|
+        # Sort to ensure deterministic order
+        [stmt.predicate.to_s, stmt.object.to_s]
+      end
+      
+      # Build content string from all properties
+      content_parts = triples.map do |stmt|
+        obj_str = if stmt.object.node?
+          # For nested blank nodes, recursively get their content
+          nested_triples = graph.query([stmt.object, nil, nil]).statements.sort_by do |s|
+            [s.predicate.to_s, s.object.to_s]
+          end
+          nested_content = nested_triples.map { |s| "#{s.predicate}=#{s.object}" }.join("|")
+          "#{stmt.predicate}=BLANK[#{nested_content}]"
+        else
+          "#{stmt.predicate}=#{stmt.object}"
+        end
+        obj_str
+      end
+      
+      content_string = content_parts.join("|")
+      
+      # Generate deterministic hash
+      hash = Digest::SHA256.hexdigest(content_string)[0..15]  # First 16 chars
+      blank_node_hashes[blank_node] = hash
+    end
+    
+    # Step 2: Create new graph with blank nodes replaced by URIs
+    skolemized_graph = RDF::Graph.new
+    
+    graph.each_statement do |stmt|
+      new_subject = if stmt.subject.node?
+        hash = blank_node_hashes[stmt.subject]
+        RDF::URI("#{base_url}/.well-known/genid/#{hash}")
+      else
+        stmt.subject
+      end
+      
+      new_object = if stmt.object.node?
+        hash = blank_node_hashes[stmt.object]
+        RDF::URI("#{base_url}/.well-known/genid/#{hash}")
+      else
+        stmt.object
+      end
+      
+      skolemized_graph << [new_subject, stmt.predicate, new_object]
+    end
+    
+    skolemized_graph
   end
 end
