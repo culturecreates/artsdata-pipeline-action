@@ -51,6 +51,7 @@ jobs:
       - name: Generate config files
         run: |
           mkdir -p output
+          CLOUDFLARE_KEY=$(printf "%s" "${{ secrets.CLOUDFLARE_PRIVATE_KEY }}" | sed 's/^/  /')
           cat <<EOF > config.yml
           mode: "fetch"
           page_url: "${{ inputs.page-url }}"
@@ -78,7 +79,7 @@ jobs:
           download_url: "https://example.com/test.jsonld"
           shacl: null
           cloudflare_private_key: |
-          $(printf "%s" "${{ secrets.CLOUDFLARE_PRIVATE_KEY  }}" | sed 's/^/ /')
+          ${CLOUDFLARE_KEY}
           EOF
 
           cat <<EOF > html-extract-config.json
