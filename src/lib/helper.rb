@@ -564,14 +564,14 @@ module Helper
     graph.each_statement do |stmt|
       new_subject = if stmt.subject.node?
         hash = blank_node_hashes[stmt.subject]
-        RDF::URI("#{base_url}/.well-known/genid/#{hash}")
+        RDF::URI("#{base_url}/genid/#{hash}")
       else
         stmt.subject
       end
       
       new_object = if stmt.object.node?
         hash = blank_node_hashes[stmt.object]
-        RDF::URI("#{base_url}/.well-known/genid/#{hash}")
+        RDF::URI("#{base_url}/genid/#{hash}")
       else
         stmt.object
       end
