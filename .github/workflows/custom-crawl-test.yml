@@ -78,7 +78,7 @@ jobs:
           download_url: "https://example.com/test.jsonld"
           shacl: null
           cloudflare_private_key: |
-          $(printf "%s\n" "${{ secrets.CLOUDFLARE_PRIVATE_KEY }}" | sed 's/^/  /')
+          $(printf "%s" "${{ secrets.CLOUDFLARE_PRIVATE_KEY  }}" | sed 's/^/ /')
           EOF
 
           cat <<EOF > html-extract-config.json
