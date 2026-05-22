@@ -49,6 +49,8 @@ jobs:
         with:
           bundler-cache: true
       - name: Generate config files
+        env:
+          CLOUDFLARE_PRIVATE_KEY: ${{ secrets.CLOUDFLARE_PRIVATE_KEY }}
         run: |
           mkdir -p output
           cat <<EOF > config.yml
@@ -77,9 +79,10 @@ jobs:
           download_file: "output/test-events2.jsonld"
           download_url: "https://example.com/test.jsonld"
           shacl: null
-          cloudflare_private_key: |
-          $(printf "%s" "${{ secrets.CLOUDFLARE_PRIVATE_KEY  }}" | sed 's/^/ /')
           EOF
+
+          echo "cloudflare_private_key: |" >> config.yml
+          echo "$CLOUDFLARE_PRIVATE_KEY" | sed 's/^/  /' >> config.yml
 
           cat <<EOF > html-extract-config.json
             ${{ inputs.html-extract-config }}
