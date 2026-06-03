@@ -204,7 +204,7 @@ module Helper
 
   def self.get_robots_txt_content(base_url:, private_key_content: nil)
     robots_txt_url = URI.join(base_url, '/robots.txt').to_s
-    puts "Fetching robots.txt from #{robots_txt_url}..."
+    puts "Fetching robots.txt from #{robots_txt_url}"
     authority = URI.parse(robots_txt_url).authority
     headers = get_headers(authority, private_key_content).merge("Accept" => "text/plain, */*")
     response = URI.open(robots_txt_url, headers)
