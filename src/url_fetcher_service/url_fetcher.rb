@@ -22,10 +22,11 @@ module UrlFetcherService
           puts "Fetching entity urls from #{url}"
           accept = url.end_with?('.xml') ? "text/xml, application/xml, */*" : nil
           page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: url, selector: identifier, accept: accept)
-          if !page_data.nil? 
+          if !page_data.nil?
             @atleast_one_page_loaded = true
           end
           page_type = Helper.get_page_type(content_type)
+          puts "Content-Type: #{content_type}, Page type: #{page_type}"
           main_doc =
             case page_type
             when :xml
@@ -47,6 +48,7 @@ module UrlFetcherService
         end
       end
       puts "All matching entity URLs have been successfully fetched. Total entities: #{@urls.length}."
+      puts "First #{[@urls.length, 10].min} entity URLs: #{@urls.take(10).join(', ')}" unless @urls.empty?
       if !@atleast_one_page_loaded
         notification_message = 'No pages were loaded. Check your page URL. Exiting...'
         puts notification_message
@@ -71,6 +73,7 @@ module UrlFetcherService
         when :xpath
           entities_data = page_data.xpath(entity_identifier)
         end
+        puts "Found #{entities_data.length} elements matching '#{entity_identifier}'"
         entities_data.each do |entity|
           if(page_type == :xml)
             url = entity.content
