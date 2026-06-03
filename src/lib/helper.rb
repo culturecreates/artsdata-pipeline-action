@@ -202,11 +202,17 @@ module Helper
     graph.query([nil, RDF.type, nil]).map(&:object).uniq
   end
 
-  def self.get_robots_txt_content(base_url: , page_fetcher: )
+  def self.get_robots_txt_content(base_url:, private_key_content: nil)
     robots_txt_url = URI.join(base_url, '/robots.txt').to_s
-    puts "Fetching robots.txt from #{robots_txt_url}..."
-    robots_txt_data, _ = page_fetcher.fetcher_with_retry(page_url: robots_txt_url)
+    puts "Fetching robots.txt from #{robots_txt_url}"
+    authority = URI.parse(robots_txt_url).authority
+    headers = get_headers(authority, private_key_content).merge("Accept" => "text/plain, */*")
+    response = URI.open(robots_txt_url, headers)
+    robots_txt_data = response.read
     RobotsTxtParser.parse(robots_txt_data)
+  rescue StandardError => e
+    puts "Warning: Could not fetch robots.txt: #{e.message}. Allowing all paths."
+    RobotsTxtParser.parse(nil)
   end
 
   def self.get_page_type(content_type)

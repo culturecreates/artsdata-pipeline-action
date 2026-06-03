@@ -88,7 +88,7 @@ if mode.include?('fetch')
       url: page_url,
       page_fetcher: page_fetcher,
       sparql_path: "./sparql/",
-      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, page_fetcher: page_fetcher)
+      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, private_key_content: cloudflare_private_key)
     )
     start_time = Time.now.utc.iso8601
     if metadata_content&.[]('skip_crawl') == "true"
@@ -126,7 +126,7 @@ if mode.include?('fetch')
       is_paginated: is_paginated,
       offset: offset,
       page_fetcher: page_fetcher,
-      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, page_fetcher: page_fetcher)
+      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, private_key_content: cloudflare_private_key)
     )
 
     entity_urls = url_fetcher.fetch_urls()
