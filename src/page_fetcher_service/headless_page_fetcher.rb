@@ -8,10 +8,11 @@ module PageFetcherService
       @private_key_content = private_key_content
     end
 
-    def fetch_page_data(page_url:, selector:)
-      timeout = 10 
+    def fetch_page_data(page_url:, selector:, accept: nil)
+      timeout = 10
       authority = URI.parse(page_url).authority
       headers = Helper.get_headers(authority, @private_key_content)
+      headers["Accept"] = accept if accept
       @browser_instance.headers.set(headers)
       @browser_instance.go_to(page_url)
       start_time = Time.now

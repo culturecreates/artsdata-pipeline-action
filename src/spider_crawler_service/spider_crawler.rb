@@ -164,7 +164,8 @@ module SpiderCrawlerService
         puts "Queue size: #{queue.length}, Visited size: #{@visited.length}"
         @visited.add(link)
 
-        page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: link)
+        accept = link.end_with?('.xml') ? "text/xml, application/xml, */*" : nil
+        page_data, content_type = @page_fetcher.fetcher_with_retry(page_url: link, accept: accept)
         if !page_data.nil?
           @atleast_one_page_loaded = true
         end

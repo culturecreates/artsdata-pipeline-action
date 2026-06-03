@@ -3,11 +3,11 @@ module PageFetcherService
     def initialize()
     end
 
-    def fetcher_with_retry(page_url:, selector: 'body')
+    def fetcher_with_retry(page_url:, selector: 'body', accept: nil)
       retry_count = 0
       max_retries = 3
       begin
-        data, content_type = fetch_page_data(page_url: page_url, selector: selector)
+        data, content_type = fetch_page_data(page_url: page_url, selector: selector, accept: accept)
       rescue StandardError => e
         retry_count += 1
         if retry_count < max_retries
@@ -29,7 +29,7 @@ module PageFetcherService
     end
 
     private 
-    def fetch_page_data(page_url:, selector:)
+    def fetch_page_data(page_url:, selector:, accept: nil)
       raise NotImplementedError, 'Subclasses must implement fetch_page_data'
     end
   end
