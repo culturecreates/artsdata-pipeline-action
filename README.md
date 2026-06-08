@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Action setup
-        uses: culturecreates/artsdata-pipeline-action@v3
+        uses: culturecreates/artsdata-pipeline-action@v4
         with:
           mode: "fetch-test"
           artifact: "my-artifact-name"
@@ -34,7 +34,7 @@ artsdata-pipeline:
   needs: fetch-and-commit-data
   steps:
     - name: Action setup
-      uses: culturecreates/artsdata-pipeline-action@v3
+      uses: culturecreates/artsdata-pipeline-action@v4
       with:
         mode: 
         page-url:
@@ -269,7 +269,7 @@ To request access, please use the Artsdata [contact form](https://www.artsdata.c
 2. **Use in your workflow:**
 ```yaml
 - name: Crawl Cloudflare-protected site
-  uses: culturecreates/artsdata-pipeline-action@v3
+  uses: culturecreates/artsdata-pipeline-action@v4
   with:
     mode: 'fetch-push'
     page-url: 'https://example.com'
