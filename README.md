@@ -65,7 +65,7 @@ artsdata-pipeline:
 To run locally
 
 1. ``` cp sample.config.yml config.yml ``` 
-2. Update config.yml to provide inputs mentioned [here.](https://github.com/culturecreates/artsdata-pipeline-action/tree/v3.7.1?tab=readme-ov-file#inputs)
+2. Update config.yml to provide inputs mentioned [here.](#inputs)
 3. ``` bundle install ```
 4. ``` bundle exec ruby src/main.rb config.yml ```
 
