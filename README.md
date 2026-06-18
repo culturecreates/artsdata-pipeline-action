@@ -54,7 +54,7 @@ artsdata-pipeline:
         fetch-urls-headlessly:
         offset:
         custom-user-agent:
-        custum-databus-url:
+        custom-databus-url:
         html-extract-config:
         register-only:
         cloudflare-private-key:
