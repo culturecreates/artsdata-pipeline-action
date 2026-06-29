@@ -252,6 +252,7 @@ This allows Cloudflare to identify and trust the Artsdata crawler.
 
 **Only the Artsdata crawler's private key will work with this feature.** The key is 
 registered with Cloudflare under the Artsdata identity. No other private key will work.
+https://radar.cloudflare.com/bots/directory/artsdata-crawler
 
 Your organization must request the private key from an 
 Artsdata Steward. The Artsdata 
