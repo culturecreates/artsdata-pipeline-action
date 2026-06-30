@@ -255,6 +255,7 @@ DEPENDENCIES
   octokit (~> 10.0.0)
   open-uri
   rake
+  rdf-normalize
 
 BUNDLED WITH
    2.3.22

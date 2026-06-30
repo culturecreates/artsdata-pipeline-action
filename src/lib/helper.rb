@@ -21,6 +21,7 @@ require 'base64'
 require 'json'
 require 'uri'
 require 'digest'
+require 'rdf/normalize'
 
 module Helper
 
@@ -528,10 +529,15 @@ module Helper
     loaded_graph
   end
 
+  def self.canonicalize_duplicates(graph)
+    RDF::Normalize.normalize_statements(graph)
+  end
+
   # Skolemize blank nodes: convert to deterministic URIs based on content
   # This ensures identical blank nodes across different crawls get the same URI
   def self.skolemize_blank_nodes(graph, base_url)
     # Map from blank node to its content hash
+    graph = canonicalize_duplicates(graph)
     blank_node_hashes = {}
     
     # Step 1: Calculate content hash for each blank node
@@ -544,7 +550,7 @@ module Helper
       
       # Build content string from all properties
       content_parts = triples.map do |stmt|
-        obj_str = if stmt.object.node?
+        if stmt.object.node?
           # For nested blank nodes, recursively get their content
           nested_triples = graph.query([stmt.object, nil, nil]).statements.sort_by do |s|
             [s.predicate.to_s, s.object.to_s]
@@ -554,14 +560,9 @@ module Helper
         else
           "#{stmt.predicate}=#{stmt.object}"
         end
-        obj_str
       end
-      
-      content_string = content_parts.join("|")
-      
-      # Generate deterministic hash
-      hash = Digest::SHA256.hexdigest(content_string)[0..15]  # First 16 chars
-      blank_node_hashes[blank_node] = hash
+      hash = Digest::SHA256.hexdigest(content_parts.join("|"))[0..15]
+      blank_node_hashes[blank_node.id.to_s] = hash
     end
     
     # Step 2: Create new graph with blank nodes replaced by URIs
@@ -569,14 +570,14 @@ module Helper
     
     graph.each_statement do |stmt|
       new_subject = if stmt.subject.node?
-        hash = blank_node_hashes[stmt.subject]
+        hash = blank_node_hashes[stmt.subject.id.to_s] || Digest::SHA256.hexdigest("empty:#{stmt.subject.id}")[0..15]
         RDF::URI("#{base_url}/genid/#{hash}")
       else
         stmt.subject
       end
       
       new_object = if stmt.object.node?
-        hash = blank_node_hashes[stmt.object]
+        hash = blank_node_hashes[stmt.object.id.to_s] || Digest::SHA256.hexdigest("empty:#{stmt.object.id}")[0..15]
         RDF::URI("#{base_url}/genid/#{hash}")
       else
         stmt.object
