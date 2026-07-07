@@ -509,6 +509,7 @@ module Helper
   end
 
   def self.transform_event_graph(loaded_graph, link, base_url)
+    loaded_graph = skolemize_blank_nodes(loaded_graph, base_url)
     transformations = [
       ['add_derived_from.sparql', 'subject_url', link],
       ['add_url_if_not_exist.sparql', 'subject_url', link],
