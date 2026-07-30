@@ -39,7 +39,7 @@ artsdata-pipeline:
         mode: 
         page-url:
         entity-identifier:
-        downloadFile:
+        artifact-file:
         downloadUrl:
         is-paginated:
         headless:
@@ -78,7 +78,8 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 | ------------------------------------- | -------------------------- |
 | `artifact`                         | **required**: Name of the artifact. When fetching data, the artifact is used in the filename, and when data is pushed to Artsdata, the artifact is the last part of the graph URI. Example: `http://kg.artsdata.ca/account/group/artifact`
 | `mode`                             | Mode to run the workflow in. MUST be one of `fetch \| fetch-test \| push \| fetch-push`. Defaults to `push`.  
-| `downloadFile`                      | Optional filename override with extension and path. When using fetch and fetch-push modes, the data will be saved to the Github repo calling the action. If not provided, it will be set to `output/[artifact].jsonld`.
+| `artifact-file`                     | Optional **local file path** (with extension) used by the pipeline. In `fetch`/`fetch-push` modes the crawled data is **saved** to this path in the calling GitHub repo. In `push`/`fetch-push` modes this is the file that is **read** and registered. If not provided, defaults to `output/[artifact].jsonld`.
+| `downloadFile`                      | **Deprecated** alias of `artifact-file`, kept for backward compatibility. Prefer `artifact-file` in new workflows.
 | `report-callback-url`               | Optional URL to send back the data validation report asynchronously using POST "Content-Type: application/json". 
 
 ### Fetch mode (including fetch-push)
@@ -118,7 +119,7 @@ html-extract-config format:
 | Name                                  | Description         |
 | ------------------------------------- | -------------------------- |
 | `publisher`                         | **required**: URI of the publisher. This must be a URI registered with one of the [Artsdata Databus team](https://github.com/orgs/artsdata-stewards/teams/databus/teams) accounts. If you are on a team you can use the format `https://https://github.com/{{your_github_handle}}#this`
-| `downloadUrl`                       | URL of the file to download. Default is set to `https://[current repo raw path]/output/[artifact].jsonld`.
+| `downloadUrl`                       | **Remote URL** of the file to register on the Databus (where consumers download the artifact from). This is different from `artifact-file`, which is the **local file path** inside the repo. Defaults to `https://[current repo raw path]/output/[artifact].jsonld`. Always ensure the URL/file includes a format extension (e.g. `.jsonld`) so the data format can be determined.
 | `group`                             | Group of artifacts/versions. Use unreserved characters. (If not provided, group will be set as your repository name).
 | `version`                           | Version of the artifact. Usually a date (e.g. 2020-10-23). Use unreserved characters. (If not provided, version will be set as the current date-time).
 | `comment`                           | Comment about the artifact push (optional, default - url of the workflow YAML file.)
@@ -128,6 +129,29 @@ html-extract-config format:
 
 
 <br>
+
+### `artifact-file` vs `downloadUrl`
+
+These two parameters are often confused:
+
+- **`artifact-file`** — the **local** file path (with extension) inside your GitHub repo. `fetch` writes to it; `push` reads from it. It is the internal handoff between the fetch and push steps.
+- **`downloadUrl`** — the **remote** URL registered on the Artsdata Databus so others can download the artifact.
+
+**Always include a file extension** (e.g. `.jsonld`) in `artifact-file` and `downloadUrl`. Extensions allow the file type and data format to be determined reliably. Historically, the legacy Culture Creates "Capacitor" server registered artifacts with extensionless URLs such as `http://capacitor.culturecreates.com/download/1234-1234-1233`, which made format detection ambiguous. Explicit extensions avoid that problem.
+
+Example:
+
+```yaml
+with:
+  mode: "fetch-push"
+  artifact: "japanesecanadianartists-com-events"
+  artifact-file: "output/japanesecanadianartists-com-events.jsonld"
+  publisher: "http://my-publisher-uri"
+  page-url: "https://japanesecanadianartists.com"
+  token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+> `downloadFile` is still supported as a deprecated alias of `artifact-file`.
 
 ## Test Mode
 

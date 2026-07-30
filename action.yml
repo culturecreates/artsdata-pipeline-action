@@ -10,10 +10,12 @@ inputs:
     description: 'URLs of the page to crawl'
   entity-identifier:
     description: 'Identifiers of the entity to fetch'
+  artifact-file:
+    description: 'Local file path (with extension) used to save fetched data and to read data when pushing. Preferred over the deprecated "downloadFile". If not provided, defaults to output/[artifact].jsonld'
   downloadFile:
-    description: 'Name of the file to download with extension'
+    description: 'DEPRECATED: use "artifact-file" instead. Local file path (with extension) for the artifact.'
   downloadUrl:
-    description: 'URL of the file to download'
+    description: 'Remote URL of the file to register on the Databus. Defaults to the raw path of "artifact-file" in the current repo.'
   is-paginated:
     description: 'Whether the page is paginated'
     default: 'false'
@@ -83,7 +85,7 @@ runs:
         version: ${{ inputs.version }}
         comment: ${{ inputs.comment || format('https://github.com/{0}/blob/{1}/{2}', github.repository, github.ref_name, github.event.workflow) }}
         group: ${{ inputs.group }}
-        download_file: ${{ inputs.downloadFile }}
+        download_file: ${{ inputs.artifact-file || inputs.downloadFile }}
         download_url: ${{ inputs.downloadUrl }}
         shacl: ${{ inputs.shacl }}
         databus: ${{ inputs.custom-databus-url }}
