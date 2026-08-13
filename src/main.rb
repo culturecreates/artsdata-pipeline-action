@@ -38,6 +38,7 @@ download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
 register_only = config['register_only'] == true
+custom_sparql = config['custom_sparql']
 cloudflare_private_key = config['cloudflare_private_key']
 
 if html_extract_config_file && File.exist?(html_extract_config_file)
@@ -79,6 +80,7 @@ notification_instance = NotificationService::WebhookNotification.instance
 if mode.include?('fetch')
   page_url, base_url = Helper.format_urls(page_url)
   Helper.set_custom_user_agent(custom_user_agent)
+  Helper.prepare_custom_sparql(custom_sparql, private_key_content: cloudflare_private_key)
 
   if entity_identifier.nil? || entity_identifier.strip.empty?
     # Check if testing Cloudflare
