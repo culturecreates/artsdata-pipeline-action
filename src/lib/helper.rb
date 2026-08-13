@@ -131,7 +131,8 @@ module Helper
   end
 
   def self.format_urls(page_url)
-    page_url = page_url.split(',')
+    page_url = page_url.to_s.split(',').map(&:strip).reject(&:empty?)
+    raise ArgumentError, "No valid page URLs provided" if page_url.empty?
     base_url = page_url.first.split('/')[0..2].join('/')
     [page_url, base_url]
   end
@@ -522,6 +523,13 @@ module Helper
       ['fix_attendance_mode.sparql'],
       ['fix_date_missing_seconds.sparql']
     ]
+
+    # Repo-specific transform, applied only when provided via `custom-sparql`.
+    custom_sparql_file = ENV['CUSTOM_SPARQL_FILE']
+    if custom_sparql_file && !custom_sparql_file.empty?
+      transformations << [custom_sparql_file, 'domain_name', base_url]
+    end
+
     sparql = SparqlService::Sparql.new('./sparql/')
     transformations.each do |args|
       loaded_graph = sparql.perform_sparql_transformation(loaded_graph, *args)
