@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       page-url:
-        description: 'URL of the page to crawl'
+        description: 'URL(s) of the page(s) to crawl (single URL or comma-separated list)'
       entity-identifier:
         description: 'Identifier of the entity'
       is-paginated:

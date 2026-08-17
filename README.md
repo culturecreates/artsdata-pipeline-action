@@ -86,9 +86,11 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 
 | Name                                  | Description      |
 | ------------------------------------- | -------------------------- |
-| `page-url`                          | **required**: URL of the page to crawl (required for fetch and fetch-push modes).
+| `page-url`                          | **required**: URL of the page to crawl. Accepts a **single URL** or a **comma-separated list** of URLs, e.g. `"https://a.com,https://b.com"`. (required for fetch and fetch-push modes).
 | `token`                             | **required**: Constant. Must be set to `${{ secrets.GITHUB_TOKEN }}`. [Automatic GitHub token](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token) generated with each run of the workflow. Needed for the action to save the crawled data to your repo.
 | `entity-identifier`                 | Identifier of the entity to fetch URL (optional, defaults to [spider crawler](#spider-crawler) mode if not provided).
+| `urls-are-entities`                 | Set to `true` when `page-url` is a comma-separated list of **already-resolved entity page URLs**. Skips both the spider crawler and the single-selector URL fetcher, and fetches each URL directly. (optional, defaults to false). See [Passing a list of entity URLs](#passing-a-list-of-entity-urls).
+| `custom-sparql`                     | URL to a **repo-specific SPARQL transformation** applied per entity during fetch. Use `domain_name` as the placeholder for the site base URL. (optional). See [Repo-specific SPARQL transformation](#repo-specific-sparql-transformation).
 | `headless`                          | Whether to run in headless mode (optional, defaults to false).
 | `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(optional, defaults to false).
 | `is-paginated`                      | Whether the page is paginated (optional, defaults to false).
@@ -303,3 +305,54 @@ To request access, please use the Artsdata [contact form](https://www.artsdata.c
 
 
 The Artsdata crawler will automatically sign all HTTP requests, allowing Cloudflare to verify the crawler's identity.
+
+## Passing a list of entity URLs
+
+`page-url` accepts a **comma-separated list** of URLs. How they are used depends on your inputs:
+
+| Inputs | Behaviour |
+| ------ | --------- |
+| `page-url` list, **no** `entity-identifier` | Each URL is used as a **seed** for the [spider crawler](#spider-crawler) (site-wide crawl). |
+| `page-url` list + `entity-identifier` | Each URL is a **listing page**; the selector extracts the entity links to fetch. |
+| `page-url` list + `urls-are-entities: true` | Each URL **is** a final entity page and is fetched directly — no spidering, no selector. |
+
+Use `urls-are-entities: true` when a repository already resolves the exact entity page
+URLs on its own (for example via multi-level scraping that a single `entity-identifier`
+hop cannot express). The action then fetches each URL directly and still applies
+blank-node **skolemization**, **de-duplication**, and the standard SPARQL transforms.
+
+```yaml
+- uses: culturecreates/artsdata-pipeline-action@v4
+  with:
+    mode: "fetch-push"
+    artifact: "my-events"
+    publisher: "http://my-publisher-uri"
+    urls-are-entities: "true"
+    page-url: "https://site.com/event/1,https://site.com/event/2"
+    token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Repo-specific SPARQL transformation
+
+Some sources need a one-off fix that should **not** run for any other repository.
+Provide `custom-sparql` with the raw URL of a SPARQL update file. The action
+downloads it once and appends it to the per-entity transform chain, substituting
+`domain_name` with the site base URL. Repos that don't set `custom-sparql` are
+unaffected.
+
+> Note: use the **raw** file URL (e.g. `https://raw.githubusercontent.com/...`),
+> not the GitHub HTML page. The custom SPARQL is applied on the
+> `entity-identifier` and `urls-are-entities` paths; it is **not** applied on the
+> plain spider-crawler path.
+
+```yaml
+- uses: culturecreates/artsdata-pipeline-action@v4
+  with:
+    mode: "fetch-push"
+    artifact: "performance"
+    publisher: "http://kg.artsdata.ca/resource/OSAC"
+    urls-are-entities: "true"
+    page-url: ${{ steps.scrape.outputs.entity_urls }}
+    custom-sparql: "https://raw.githubusercontent.com/culturecreates/artsdata-planet-osac/main/sparql/fix_pa_image_urls.sparql"
+    token: ${{ secrets.GITHUB_TOKEN }}
+```

@@ -38,6 +38,8 @@ download_url = config['download_url']
 shacl = config['shacl']
 databus_url = config['databus']
 register_only = config['register_only'] == true
+custom_sparql = config['custom_sparql']
+urls_are_entities = config['urls_are_entities'] == true
 cloudflare_private_key = config['cloudflare_private_key']
 
 if html_extract_config_file && File.exist?(html_extract_config_file)
@@ -79,8 +81,34 @@ notification_instance = NotificationService::WebhookNotification.instance
 if mode.include?('fetch')
   page_url, base_url = Helper.format_urls(page_url)
   Helper.set_custom_user_agent(custom_user_agent)
+  Helper.prepare_custom_sparql(custom_sparql, private_key_content: cloudflare_private_key)
 
-  if entity_identifier.nil? || entity_identifier.strip.empty?
+  if urls_are_entities
+    # Caller (e.g. artsdata-planet-osac) already resolved the exact entity page
+    # URLs via its own multi-level scraping, so skip both SpiderCrawler and
+    # UrlFetcher and fetch each provided URL directly as an entity page.
+    entity_urls = page_url
+
+    notification_instance.send_notification(
+      stage: 'entity_urls_fetched',
+      message: 'using caller-provided entity urls, count: ' + entity_urls.length.to_s
+    )
+
+    if mode.include?('test')
+      entity_urls = entity_urls.take(5)
+    end
+
+    graph_fetcher = Helper.get_graph_fetcher(
+      page_fetcher: Helper.get_page_fetcher(
+        is_headless: headless,
+        private_key_content: cloudflare_private_key
+      ),
+      sparql_path: "./sparql/",
+      html_extract_config: html_extract_config
+    )
+
+    graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)
+  elsif entity_identifier.nil? || entity_identifier.strip.empty?
     # Check if testing Cloudflare
     page_fetcher = Helper.get_page_fetcher(is_headless: headless, private_key_content: cloudflare_private_key)
     # Use SpiderCrawler when no entity identifier is provided
