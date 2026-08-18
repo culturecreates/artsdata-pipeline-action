@@ -116,7 +116,7 @@ runs:
         mkdir -p output
         mkdir -p metadata
 
-        version="v4.0.4"
+        version="v4.0.5"
 
         for i in {1..5}; do
           docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version && break
