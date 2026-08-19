@@ -172,7 +172,7 @@ runs:
       with:
         name: pipeline-result-${{ github.run_id }}-${{ github.run_attempt }}
         path: result.json
-        retention-days: 100
+        retention-days: 90
 
     - name: Preserve original exit code
       if: always() && steps.run.outputs.exit_code != '0'
