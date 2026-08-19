@@ -30,13 +30,22 @@ module FileSaverService
     end
 
     def save(content)
-      if(!@access_token)
+      # FIX: was `exit(0)` - a missing token is a real failure, not a
+      # success. exit(0) hid this from any workflow-status-based check,
+      # including CI and the workflow health report.
+      if !@access_token
         puts("Access token is not provided. Cannot save to GitHub.")
-        exit(0)
+        exit(1)
+      end
 
+      # FIX: these were previously declared *inside* the `if !@access_token`
+      # block, after the exit call - meaning they were only ever assigned
+      # on the dead branch and were undefined here whenever a token WAS
+      # provided. Any Octokit::Conflict would then raise a NameError on
+      # `retries += 1` instead of retrying.
       max_retries = 3
       retries = 0
-      end
+
       begin
         existing_file = @client.contents(@repository, path: @path)
         sha = existing_file.sha

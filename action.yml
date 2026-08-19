@@ -70,6 +70,7 @@ runs:
   steps:
 
     - name: Run
+      id: run
       run: |
 
         cat <<EOF > config.yml
@@ -123,6 +124,16 @@ runs:
           echo "Retry $i/5..."
           sleep 10
         done
+
+        # --- reporting change starts here ---
+        # Default shell runs with `set -eo pipefail`, which would exit this
+        # step immediately on a nonzero docker exit code, before we get a
+        # chance to classify and upload a result. Disable that locally,
+        # capture the real exit code ourselves, and restore it at the end
+        # so the job's overall pass/fail status is unchanged.
+        set +e
+        started_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
         docker run --shm-size=1g \
           -v $(pwd)/config.yml:/usr/src/app/config.yml:ro \
           -v $(pwd)/html-extract-config.json:/usr/src/app/html-extract-config.json:ro \
@@ -132,6 +143,38 @@ runs:
           ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version \
           /usr/src/app/config.yml \
           /usr/src/app/html-extract-config.json \
-          /usr/src/app/metadata-file.json
+          /usr/src/app/metadata-file.json \
+          2>&1 | tee run.log
+
+        exit_code=${PIPESTATUS[0]}
+        ended_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+        echo "exit_code=$exit_code" >> "$GITHUB_OUTPUT"
+        echo "started_at=$started_at" >> "$GITHUB_OUTPUT"
+        echo "ended_at=$ended_at" >> "$GITHUB_OUTPUT"
+        set -e
+        # --- reporting change ends here ---
 
       shell: bash
+
+    - name: Classify and write result.json
+      if: always() && steps.run.outputs.exit_code != '0'
+      shell: bash
+      run: |
+        ruby "${{ github.action_path }}/write_result.rb" \
+          "${{ steps.run.outputs.exit_code }}" \
+          "${{ steps.run.outputs.started_at }}" \
+          "${{ steps.run.outputs.ended_at }}"
+
+    - name: Upload result artifact
+      if: always() && steps.run.outputs.exit_code != '0'
+      uses: actions/upload-artifact@v4
+      with:
+        name: pipeline-result-${{ github.run_id }}-${{ github.run_attempt }}
+        path: result.json
+        retention-days: 90
+
+    - name: Preserve original exit code
+      if: always() && steps.run.outputs.exit_code != '0'
+      shell: bash
+      run: exit ${{ steps.run.outputs.exit_code }}
