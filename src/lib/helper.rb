@@ -131,9 +131,29 @@ module Helper
   end
 
   def self.format_urls(page_url)
-    page_url = page_url.split(',')
+    page_url = page_url.to_s.split(',').map(&:strip).reject(&:empty?)
+    raise ArgumentError, "No valid page URLs provided" if page_url.empty?
     base_url = page_url.first.split('/')[0..2].join('/')
     [page_url, base_url]
+  end
+
+  # Downloads a repo-specific SPARQL file (given as a URL) into ./sparql/ and
+  # records its name so transform_event_graph can apply it. No-op if blank.
+  def self.prepare_custom_sparql(custom_sparql_url, private_key_content: nil)
+    return if custom_sparql_url.nil? || custom_sparql_url.to_s.strip.empty?
+
+    file_name = 'custom_transform.sparql'
+    target_path = File.join('./sparql/', file_name)
+    begin
+      authority = URI.parse(custom_sparql_url).authority
+      headers = get_headers(authority, private_key_content).merge("Accept" => "text/plain, */*")
+      content = URI.open(custom_sparql_url, headers).read
+      File.write(target_path, content)
+      ENV['CUSTOM_SPARQL_FILE'] = file_name
+      puts "Loaded custom SPARQL transformation from #{custom_sparql_url}"
+    rescue StandardError => e
+      puts "Warning: Could not load custom SPARQL from #{custom_sparql_url}: #{e.message}. Skipping."
+    end
   end
 
   def self.get_page_fetcher(is_headless:, private_key_content: nil)
@@ -522,6 +542,13 @@ module Helper
       ['fix_attendance_mode.sparql'],
       ['fix_date_missing_seconds.sparql']
     ]
+
+    # Repo-specific transform, applied only when provided via `custom-sparql`.
+    custom_sparql_file = ENV['CUSTOM_SPARQL_FILE']
+    if custom_sparql_file && !custom_sparql_file.empty?
+      transformations << [custom_sparql_file, 'domain_name', base_url]
+    end
+
     sparql = SparqlService::Sparql.new('./sparql/')
     transformations.each do |args|
       loaded_graph = sparql.perform_sparql_transformation(loaded_graph, *args)

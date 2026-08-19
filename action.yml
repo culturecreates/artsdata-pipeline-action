@@ -7,7 +7,7 @@ inputs:
     required: true
     default: 'push'
   page-url:
-    description: 'URLs of the page to crawl'
+    description: 'URL(s) of the page(s) to crawl. Provide a single URL or a comma-separated list, e.g. "https://a.com,https://b.com"'
   entity-identifier:
     description: 'Identifiers of the entity to fetch'
   artifact-file:
@@ -54,6 +54,13 @@ inputs:
   register-only:
     description: 'If true, upload to databus in register-only mode'
     default: 'false'
+  custom-sparql:
+    description: 'URL to a repo-specific SPARQL transformation applied per entity during fetch. Use "domain_name" as the placeholder for the base URL.'
+    required: false
+  urls-are-entities:
+    description: 'Set true when page-url is a comma-separated list of already-resolved entity page URLs. Skips spidering and single-selector fetching, and fetches each URL directly.'
+    default: 'false'
+    required: false
   cloudflare-private-key:
     description: 'Ed25519 private key for Cloudflare signing (PEM format content)'
     required: false
@@ -91,6 +98,8 @@ runs:
         shacl: ${{ inputs.shacl }}
         databus: ${{ inputs.custom-databus-url }}
         register_only: ${{ inputs.register-only }}
+        custom_sparql: ${{ inputs.custom-sparql }}
+        urls_are_entities: ${{ inputs.urls-are-entities }}
         cloudflare_private_key: |
         $(printf "%s" "${{ inputs.cloudflare-private-key  }}" | sed 's/^/ /')
         EOF
@@ -108,7 +117,7 @@ runs:
         mkdir -p output
         mkdir -p metadata
 
-        version="v4.0.4"
+        version="v4.0.5"
 
         for i in {1..5}; do
           docker pull ghcr.io/culturecreates/artsdata-pipeline-action/artsdata-rdf-fetcher:$version && break
