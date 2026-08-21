@@ -60,9 +60,12 @@ module Helper
 
     headers["User-Agent"] = get_user_agent()
 
-    headers["Signature-Agent"] = "https://kg.artsdata.ca"
+    signature_agent = "https://kg.artsdata.ca"
+    # Signature-Agent is an HTTP structured field (a String), so the value
+    # itself must be enclosed in double quotes on the wire.
+    headers["Signature-Agent"] = "\"#{signature_agent}\""
 
-    signature_headers = build_signature_headers(authority, private_key_content)
+    signature_headers = build_signature_headers(authority, signature_agent, private_key_content)
     headers.merge!(signature_headers) if signature_headers
 
     headers
@@ -91,7 +94,7 @@ module Helper
     Base64.urlsafe_encode64(hash, padding: false)          # Base64url encode without padding
   end
 
-  def self.build_signature_headers(authority, private_key_content = nil)
+  def self.build_signature_headers(authority, signature_agent, private_key_content = nil)
     # If no private key content provided, return nil (no signing)
     return nil if private_key_content.nil? || private_key_content.empty?
 
@@ -109,7 +112,7 @@ module Helper
     expires = created + 300
 
     signature_params =
-      "(\"@authority\");" \
+      "(\"@authority\" \"signature-agent\");" \
       "alg=\"ed25519\";" \
       "keyid=\"#{key_id}\";" \
       "nonce=\"#{nonce}\";" \
@@ -119,6 +122,7 @@ module Helper
 
     signing_base =
       "\"@authority\": #{authority}\n" \
+      "\"signature-agent\": \"#{signature_agent}\"\n" \
       "\"@signature-params\": #{signature_params}"
 
     signature_bytes = private_key.sign(nil, signing_base)
