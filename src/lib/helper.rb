@@ -109,7 +109,7 @@ module Helper
     expires = created + 300
 
     signature_params =
-      "(\"@authority\" \"#{authority}\");" \
+      "(\"@authority\");" \
       "alg=\"ed25519\";" \
       "keyid=\"#{key_id}\";" \
       "nonce=\"#{nonce}\";" \
