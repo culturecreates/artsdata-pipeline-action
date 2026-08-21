@@ -356,3 +356,72 @@ unaffected.
     custom-sparql: "https://raw.githubusercontent.com/culturecreates/artsdata-planet-osac/main/sparql/fix_pa_image_urls.sparql"
     token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+
+## Workflow Failure Report
+
+When a run **fails**, the action classifies *why* it failed and uploads a small
+`result.json` file as a **GitHub workflow artifact**. This is intended to be
+consumed by an external report-analysis program that aggregates failures across
+many caller repos.
+
+### How it works
+
+1. The pipeline container runs with its real exit code captured (the step
+   temporarily disables `set -eo pipefail` so it can classify before failing).
+   Combined stdout+stderr is saved to `run.log`.
+2. On a nonzero exit code, `write_result.rb` runs `FailureClassifier`, which
+   greps `run.log` against a set of **known failure signatures** taken from the
+   actual `puts`/exception output in the source.
+3. `result.json` is uploaded via `actions/upload-artifact`. It is attached to the
+   **caller repo's workflow run** (visible under *Artifacts*), **not committed** to
+   any repository, and retained for 90 days.
+4. The step then re-exits with the original code, so the job's overall
+   pass/fail status is unchanged.
+
+> Only **failures** produce a `result.json`. Success records are intentionally
+> not retained.
+
+### `result.json` schema
+
+| Field | Description |
+| ----- | ----------- |
+| `repo` | Caller repository (`GITHUB_REPOSITORY`). |
+| `workflow` | Caller workflow name (`GITHUB_WORKFLOW`). |
+| `run_id` | Workflow run id (`GITHUB_RUN_ID`), integer. |
+| `result` | Always `"failure"` (the file is only written on failure). |
+| `started_at` / `ended_at` | UTC ISO‑8601 timestamps of the container run. |
+| `failure_category` | One of the known categories below, or `unhandled_exception`. |
+| `http_status` | HTTP status integer — non‑null only for `databus_error`, else `null`. |
+| `ruby_exception_class` | Ruby exception class — non‑null only for `unhandled_exception`, else `null`. |
+
+Example:
+
+```json
+{
+  "repo": "artsdata-stewards/artsdata-planet-boost",
+  "workflow": "Process Organization Batch",
+  "run_id": 987654321,
+  "result": "failure",
+  "started_at": "2025-06-12T14:03:21Z",
+  "ended_at": "2025-06-12T14:07:58Z",
+  "failure_category": "databus_error",
+  "http_status": 422,
+  "ruby_exception_class": null
+}
+```
+
+### Failure categories
+
+| Category | Meaning |
+| -------- | ------- |
+| `missing_config` | A required config parameter was missing. |
+| `no_entity_urls` | No entity URLs found for the given `entity-identifier`. |
+| `no_pages_loaded` | Spider crawler could not load any page from the starting URL. |
+| `empty_graph` | Crawl/fetch produced no RDF data. |
+| `timeout` | Headless fetcher timed out waiting for the page or JSON‑LD. |
+| `databus_error` | Databus responded with a non‑201 status (see `http_status`). |
+| `databus_exception` | Network-level error while posting to the Databus. |
+| `databus_unknown_status` | Databus returned an unrecognized status. |
+| `unhandled_exception` | No known pattern matched; `ruby_exception_class` is best-effort extracted. |
+
