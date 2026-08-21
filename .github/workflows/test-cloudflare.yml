@@ -2,6 +2,8 @@ name: Test Cloudflare Bot Authentication
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 0 15 * *'
 
 jobs:
   test-cloudflare:
