@@ -1,16 +1,25 @@
 require_relative 'lib/helper'
 require 'net/http'
 require 'uri'
+require 'yaml'
 
-page_url = ARGV[0]
-if page_url.nil? || page_url.empty?
-  puts "Usage: ruby check_cloudflare_auth.rb <page_url>"
+config_file = ARGV[0]
+if config_file.nil? || config_file.empty?
+  puts "Usage: ruby check_cloudflare_auth.rb <config_file>"
   exit(1)
 end
 
-private_key_content = ENV['CLOUDFLARE_PRIVATE_KEY']
+config = YAML.load_file(config_file)
+page_url = config['page_url']
+private_key_content = config['cloudflare_private_key']
+
+if page_url.nil? || page_url.empty?
+  puts "page_url is missing from #{config_file}. Exiting..."
+  exit(1)
+end
+
 if private_key_content.nil? || private_key_content.strip.empty?
-  puts "CLOUDFLARE_PRIVATE_KEY is not set. Exiting..."
+  puts "cloudflare_private_key is missing from #{config_file}. Exiting..."
   exit(1)
 end
 
