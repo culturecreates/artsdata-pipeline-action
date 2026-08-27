@@ -28,6 +28,13 @@ on:
       html-extract-config:
         description: 'Custom HTML configuration as JSON'
         required: false
+      custom-sparql:
+        description: 'URL to a repo-specific SPARQL transformation applied per entity during fetch. Use "domain_name" as the placeholder for the base URL.'
+        required: false
+      urls-are-entities:
+        description: 'Set true when page-url is a comma-separated list of already-resolved entity page URLs. Skips spidering and single-selector fetching, and fetches each URL directly.'
+        default: 'false'
+        required: false
             
 jobs:
   call_reusable_workflow:
@@ -78,6 +85,8 @@ jobs:
           group: "test-group"
           download_file: "output/test-events2.jsonld"
           download_url: "https://example.com/test.jsonld"
+          custom_sparql: ${{ inputs.custom-sparql }}
+          urls_are_entities: ${{ inputs.urls-are-entities }}
           shacl: null
           EOF
 
