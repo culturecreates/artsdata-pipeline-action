@@ -3,11 +3,19 @@ module PageFetcherService
     def initialize()
     end
 
-    def fetcher_with_retry(page_url:, selector: 'body', accept: nil)
+    def fetcher_with_retry(page_url:, selector: 'body', accept: nil, expected_content_type: nil)
       retry_count = 0
       max_retries = 3
+      data = nil
+      content_type = nil
       begin
-        data, content_type = fetch_page_data(page_url: page_url, selector: selector, accept: accept)
+        fetched_data, fetched_content_type = fetch_page_data(page_url: page_url, selector: selector, accept: accept)
+        if expected_content_type && !fetched_content_type&.include?(expected_content_type)
+          raise "Unexpected Content-Type '#{fetched_content_type}' for #{page_url} " \
+                "(expected to include '#{expected_content_type}') — likely a bot-block, " \
+                "WAF challenge, or cache response rather than the real resource"
+        end
+        data, content_type = fetched_data, fetched_content_type
       rescue StandardError => e
         retry_count += 1
         if retry_count < max_retries
