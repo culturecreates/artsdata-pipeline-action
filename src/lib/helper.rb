@@ -621,4 +621,23 @@ module Helper
     
     skolemized_graph
   end
+
+  def self.normalize_literals(graph)
+    normalized_graph = RDF::Graph.new
+    graph.each_statement do |stmt|
+      if stmt.object.literal?
+        decoded = CGI.unescapeHTML(stmt.object.to_s)
+        if decoded != stmt.object.to_s
+          stmt = RDF::Statement(
+            stmt.subject,
+            stmt.predicate,
+            RDF::Literal.new(decoded, language: stmt.object.language, datatype: stmt.object.datatype)
+          )
+        end
+      end
+      normalized_graph << stmt
+    end
+    normalized_graph
+  end
+
 end
