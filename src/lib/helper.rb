@@ -21,6 +21,7 @@ require 'base64'
 require 'json'
 require 'uri'
 require 'digest'
+require 'cgi'
 
 module Helper
 
@@ -581,10 +582,11 @@ module Helper
           nested_triples = graph.query([stmt.object, nil, nil]).statements.sort_by do |s|
             [s.predicate.to_s, s.object.to_s]
           end
-          nested_content = nested_triples.map { |s| "#{s.predicate}=#{s.object}" }.join("|")
+          nested_content = nested_triples.map { |s| "#{s.predicate}=#{CGI.unescapeHTML(s.object.to_s)}" }.join("|")
           "#{stmt.predicate}=BLANK[#{nested_content}]"
         else
-          "#{stmt.predicate}=#{stmt.object}"
+          normalized_object = CGI.unescapeHTML(stmt.object.to_s)
+          "#{stmt.predicate}=#{normalized_object}"
         end
         obj_str
       end
