@@ -111,4 +111,56 @@ class TestBlankNodeSkolemization < Minitest::Test
     refute address_uri.node?, "Address should be URI"
     
   end
+
+  def test_html_entity_encoded_literals_produce_same_uri
+    base_url = "http://www.petittheatre.org"
+
+    # Real-world variants captured from petittheatre.org: each is a different
+    # per-render HTML-entity encoding of the SAME email, produced by the
+    # site's anti-scraping obfuscation. They must not affect skolemization.
+    encoded_email_variants = [
+      "&#105;&#110;f&#111;&#64;&#112;et&#105;t&#116;h&#101;a&#116;r&#101;.&#111;r&#103;",
+      "&#105;n&#102;&#111;&#64;p&#101;t&#105;t&#116;h&#101;a&#116;r&#101;.&#111;r&#103;",
+      "in&#102;o&#64;p&#101;&#116;i&#116;&#116;he&#97;t&#114;e&#46;o&#114;&#103;",
+      "in&#102;&#111;&#64;p&#101;&#116;i&#116;&#116;&#104;e&#97;tre.or&#103;",
+      "info@petittheatre.org", # fully decoded form, for completeness
+    ]
+
+    uris = encoded_email_variants.map do |encoded_email|
+      graph = RDF::Graph.new
+      person = RDF::Node.new
+
+      graph << [person, RDF.type, RDF::Vocab::SCHEMA.Person]
+      graph << [person, RDF::Vocab::SCHEMA.name, "Petit Théâtre du Vieux Noranda"]
+      graph << [person, RDF::Vocab::SCHEMA.telephone, "(819) 797-6436"]
+      graph << [person, RDF::Vocab::SCHEMA.email, encoded_email]
+
+      skolemized = Helper.skolemize_blank_nodes(graph, base_url)
+      skolemized.query([nil, RDF.type, RDF::Vocab::SCHEMA.Person]).subjects.first.to_s
+    end
+
+    assert_equal 1, uris.uniq.size,
+      "Same Person data with differently HTML-entity-encoded (but semantically identical) " \
+      "email should skolemize to the SAME URI. Got distinct URIs: #{uris.uniq.inspect}"
+  end
+  
+  def test_normalize_literals_decodes_double_encoded_entities
+    graph = RDF::Graph.new
+    person = RDF::URI("http://example.com/person/1")
+
+    # Simulates what RDFa extraction hands back when the source HTML
+    # double-encodes an email (encodes the leading "&" of "&#105;..." as "&amp;"),
+    # so a single HTML-parse pass only strips one layer.
+    double_encoded_email = "&#105;&#110;f&#111;&#64;&#112;et&#105;t&#116;h&#101;a&#116;r&#101;.&#111;r&#103;"
+
+    graph << [person, RDF.type, RDF::Vocab::SCHEMA.Person]
+    graph << [person, RDF::Vocab::SCHEMA.email, double_encoded_email]
+
+    normalized = Helper.normalize_literals(graph)
+
+    email = normalized.query([person, RDF::Vocab::SCHEMA.email, nil]).objects.first.to_s
+    assert_equal "info@petittheatre.org", email,
+      "normalize_literals should fully decode HTML entities in literal values"
+  end
+  
 end
