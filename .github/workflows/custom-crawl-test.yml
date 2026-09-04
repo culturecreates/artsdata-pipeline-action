@@ -3,7 +3,7 @@ name: Custom crawl test
 on:
   workflow_dispatch:
     inputs:
-      mode: 'fetch-test'
+      mode:
         description: 'Mode of operation'
         default: 'fetch-test'
       page-url:
