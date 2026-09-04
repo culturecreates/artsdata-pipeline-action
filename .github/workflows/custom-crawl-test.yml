@@ -86,7 +86,7 @@ jobs:
           version: "1.0.0"
           comment: "Test comment"
           group: "test-group"
-          download_file: "output/test-events2.jsonld"
+          download_file: "output/test-fetch.jsonld"
           download_url: "https://example.com/test.jsonld"
           custom_sparql: ${{ inputs.custom-sparql }}
           urls_are_entities: ${{ inputs.urls-are-entities }}
