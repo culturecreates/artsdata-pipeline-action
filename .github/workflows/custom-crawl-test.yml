@@ -3,6 +3,9 @@ name: Custom crawl test
 on:
   workflow_dispatch:
     inputs:
+      mode: 'fetch-test'
+        description: 'Mode of operation'
+        default: 'fetch-test'
       page-url:
         description: 'URL(s) of the page(s) to crawl (single URL or comma-separated list)'
       entity-identifier:
@@ -61,7 +64,7 @@ jobs:
         run: |
           mkdir -p output
           cat <<EOF > config.yml
-          mode: "fetch"
+          mode: "${{ inputs.mode }}"
           page_url: "${{ inputs.page-url }}"
           entity_identifier: "${{ inputs.entity-identifier }}"
           is_paginated: ${{ inputs.is-paginated }}
@@ -74,7 +77,7 @@ jobs:
           callback_url: null
           workflow_id: "${{ github.workflow }}"
           actor: "${{ github.actor }}"
-          token: null
+          token: ${{ secrets.DEV_PAT }}
           repository: "${{ github.repository }}"
           artifact: "test-events"
           publisher: "test-publisher"
