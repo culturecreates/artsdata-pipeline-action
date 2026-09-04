@@ -35,6 +35,10 @@ module GraphFetcherService
             )
           end
         end
+        # Normalize any double-encoded HTML entities (e.g. obfuscated mailto emails)
+        # before anything downstream — SPARQL transforms, merging, skolemization — sees them.
+        loaded_graph = Helper.normalize_literals(loaded_graph)
+
         if !loaded_graph.empty?
           puts "Performing SPARQL transformations on loaded graph from #{entity_url}."
           loaded_graph = Helper.transform_event_graph(loaded_graph, entity_url, entity_urls[0].split('/')[0..2].join('/'))

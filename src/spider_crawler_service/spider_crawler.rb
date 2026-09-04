@@ -183,6 +183,7 @@ module SpiderCrawlerService
 
         new_links = fetch_links(nokogiri_doc: nokogiri_doc, page_type: page_type)
         loaded_graph = fetch_graph(page_url: link, page_data: page_data)
+        loaded_graph = Helper.normalize_literals(loaded_graph)
         event_count = @sparql.query_graph(loaded_graph, "event_count.sparql").first[:count].to_i
         if event_count == 0 || loaded_graph.empty?
           puts "No relevant RDF data found at #{link}, the graph will not be loaded." 
