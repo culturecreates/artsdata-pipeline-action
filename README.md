@@ -163,15 +163,6 @@ Test mode can be activated by setting the mode as `fetch-test` which limits the 
 
 The spider crawler kicks in when the entity identifier is not provided. The system starts from the base url and works its way up to find relevant event, place, organization and person data. 
 
-### Non-crawl fetch modes and robots.txt
-
-When an `entity-identifier` is provided (or `urls-are-entities: true` is set), the spider crawler is **not** used. Instead the action follows a direct fetch path:
-
-- With `entity-identifier`, the `UrlFetcher` loads the listing page(s) given in `page-url`, applies the selector to extract entity links (handling pagination via `is-paginated`/`offset`), and then the `GraphFetcher` fetches each resolved entity page.
-- With `urls-are-entities: true`, the URLs in `page-url` are treated as final entity pages and fetched directly, skipping both the crawler and the selector step.
-
-`robots.txt` is still honoured on these non-crawl paths. Before any listing or entity URL is fetched, the action retrieves and parses the site's `robots.txt` (see [Robots.txt parsing](#robotstxt-parsing)) and evaluates each URL's path with `allowed?` for the configured user-agent. Any URL disallowed by `robots.txt` is skipped and logged, so only permitted paths are requested. If `robots.txt` is missing or cannot be fetched, all paths are assumed allowed.
-
 ### Pseudo Code for spider
 
 1. Initialize
@@ -238,7 +229,16 @@ It defines a `RobotsTxt` class that:
     - Uses the longest matching rule wins principle.
     - If two rules match with equal length, Allow overrides Disallow.
     - If no rules match, the path is allowed by default.
-    
+
+## Non-crawl fetch modes and robots.txt
+
+When an `entity-identifier` is provided (or `urls-are-entities: true` is set), the spider crawler is **not** used. Instead the action follows a direct fetch path:
+
+- With `entity-identifier`, the `UrlFetcher` loads the listing page(s) given in `page-url`, applies the selector to extract entity links (handling pagination via `is-paginated`/`offset`), and then the `GraphFetcher` fetches each resolved entity page.
+- With `urls-are-entities: true`, the URLs in `page-url` are treated as final entity pages and fetched directly, skipping both the crawler and the selector step.
+
+`robots.txt` is still honoured on these non-crawl paths. Before any listing or entity URL is fetched, the action retrieves and parses the site's `robots.txt` (see [Robots.txt parsing](#robotstxt-parsing)) and evaluates each URL's path with `allowed?` for the configured user-agent. Any URL disallowed by `robots.txt` is skipped and logged, so only permitted paths are requested. If `robots.txt` is missing or cannot be fetched, all paths are assumed allowed.
+
 ## Potential Issues
 
 Remember to use only unreserved characters ([0-9a-zA-Z-._]) for input variables where mentioned.
