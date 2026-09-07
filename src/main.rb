@@ -175,7 +175,7 @@ if mode.include?('fetch')
     )
 
     if mode.include?('test')
-      entity_urls = entity_urls.take(5) # Limit to 5 URLs for testing
+      entity_urls = entity_urls.take(40) # Limit to 40 URLs for testing
     end
 
     notification_instance.send_notification(
