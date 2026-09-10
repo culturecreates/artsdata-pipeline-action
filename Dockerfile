@@ -1,10 +1,10 @@
 FROM ruby:3.1-bookworm
 
-RUN sed -i 's|deb.debian.org|archive.debian.org|g; s|security.debian.org|archive.debian.org/debian-security|g' /etc/apt/sources.list && \
-    apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y \
+RUN apt-get update && apt-get install -y \
     curl \
     apt-transport-https \
     ca-certificates \
+    gnupg \
     libx11-xcb1 \
     libxcomposite1 \
     libxcursor1 \
