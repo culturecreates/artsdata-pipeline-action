@@ -1,9 +1,10 @@
-FROM ruby:3.1.2
+FROM ruby:3.1-bookworm
 
 RUN apt-get update && apt-get install -y \
     curl \
     apt-transport-https \
     ca-certificates \
+    gnupg \
     libx11-xcb1 \
     libxcomposite1 \
     libxcursor1 \
@@ -20,12 +21,12 @@ RUN apt-get update && apt-get install -y \
     libpangoft2-1.0-0 \
     libjpeg-dev \
     libxshmfence1 \
-    libgles2-mesa \
+    libgles2 \
     xvfb \
     tzdata \
     --no-install-recommends && \
-    curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
+    curl -sSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
     apt-get update && apt-get install -y google-chrome-stable --no-install-recommends && \
     rm -rf /var/lib/apt/lists/* && \
     ln -fs /usr/share/zoneinfo/America/Toronto /etc/localtime && \
