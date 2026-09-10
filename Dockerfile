@@ -1,4 +1,4 @@
-FROM ruby:3.1.2
+FROM ruby:3.1-bookworm
 
 RUN sed -i 's|deb.debian.org|archive.debian.org|g; s|security.debian.org|archive.debian.org/debian-security|g' /etc/apt/sources.list && \
     apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y \
@@ -21,7 +21,7 @@ RUN sed -i 's|deb.debian.org|archive.debian.org|g; s|security.debian.org|archive
     libpangoft2-1.0-0 \
     libjpeg-dev \
     libxshmfence1 \
-    libgles2-mesa \
+    libgles2 \
     xvfb \
     tzdata \
     --no-install-recommends && \
