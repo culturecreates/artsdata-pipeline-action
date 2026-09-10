@@ -1,6 +1,6 @@
 FROM ruby:3.1.2
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y \
     curl \
     apt-transport-https \
     ca-certificates \
@@ -26,7 +26,7 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && apt-get install -y google-chrome-stable --no-install-recommends && \
+    apt-get update -o Acquire::Check-Valid-Until=false && apt-get install -y google-chrome-stable --no-install-recommends && \
     rm -rf /var/lib/apt/lists/* && \
     ln -fs /usr/share/zoneinfo/America/Toronto /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata
