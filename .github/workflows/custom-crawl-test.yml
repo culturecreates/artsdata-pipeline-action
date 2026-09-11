@@ -38,6 +38,9 @@ on:
         description: 'Set true when page-url is a comma-separated list of already-resolved entity page URLs. Skips spidering and single-selector fetching, and fetches each URL directly.'
         default: 'false'
         required: false
+      skolemization-exclude:
+        description: 'JSON object mapping an entity type URI to an array of property URIs to exclude from skolemization hashing, e.g. {"http://schema.org/Place":["http://schema.org/url"]}'
+        required: false
             
 jobs:
   call_reusable_workflow:
@@ -90,6 +93,7 @@ jobs:
           download_url: "https://example.com/test.jsonld"
           custom_sparql: ${{ inputs.custom-sparql }}
           urls_are_entities: ${{ inputs.urls-are-entities }}
+          skolemize_exclude: ${{ inputs.skolemization-exclude || '{}' }}
           shacl: null
           EOF
 
