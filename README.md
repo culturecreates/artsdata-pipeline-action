@@ -57,6 +57,7 @@ artsdata-pipeline:
         custom-databus-url:
         html-extract-config:
         register-only:
+        skolemization-exclude:
         cloudflare-private-key:
 ```
 
@@ -91,6 +92,7 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 | `entity-identifier`                 | Identifier of the entity to fetch URL (optional, defaults to [spider crawler](#spider-crawler) mode if not provided).
 | `urls-are-entities`                 | Set to `true` when `page-url` is a comma-separated list of **already-resolved entity page URLs**. Skips both the spider crawler and the single-selector URL fetcher, and fetches each URL directly. (optional, defaults to false). See [Passing a list of entity URLs](#passing-a-list-of-entity-urls).
 | `custom-sparql`                     | URL to a **repo-specific SPARQL transformation** applied per entity during fetch. Use `domain_name` as the placeholder for the site base URL. (optional). See [Repo-specific SPARQL transformation](#repo-specific-sparql-transformation).
+| `skolemization-exclude`             | JSON object mapping an **entity type URI** to an array of **property URIs** to exclude from blank-node skolemization hashing. (optional). See [Excluding properties from skolemization](#excluding-properties-from-skolemization).
 | `headless`                          | Whether to run in headless mode (optional, defaults to false).
 | `fetch-urls-headlessly`             | Fetch the URLs of entities using a headless browser(optional, defaults to false).
 | `is-paginated`                      | Whether the page is paginated (optional, defaults to false).
