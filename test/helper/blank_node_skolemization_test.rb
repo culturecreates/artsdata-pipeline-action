@@ -162,5 +162,81 @@ class TestBlankNodeSkolemization < Minitest::Test
     assert_equal "info@petittheatre.org", email,
       "normalize_literals should fully decode HTML entities in literal values"
   end
+
+  # --- skolemization-exclude feature ---------------------------------------
+
+  # Helper: builds a Brantford-style Place blank node whose only per-event
+  # difference is schema:url (a different event page each time).
+  def build_place_graph(event_url)
+    graph = RDF::Graph.new
+    place = RDF::Node.new
+    graph << [place, RDF.type, RDF::Vocab::SCHEMA.Place]
+    graph << [place, RDF::Vocab::SCHEMA.name, RDF::Literal.new("Sanderson Centre for the Performing Arts", language: :en)]
+    graph << [place, RDF::Vocab::SCHEMA.telephone, RDF::Literal.new("519-758-8090", language: :en)]
+    graph << [place, RDF::Vocab::SCHEMA.sameAs, RDF::URI("http://www.sandersoncentre.ca")]
+    graph << [place, RDF::Vocab::SCHEMA.url, RDF::URI(event_url)]
+    graph
+  end
+
+  def skolemized_place_uri(graph, base_url)
+    Helper.skolemize_blank_nodes(graph, base_url)
+      .query([nil, RDF.type, RDF::Vocab::SCHEMA.Place]).subjects.first.to_s
+  end
+
+  def test_excluded_property_gives_same_uri_across_events
+    base_url = "https://brantfordsymphony.ca"
+    ENV['SKOLEMIZE_EXCLUDE_CONFIG'] =
+      { "http://schema.org/Place" => ["http://schema.org/url"] }.to_json
+
+    uri1 = skolemized_place_uri(
+      build_place_graph("https://brantfordsymphony.ca/event/silver-bells/"), base_url)
+    uri2 = skolemized_place_uri(
+      build_place_graph("https://brantfordsymphony.ca/event/spring-gala/"), base_url)
+
+    assert_equal uri1, uri2,
+      "Place appearing on two different events should skolemize to the same URI " \
+      "when schema:url is excluded"
+  ensure
+    ENV.delete('SKOLEMIZE_EXCLUDE_CONFIG')
+  end
+
+  def test_without_exclusion_differing_property_gives_different_uris
+    base_url = "https://brantfordsymphony.ca"
+    ENV.delete('SKOLEMIZE_EXCLUDE_CONFIG')
+
+    uri1 = skolemized_place_uri(
+      build_place_graph("https://brantfordsymphony.ca/event/silver-bells/"), base_url)
+    uri2 = skolemized_place_uri(
+      build_place_graph("https://brantfordsymphony.ca/event/spring-gala/"), base_url)
+
+    refute_equal uri1, uri2,
+      "Without exclusion, a differing schema:url should still produce different URIs"
+  end
+
+  def test_exclusion_only_applies_to_matching_type
+    base_url = "https://brantfordsymphony.ca"
+    # Excludes url only for Place, but here the node is an Event.
+    ENV['SKOLEMIZE_EXCLUDE_CONFIG'] =
+      { "http://schema.org/Place" => ["http://schema.org/url"] }.to_json
+
+    build_event = lambda do |url|
+      graph = RDF::Graph.new
+      event = RDF::Node.new
+      graph << [event, RDF.type, RDF::Vocab::SCHEMA.Event]
+      graph << [event, RDF::Vocab::SCHEMA.name, RDF::Literal.new("Concert", language: :en)]
+      graph << [event, RDF::Vocab::SCHEMA.url, RDF::URI(url)]
+      graph
+    end
+
+    uri1 = Helper.skolemize_blank_nodes(build_event.call("https://brantfordsymphony.ca/a"), base_url)
+      .query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).subjects.first.to_s
+    uri2 = Helper.skolemize_blank_nodes(build_event.call("https://brantfordsymphony.ca/b"), base_url)
+      .query([nil, RDF.type, RDF::Vocab::SCHEMA.Event]).subjects.first.to_s
+
+    refute_equal uri1, uri2,
+      "Exclusion configured for Place must not affect Event skolemization"
+  ensure
+    ENV.delete('SKOLEMIZE_EXCLUDE_CONFIG')
+  end
   
 end
