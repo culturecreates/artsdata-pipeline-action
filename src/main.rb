@@ -40,7 +40,13 @@ databus_url = config['databus']
 register_only = config['register_only'] == true
 custom_sparql = config['custom_sparql']
 urls_are_entities = config['urls_are_entities'] == true
+skolemize_exclude = config['skolemize_exclude']
 cloudflare_private_key = config['cloudflare_private_key']
+
+# Expose the skolemization exclusion config to the transformation layer.
+if skolemize_exclude.is_a?(Hash) && !skolemize_exclude.empty?
+  ENV['SKOLEMIZE_EXCLUDE_CONFIG'] = skolemize_exclude.to_json
+end
 
 if html_extract_config_file && File.exist?(html_extract_config_file)
   begin
