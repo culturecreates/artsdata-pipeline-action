@@ -22,6 +22,7 @@ require 'json'
 require 'uri'
 require 'digest'
 require 'cgi'
+require 'set'
 
 module Helper
 
@@ -561,19 +562,38 @@ module Helper
     loaded_graph
   end
 
+  # Parses the per-run skolemization exclusion config (entity type URI ->
+  # array of property URIs to ignore when hashing a blank node).
+  def self.skolemize_exclude_config
+    raw = ENV['SKOLEMIZE_EXCLUDE_CONFIG']
+    return {} if raw.nil? || raw.strip.empty?
+    JSON.parse(raw)
+  rescue JSON::ParserError
+    {}
+  end
+
   # Skolemize blank nodes: convert to deterministic URIs based on content
   # This ensures identical blank nodes across different crawls get the same URI
   def self.skolemize_blank_nodes(graph, base_url)
     # Map from blank node to its content hash
     blank_node_hashes = {}
-    
+
+    exclude_config = skolemize_exclude_config
+
     # Step 1: Calculate content hash for each blank node
     graph.subjects.select(&:node?).each do |blank_node|
-      # Get all triples where this blank node is the subject
-      triples = graph.query([blank_node, nil, nil]).statements.sort_by do |stmt|
-        # Sort to ensure deterministic order
-        [stmt.predicate.to_s, stmt.object.to_s]
-      end
+      # Determine which predicates to exclude for this node based on its type(s)
+      node_types = graph.query([blank_node, RDF.type, nil]).map { |st| st.object.to_s }
+      excluded_predicates = node_types.flat_map { |type| exclude_config[type] || [] }.to_set
+
+      # Get all triples where this blank node is the subject, skipping any
+      # predicates configured as excluded for this entity type.
+      triples = graph.query([blank_node, nil, nil]).statements
+        .reject { |stmt| excluded_predicates.include?(stmt.predicate.to_s) }
+        .sort_by do |stmt|
+          # Sort to ensure deterministic order
+          [stmt.predicate.to_s, stmt.object.to_s]
+        end
       
       # Build content string from all properties
       content_parts = triples.map do |stmt|
@@ -582,9 +602,11 @@ module Helper
           nested_triples = graph.query([stmt.object, nil, nil]).statements.sort_by do |s|
             [s.predicate.to_s, s.object.to_s]
           end
+          # nested_content = nested_triples.map { |s| "#{s.predicate}=#{s.object}" }.join("|")
           nested_content = nested_triples.map { |s| "#{s.predicate}=#{CGI.unescapeHTML(s.object.to_s)}" }.join("|")
           "#{stmt.predicate}=BLANK[#{nested_content}]"
         else
+          # "#{stmt.predicate}=#{stmt.object}"
           normalized_object = CGI.unescapeHTML(stmt.object.to_s)
           "#{stmt.predicate}=#{normalized_object}"
         end
