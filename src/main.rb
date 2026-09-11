@@ -181,7 +181,7 @@ if mode.include?('fetch')
     )
 
     if mode.include?('test')
-      entity_urls = entity_urls.take(5) # Limit to 5 URLs for testing
+      entity_urls = entity_urls.take(100) # Limit to 5 URLs for testing
     end
 
     notification_instance.send_notification(
@@ -224,20 +224,29 @@ if mode.include?('fetch')
     message: 'entity types fetched: ' + entity_types.map(&:to_s).join(', ')
   )
 
-  if !mode.include?('test') && graph.size != 0
+  if graph.size != 0
     download_file ||= "output/#{artifact}.jsonld"
-    github_saver = Helper.get_github_saver(
-      repository: repository,
-      file_name: download_file,
-      token: token,
-    )
-    github_saver.save_graph_to_file(file_name: download_file, graph: graph)
-    download_url = github_saver.save(File.read(download_file))
+    # Always write the fetched graph to disk so it is available as a
+    # workflow artifact (including in fetch-test mode, where nothing is
+    # pushed to GitHub). This lets you download and inspect the output
+    # to verify fixes.
+    FileSaverService::FileSaver.new(path: download_file)
+      .save_graph_to_file(file_name: download_file, graph: graph)
 
-    notification_instance.send_notification(
-      stage: 'file_saved',
-      message: 'file saved to github'
-    )
+    # Only push to GitHub when NOT in test mode.
+    if !mode.include?('test')
+      github_saver = Helper.get_github_saver(
+        repository: repository,
+        file_name: download_file,
+        token: token,
+      )
+      download_url = github_saver.save(File.read(download_file))
+
+      notification_instance.send_notification(
+        stage: 'file_saved',
+        message: 'file saved to github'
+      )
+    end
   end
 end
 
