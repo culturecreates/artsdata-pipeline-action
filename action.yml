@@ -61,6 +61,9 @@ inputs:
     description: 'Set true when page-url is a comma-separated list of already-resolved entity page URLs. Skips spidering and single-selector fetching, and fetches each URL directly.'
     default: 'false'
     required: false
+  skolemization-exclude:
+    description: 'JSON object mapping an entity type URI to an array of property URIs to exclude from skolemization hashing, e.g. {"http://schema.org/Place":["http://schema.org/url"]}'
+    required: false
   cloudflare-private-key:
     description: 'Ed25519 private key for Cloudflare signing (PEM format content)'
     required: false
@@ -100,6 +103,7 @@ runs:
         register_only: ${{ inputs.register-only }}
         custom_sparql: ${{ inputs.custom-sparql }}
         urls_are_entities: ${{ inputs.urls-are-entities }}
+        skolemize_exclude: ${{ inputs.skolemization-exclude || '{}' }}
         cloudflare_private_key: |
         $(printf "%s" "${{ inputs.cloudflare-private-key  }}" | sed 's/^/ /')
         EOF
