@@ -26,8 +26,10 @@ module GraphFetcherService
           if entity_count == 0
             # No entity of the configured type was found in the page's RDFa
             # (these pages have no structured markup). Mint one from the page
-            # URL so the XPath-extracted properties have a subject to attach to.
-            entity_uri = RDF::URI(entity_url)
+            # URL, appending the entity type ID as a fragment so the minted URI
+            # is distinct from the webpage URL (e.g. .../webpage#Person).
+            entity_type_id = entity_type.to_s.split(/[#\/]/).last
+            entity_uri = RDF::URI("#{entity_url}##{entity_type_id}")
             loaded_graph << [entity_uri, RDF.type, RDF::URI(entity_type)]
             extract_logic = @html_extract_config['extract']
             loaded_graph << extract_with_xpath(entity_uri, data, extract_logic)
