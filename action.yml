@@ -64,12 +64,12 @@ inputs:
   skolemization-exclude:
     description: 'JSON object mapping an entity type URI to an array of property URIs to exclude from skolemization hashing, e.g. {"http://schema.org/Place":["http://schema.org/url"]}'
     required: false
-  cloudflare-private-key:
-    description: 'Ed25519 private key for Cloudflare signing (PEM format content)'
-    required: false
   auto-detect-page-param:
       description: 'Detect a client-side pagination query param (e.g. randomized by the site) before crawling, instead of a hardcoded page-url param'
       default: 'false'
+  cloudflare-private-key:
+    description: 'Ed25519 private key for Cloudflare signing (PEM format content)'
+    required: false
 
 runs: 
   using: 'composite'
