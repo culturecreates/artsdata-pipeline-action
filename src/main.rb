@@ -41,6 +41,7 @@ register_only = config['register_only'] == true
 custom_sparql = config['custom_sparql']
 urls_are_entities = config['urls_are_entities'] == true
 skolemize_exclude = config['skolemize_exclude']
+auto_detect_page_param = config['auto_detect_page_param'] == true
 cloudflare_private_key = config['cloudflare_private_key']
 
 # Expose the skolemization exclusion config to the transformation layer.
@@ -160,7 +161,8 @@ if mode.include?('fetch')
       is_paginated: is_paginated,
       offset: offset,
       page_fetcher: page_fetcher,
-      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, private_key_content: cloudflare_private_key)
+      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, private_key_content: cloudflare_private_key),
+      auto_detect_page_param: auto_detect_page_param
     )
 
     entity_urls = url_fetcher.fetch_urls()
