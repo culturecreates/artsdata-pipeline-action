@@ -234,17 +234,27 @@ if mode.include?('fetch')
     github_saver.save_graph_to_file(file_name: download_file, graph: graph)
     download_url = github_saver.save(File.read(download_file))
 
-    # Always pin download_url to the exact commit that stored this artifact so
-    # the Artsdata Databus can browse dataset history and load older versions.
-    # The raw commit URL is permanent (public repos) and contains no token.
+    # Primary: exact commit created by the save above (from the PUT response).
+    commit_sha = github_saver.last_commit_sha
+
+    # Fallback: write was skipped (identical content). Look up the file's last
+    # commit on the DEFAULT branch, not github.ref.
+    if commit_sha.nil? || commit_sha.to_s.strip.empty?
+      commit_sha = Helper.resolve_last_commit_sha_on_default_branch(
+        repository: repository,
+        file_path: download_file,
+        default_branch: github_saver.default_branch,
+        github_token: token
+      )
+    end
+
     pinned_download_url = Helper.build_commit_pinned_download_url(
       repository: repository,
       file_path: download_file,
-      reference: reference,
-      github_token: token
-    ) 
+      commit_sha: commit_sha
+    )
     if pinned_download_url.nil? || pinned_download_url.empty?
-      notification_message = 'Could not resolve commit-pinned download URL. Exiting to avoid registering a mutable latest-commit URL.'
+      notification_message = 'Could not determine the commit SHA for the artifact. Exiting to avoid registering a mutable latest-commit URL.'
       puts notification_message
       notification_instance.send_notification(
         stage: 'file_saved',
