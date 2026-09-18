@@ -234,6 +234,27 @@ if mode.include?('fetch')
     github_saver.save_graph_to_file(file_name: download_file, graph: graph)
     download_url = github_saver.save(File.read(download_file))
 
+    # Always pin download_url to the exact commit that stored this artifact so
+    # the Artsdata Databus can browse dataset history and load older versions.
+    # The raw commit URL is permanent (public repos) and contains no token.
+    pinned_download_url = Helper.build_commit_pinned_download_url(
+      repository: repository,
+      file_path: download_file,
+      reference: reference,
+      github_token: token
+    ) 
+    if pinned_download_url.nil? || pinned_download_url.empty?
+      notification_message = 'Could not resolve commit-pinned download URL. Exiting to avoid registering a mutable latest-commit URL.'
+      puts notification_message
+      notification_instance.send_notification(
+        stage: 'file_saved',
+        message: notification_message
+      )
+      exit(1)
+    end
+    download_url = pinned_download_url
+    puts "Using commit-pinned download URL: #{download_url}"
+
     notification_instance.send_notification(
       stage: 'file_saved',
       message: 'file saved to github'
