@@ -663,36 +663,25 @@ module Helper
     normalized_graph
   end
 
-  def self.normalize_github_reference(reference)
-    return nil if reference.nil?
-    ref = reference.to_s.strip
-    return nil if ref.empty?
-    ref = ref.sub(%r{\Arefs/heads/}, '')
-    ref = ref.sub(%r{\Arefs/tags/}, '')
-    ref
-  end
 
-  def self.resolve_file_commit_sha(repository:, file_path:, reference: nil, github_token: nil)
+  # Fallback for the "unchanged content, write skipped" case: find the last
+  # commit that modified the file on the DEFAULT branch (where the Contents
+  # API writes). Must NOT be scoped to github.ref, which may be a tag/PR/
+  # feature ref not containing the file's current commit.
+  def self.resolve_last_commit_sha_on_default_branch(repository:, file_path:, default_branch:, github_token: nil)
     clean_path = file_path.to_s.sub(%r{\A/+}, '')
-    return nil if repository.to_s.strip.empty? || clean_path.empty?
+    return nil if repository.to_s.strip.empty? || clean_path.empty? || default_branch.to_s.strip.empty?
 
     api_uri = URI("https://api.github.com/repos/#{repository}/commits")
-    params = { path: clean_path, per_page: 1 }
-    normalized_ref = normalize_github_reference(reference)
-    params[:sha] = normalized_ref if normalized_ref && !normalized_ref.empty?
-    api_uri.query = URI.encode_www_form(params)
+    api_uri.query = URI.encode_www_form(path: clean_path, sha: default_branch, per_page: 1)
 
-    headers = {
-      "User-Agent" => get_user_agent,
-      "Accept" => "application/vnd.github+json"
-    }
-    headers["Authorization"] = "Bearer #{github_token}" if github_token && !github_token.to_s.strip.empty?
+    headers = { "User-Agent" => get_user_agent, "Accept" => "application/vnd.github+json" }
+    headers["Authorization"] = "Bearer #{github_token}" unless github_token.to_s.strip.empty?
 
-    payload = URI.open(api_uri, headers).read
-    commits = JSON.parse(payload)
+    commits = JSON.parse(URI.open(api_uri, headers).read)
     commits.is_a?(Array) ? commits.first&.dig("sha") : nil
   rescue StandardError => e
-    puts "Warning: Could not resolve commit SHA for #{clean_path}: #{e.message}"
+    puts "Warning: fallback commit lookup failed for #{clean_path}: #{e.message}"
     nil
   end
 
