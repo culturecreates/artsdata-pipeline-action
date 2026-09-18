@@ -14,6 +14,7 @@ require_relative '../databus_service/databus'
 require_relative '../spider_crawler_service/spider_crawler'
 require_relative '../url_fetcher_service/url_fetcher'
 require_relative '../robots_txt_parser_service/robots_txt_parser'
+require 'open-uri'
 
 require 'securerandom'
 require 'openssl'
@@ -662,4 +663,38 @@ module Helper
     normalized_graph
   end
 
+  # Build a permanent, commit-pinned raw URL from the exact commit SHA that the
+  # write operation created. This avoids a second "latest commit for path"
+  # lookup, which is both racy (a newer commit may land first) and ref-scoped
+  # (the save writes to the default branch, not necessarily github.ref).
+  def self.build_commit_pinned_download_url(repository:, file_path:, commit_sha:)
+    return nil if commit_sha.nil? || commit_sha.to_s.strip.empty?
+    return nil if repository.to_s.strip.empty?
+
+    clean_path = file_path.to_s.sub(%r{\A/+}, '')
+    return nil if clean_path.empty?
+
+    "https://raw.githubusercontent.com/#{repository}/#{commit_sha}/#{clean_path}"
+  end
+
+  # Fallback for the "unchanged content, write skipped" case: find the last
+  # commit that modified the file on the DEFAULT branch (where the Contents
+  # API writes). Must NOT be scoped to github.ref, which may be a tag/PR/
+  # feature ref not containing the file's current commit.
+  def self.resolve_last_commit_sha_on_default_branch(repository:, file_path:, default_branch:, github_token: nil)
+    clean_path = file_path.to_s.sub(%r{\A/+}, '')
+    return nil if repository.to_s.strip.empty? || clean_path.empty? || default_branch.to_s.strip.empty?
+
+    api_uri = URI("https://api.github.com/repos/#{repository}/commits")
+    api_uri.query = URI.encode_www_form(path: clean_path, sha: default_branch, per_page: 1)
+
+    headers = { "User-Agent" => get_user_agent, "Accept" => "application/vnd.github+json" }
+    headers["Authorization"] = "Bearer #{github_token}" unless github_token.to_s.strip.empty?
+
+    commits = JSON.parse(URI.open(api_uri, headers).read)
+    commits.is_a?(Array) ? commits.first&.dig("sha") : nil
+  rescue StandardError => e
+    puts "Warning: fallback commit lookup failed for #{clean_path}: #{e.message}"
+    nil
+  end
 end

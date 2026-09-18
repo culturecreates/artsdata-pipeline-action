@@ -1,8 +1,14 @@
 require 'octokit'
 require 'base64'
+require 'open-uri'
+require 'json'
 
 module FileSaverService
   class GitHubSaverService < FileSaverService::FileSaver
+    # Commit SHA created by the most recent successful save (from the Contents
+    # PUT response). nil if no write was performed (unchanged file skipped).
+    attr_reader :last_commit_sha
+
     def initialize(repository:, path:, message:, access_token:, author_name:, author_email:)
       super(path: path)
       @repository = repository
@@ -30,6 +36,8 @@ module FileSaverService
     end
 
     def save(content)
+      @last_commit_sha = nil
+
       # FIX: was `exit(0)` - a missing token is a real failure, not a
       # success. exit(0) hid this from any workflow-status-based check,
       # including CI and the workflow health report.
@@ -75,9 +83,33 @@ module FileSaverService
         end
       end
 
+      # Use commit.sha (the commit), NOT content.sha (the blob hash).
+      @last_commit_sha =
+        if response.respond_to?(:commit)          # Octokit-style object
+          response.commit&.sha
+        elsif response.is_a?(Hash)                 # raw JSON hash
+          response.dig("commit", "sha") || response.dig(:commit, :sha)
+        end
+
       owner, repo = @repository.split("/")
       branch = response[:content][:branch] || "main"
       "https://raw.githubusercontent.com/#{owner}/#{repo}/#{branch}/#{@path}"
+    end
+
+    # Default branch the Contents API writes to when no branch: is supplied.
+    def default_branch
+      @default_branch ||= begin
+        api_uri = URI("https://api.github.com/repos/#{@repository}")
+        headers = {
+          "User-Agent" => "artsdata-pipeline-action",
+          "Accept"     => "application/vnd.github+json"
+        }
+        headers["Authorization"] = "Bearer #{@access_token}" unless @access_token.to_s.strip.empty?
+        JSON.parse(URI.open(api_uri, headers).read)["default_branch"]
+      rescue StandardError => e
+        puts "Warning: could not resolve default branch for #{@repository}: #{e.message}"
+        nil
+      end
     end
   end
 end
