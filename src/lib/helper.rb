@@ -14,6 +14,7 @@ require_relative '../databus_service/databus'
 require_relative '../spider_crawler_service/spider_crawler'
 require_relative '../url_fetcher_service/url_fetcher'
 require_relative '../robots_txt_parser_service/robots_txt_parser'
+require 'open-uri'
 
 require 'securerandom'
 require 'openssl'
@@ -660,6 +661,52 @@ module Helper
       normalized_graph << stmt
     end
     normalized_graph
+  end
+
+  def self.normalize_github_reference(reference)
+    return nil if reference.nil?
+    ref = reference.to_s.strip
+    return nil if ref.empty?
+    ref = ref.sub(%r{\Arefs/heads/}, '')
+    ref = ref.sub(%r{\Arefs/tags/}, '')
+    ref
+  end
+
+  def self.resolve_file_commit_sha(repository:, file_path:, reference: nil, github_token: nil)
+    clean_path = file_path.to_s.sub(%r{\A/+}, '')
+    return nil if repository.to_s.strip.empty? || clean_path.empty?
+
+    api_uri = URI("https://api.github.com/repos/#{repository}/commits")
+    params = { path: clean_path, per_page: 1 }
+    normalized_ref = normalize_github_reference(reference)
+    params[:sha] = normalized_ref if normalized_ref && !normalized_ref.empty?
+    api_uri.query = URI.encode_www_form(params)
+
+    headers = {
+      "User-Agent" => get_user_agent,
+      "Accept" => "application/vnd.github+json"
+    }
+    headers["Authorization"] = "Bearer #{github_token}" if github_token && !github_token.to_s.strip.empty?
+
+    payload = URI.open(api_uri, headers).read
+    commits = JSON.parse(payload)
+    commits.is_a?(Array) ? commits.first&.dig("sha") : nil
+  rescue StandardError => e
+    puts "Warning: Could not resolve commit SHA for #{clean_path}: #{e.message}"
+    nil
+  end
+
+  def self.build_commit_pinned_download_url(repository:, file_path:, reference: nil, github_token: nil)
+    commit_sha = resolve_file_commit_sha(
+      repository: repository,
+      file_path: file_path,
+      reference: reference,
+      github_token: github_token
+    )
+    return nil if commit_sha.nil? || commit_sha.empty?
+
+    clean_path = file_path.to_s.sub(%r{\A/+}, '')
+    "https://raw.githubusercontent.com/#{repository}/#{commit_sha}/#{clean_path}"
   end
 
 end
