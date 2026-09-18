@@ -663,6 +663,19 @@ module Helper
     normalized_graph
   end
 
+  # Build a permanent, commit-pinned raw URL from the exact commit SHA that the
+  # write operation created. This avoids a second "latest commit for path"
+  # lookup, which is both racy (a newer commit may land first) and ref-scoped
+  # (the save writes to the default branch, not necessarily github.ref).
+  def self.build_commit_pinned_download_url(repository:, file_path:, commit_sha:)
+    return nil if commit_sha.nil? || commit_sha.to_s.strip.empty?
+    return nil if repository.to_s.strip.empty?
+
+    clean_path = file_path.to_s.sub(%r{\A/+}, '')
+    return nil if clean_path.empty?
+
+    "https://raw.githubusercontent.com/#{repository}/#{commit_sha}/#{clean_path}"
+  end
 
   # Fallback for the "unchanged content, write skipped" case: find the last
   # commit that modified the file on the DEFAULT branch (where the Contents
@@ -684,18 +697,4 @@ module Helper
     puts "Warning: fallback commit lookup failed for #{clean_path}: #{e.message}"
     nil
   end
-
-  def self.build_commit_pinned_download_url(repository:, file_path:, reference: nil, github_token: nil)
-    commit_sha = resolve_file_commit_sha(
-      repository: repository,
-      file_path: file_path,
-      reference: reference,
-      github_token: github_token
-    )
-    return nil if commit_sha.nil? || commit_sha.empty?
-
-    clean_path = file_path.to_s.sub(%r{\A/+}, '')
-    "https://raw.githubusercontent.com/#{repository}/#{commit_sha}/#{clean_path}"
-  end
-
 end
