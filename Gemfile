@@ -9,5 +9,6 @@ gem 'ferrum'
 gem 'mocha'
 gem 'jsonlint', '~> 0.4.0'
 gem 'octokit', '~> 10.0.0'
-gem 'faraday-retry', '~> 2.3.1'
-
+gem 'faraday-retry', '~> 2.4'
+gem 'base64'
+gem 'csv'
