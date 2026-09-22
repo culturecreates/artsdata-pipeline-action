@@ -14,6 +14,7 @@ require_relative '../databus_service/databus'
 require_relative '../spider_crawler_service/spider_crawler'
 require_relative '../url_fetcher_service/url_fetcher'
 require_relative '../robots_txt_parser_service/robots_txt_parser'
+require_relative '../pagination_service/pagination_param_detector'
 
 require 'securerandom'
 require 'openssl'
@@ -175,7 +176,29 @@ module Helper
     end
   end
 
-  def self.get_url_fetcher(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:, robots_txt_content:)
+  def self.detect_page_url_param(base_page_url:, entity_identifier:)
+    detector = PaginationParamDetectorService::PaginationParamDetector.new(
+      browser: BrowserService::ChromeBrowser.new,
+      entity_selector: entity_identifier
+    )
+    detector.detect(base_page_url: base_page_url)
+  end
+
+  def self.get_url_fetcher(page_url:, base_url:, entity_identifier:, is_paginated:, offset:, page_fetcher:, robots_txt_content:, auto_detect_page_param: false)
+    if auto_detect_page_param
+      page_url = page_url.map do |url|
+        detected = detect_page_url_param(base_page_url: url, entity_identifier: entity_identifier)
+        unless detected
+          NotificationService::WebhookNotification.instance.send_notification(
+            stage: 'fetching_entity_urls',
+            message: "Could not auto-detect pagination param for #{url}"
+          )
+          exit(1)
+        end
+        detected
+      end
+    end
+    
     UrlFetcherService::UrlFetcher.new(
       page_url: page_url,
       base_url: base_url,
