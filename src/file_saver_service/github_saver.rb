@@ -1,14 +1,8 @@
 require 'octokit'
 require 'base64'
-require 'open-uri'
-require 'json'
 
 module FileSaverService
   class GitHubSaverService < FileSaverService::FileSaver
-    # Commit SHA created by the most recent successful save (from the Contents
-    # PUT response). nil if no write was performed (unchanged file skipped).
-    attr_reader :last_commit_sha
-
     def initialize(repository:, path:, message:, access_token:, author_name:, author_email:)
       super(path: path)
       @repository = repository
@@ -36,8 +30,6 @@ module FileSaverService
     end
 
     def save(content)
-      @last_commit_sha = nil
-
       # FIX: was `exit(0)` - a missing token is a real failure, not a
       # success. exit(0) hid this from any workflow-status-based check,
       # including CI and the workflow health report.
@@ -83,33 +75,25 @@ module FileSaverService
         end
       end
 
-      # Use commit.sha (the commit), NOT content.sha (the blob hash).
-      @last_commit_sha =
-        if response.respond_to?(:commit)          # Octokit-style object
-          response.commit&.sha
-        elsif response.is_a?(Hash)                 # raw JSON hash
-          response.dig("commit", "sha") || response.dig(:commit, :sha)
-        end
+      # Pin the URL to the commit this write created (commit.sha, NOT the
+      # blob's content.sha) so each crawl keeps its own permanent downloadURL.
+      commit = response[:commit]
+      commit_sha = (commit && commit[:sha]) || last_commit_sha_for_path
+      return nil if commit_sha.to_s.empty?
 
-      owner, repo = @repository.split("/")
-      branch = response[:content][:branch] || "main"
-      "https://raw.githubusercontent.com/#{owner}/#{repo}/#{branch}/#{@path}"
+      "https://raw.githubusercontent.com/#{@repository}/#{commit_sha}/#{@path}"
     end
 
-    # Default branch the Contents API writes to when no branch: is supplied.
-    def default_branch
-      @default_branch ||= begin
-        api_uri = URI("https://api.github.com/repos/#{@repository}")
-        headers = {
-          "User-Agent" => "artsdata-pipeline-action",
-          "Accept"     => "application/vnd.github+json"
-        }
-        headers["Authorization"] = "Bearer #{@access_token}" unless @access_token.to_s.strip.empty?
-        JSON.parse(URI.open(api_uri, headers).read)["default_branch"]
-      rescue StandardError => e
-        puts "Warning: could not resolve default branch for #{@repository}: #{e.message}"
-        nil
-      end
+    private
+
+    # Safety net in case the write response carries no commit: the last commit
+    # that touched the file on the default branch (where the Contents API writes).
+    def last_commit_sha_for_path
+      default_branch = @client.repository(@repository).default_branch
+      @client.commits(@repository, default_branch, path: @path, per_page: 1).first&.sha
+    rescue Octokit::Error => e
+      puts "Warning: could not resolve commit for #{@path}: #{e.message}"
+      nil
     end
   end
 end
