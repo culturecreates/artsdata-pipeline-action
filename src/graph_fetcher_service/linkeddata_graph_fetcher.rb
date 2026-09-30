@@ -22,13 +22,23 @@ module GraphFetcherService
         end
         if (!@html_extract_config.nil?)
           entity_type = @html_extract_config['entity_type']
-          entity_uri = get_uri_by_type(loaded_graph, entity_type)
-          if !entity_uri.nil?
+          entity_uri, entity_count = get_uri_by_type(loaded_graph, entity_type)
+          if entity_count == 0
+            # No entity of the configured type was found in the page's RDFa
+            # (these pages have no structured markup). Mint one from the page
+            # URL, appending the entity type ID as a fragment so the minted URI
+            # is distinct from the webpage URL (e.g. .../webpage#Person).
+            entity_type_id = entity_type.to_s.split(/[#\/]/).last
+            entity_uri = RDF::URI("#{entity_url}##{entity_type_id}")
+            loaded_graph << [entity_uri, RDF.type, RDF::URI(entity_type)]
+            extract_logic = @html_extract_config['extract']
+            loaded_graph << extract_with_xpath(entity_uri, data, extract_logic)
+          elsif !entity_uri.nil?
             extract_logic = @html_extract_config['extract']
             loaded_graph << extract_with_xpath(entity_uri, data, extract_logic)
           else
             notification_instance = NotificationService::WebhookNotification.instance
-            puts "Warning: Multiple/No entities of type #{entity_type} found from #{entity_url}, cannot add html data."
+            puts "Warning: Multiple entities of type #{entity_type} found from #{entity_url}, cannot add html data."
             notification_instance.send_notification(
               stage: 'adding_html_data',
               message: "Multiple entities of type #{entity_type} found."
@@ -68,10 +78,10 @@ module GraphFetcherService
 
     def get_uri_by_type(graph, type)
       entities = graph.query([nil, RDF.type, RDF::URI(type)]).map(&:subject).uniq
-      if entities.size != 1
-        return nil
-      end
-      entities.first
+      # Returns [uri, count]. uri is nil unless exactly one entity is present.
+      return [nil, 0] if entities.empty?
+      return [nil, entities.size] if entities.size > 1
+      [entities.first, 1]
     end
 
     private
