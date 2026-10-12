@@ -236,6 +236,17 @@ if mode.include?('fetch')
     github_saver.save_graph_to_file(file_name: download_file, graph: graph)
     download_url = github_saver.save(File.read(download_file))
 
+    if download_url.nil?
+      notification_message = 'Could not determine a permanent download URL for the saved file.'
+      puts notification_message
+      notification_instance.send_notification(
+        stage: 'file_saved',
+        message: notification_message
+      )
+      exit(1)
+    end
+    puts "Download URL: #{download_url}"
+
     notification_instance.send_notification(
       stage: 'file_saved',
       message: 'file saved to github'
