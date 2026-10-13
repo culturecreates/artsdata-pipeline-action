@@ -75,9 +75,25 @@ module FileSaverService
         end
       end
 
-      owner, repo = @repository.split("/")
-      branch = response[:content][:branch] || "main"
-      "https://raw.githubusercontent.com/#{owner}/#{repo}/#{branch}/#{@path}"
+      # Pin the URL to the commit this write created (commit.sha, NOT the
+      # blob's content.sha) so each crawl keeps its own permanent downloadURL.
+      commit = response[:commit]
+      commit_sha = (commit && commit[:sha]) || last_commit_sha_for_path
+      return nil if commit_sha.to_s.empty?
+
+      "https://raw.githubusercontent.com/#{@repository}/#{commit_sha}/#{@path}"
+    end
+
+    private
+
+    # Safety net in case the write response carries no commit: the last commit
+    # that touched the file on the default branch (where the Contents API writes).
+    def last_commit_sha_for_path
+      default_branch = @client.repository(@repository).default_branch
+      @client.commits(@repository, default_branch, path: @path, per_page: 1).first&.sha
+    rescue Octokit::Error => e
+      puts "Warning: could not resolve commit for #{@path}: #{e.message}"
+      nil
     end
   end
 end
