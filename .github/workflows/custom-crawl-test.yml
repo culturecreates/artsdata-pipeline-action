@@ -45,6 +45,8 @@ on:
 jobs:
   call_reusable_workflow:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -80,7 +82,7 @@ jobs:
           callback_url: null
           workflow_id: "${{ github.workflow }}"
           actor: "${{ github.actor }}"
-          token: ${{ secrets.DEV_PAT }}
+          token: ${{ github.token }}
           repository: "${{ github.repository }}"
           artifact: "test-events"
           publisher: "test-publisher"
