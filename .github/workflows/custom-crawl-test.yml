@@ -80,7 +80,7 @@ jobs:
           callback_url: null
           workflow_id: "${{ github.workflow }}"
           actor: "${{ github.actor }}"
-          token: ${{ secrets.DEV_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: "${{ github.repository }}"
           artifact: "test-events"
           publisher: "test-publisher"
