@@ -51,8 +51,12 @@ class LinkedPageExtractTest < Minitest::Test
       sparql_path: './sparql/',
       html_extract_config: html_extract_config
     )
-    graph = Helper.stub(:get_robots_txt_content, RobotsTxtParser.parse(nil)) do
-      graph_fetcher.load_with_retry(entity_urls: entity_urls)
+    graph = nil
+    # Swallow the fetcher's progress logging so the test run stays quiet.
+    capture_io do
+      graph = Helper.stub(:get_robots_txt_content, RobotsTxtParser.parse(nil)) do
+        graph_fetcher.load_with_retry(entity_urls: entity_urls)
+      end
     end
     [graph, fetcher.requested]
   end
