@@ -119,6 +119,18 @@ html-extract-config format:
       } 
     }
 
+To extract from a page that the entity links to instead of the crawled page, add `from_property` to an `extract` entry. The URL is taken from that property of the matched entity, the linked page is fetched with the same page fetcher (user agent, robots.txt, Cloudflare signing), and the `xpath`/`css` runs on it. Each linked page is fetched once per run, even when many entities link to it. The entry is skipped when the property is missing or points to the page being crawled. Entries without `from_property` read the crawled page as before.
+
+    {
+      "entity_type": "http://schema.org/Event",
+      "extract": {
+        "http://schema.org/description": {
+          "from_property": "http://schema.org/url",
+          "xpath": "normalize-space(//div[contains(@class,\"content-box\")])"
+        }
+      }
+    }
+
 ### Push mode (including fetch-push)
 
 | Name                                  | Description         |
