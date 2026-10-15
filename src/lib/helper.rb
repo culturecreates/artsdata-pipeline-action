@@ -238,12 +238,13 @@ module Helper
     )
   end
 
-  def self.get_spider_crawler(url:, page_fetcher:, sparql_path:, robots_txt_content:)
+  def self.get_spider_crawler(url:, page_fetcher:, sparql_path:, robots_txt_content:, max_pages: nil)
     SpiderCrawlerService::SpiderCrawler.new(
       url: url,
       page_fetcher: page_fetcher,
       sparql: SparqlService::Sparql.new(sparql_path),
-      robots_txt_content: robots_txt_content
+      robots_txt_content: robots_txt_content,
+      max_pages: max_pages
     )
   end
 

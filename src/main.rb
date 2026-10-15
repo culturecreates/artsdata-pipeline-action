@@ -44,6 +44,16 @@ skolemize_exclude = config['skolemize_exclude']
 auto_detect_page_param = config['auto_detect_page_param'] == true
 cloudflare_private_key = config['cloudflare_private_key']
 
+max_pages = Config::SPIDER_CRAWLER[:max_pages_to_crawl]
+max_pages_input = config['max_pages'].to_s.strip
+unless max_pages_input.empty?
+  if max_pages_input.match?(/\A[1-9]\d*\z/)
+    max_pages = max_pages_input.to_i
+  else
+    puts "Ignoring invalid max-pages '#{max_pages_input}', using default #{max_pages}"
+  end
+end
+
 # Expose the skolemization exclusion config to the transformation layer.
 if skolemize_exclude.is_a?(Hash) && !skolemize_exclude.empty?
   ENV['SKOLEMIZE_EXCLUDE_CONFIG'] = skolemize_exclude.to_json
@@ -105,6 +115,11 @@ if mode.include?('fetch')
       entity_urls = entity_urls.take(5)
     end
 
+    if entity_urls.length > max_pages
+      puts "Limiting entity urls from #{entity_urls.length} to max-pages #{max_pages}"
+      entity_urls = entity_urls.take(max_pages)
+    end
+
     graph_fetcher = Helper.get_graph_fetcher(
       page_fetcher: Helper.get_page_fetcher(
         is_headless: headless,
@@ -123,7 +138,8 @@ if mode.include?('fetch')
       url: page_url,
       page_fetcher: page_fetcher,
       sparql_path: "./sparql/",
-      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, private_key_content: cloudflare_private_key)
+      robots_txt_content: Helper.get_robots_txt_content(base_url: base_url, private_key_content: cloudflare_private_key),
+      max_pages: max_pages
     )
     start_time = Time.now.utc.iso8601
     if metadata_content&.[]('skip_crawl') == "true"
@@ -184,6 +200,11 @@ if mode.include?('fetch')
 
     if mode.include?('test')
       entity_urls = entity_urls.take(5) # Limit to 5 URLs for testing
+    end
+
+    if entity_urls.length > max_pages
+      puts "Limiting entity urls from #{entity_urls.length} to max-pages #{max_pages}"
+      entity_urls = entity_urls.take(max_pages)
     end
 
     notification_instance.send_notification(
