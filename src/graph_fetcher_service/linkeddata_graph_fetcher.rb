@@ -2,8 +2,13 @@ require 'linkeddata'
 
 module GraphFetcherService
   class LinkedDataGraphFetcher < GraphFetcherService::GraphFetcher
-    def initialize(page_fetcher:, sparql:, html_extract_config:)
-      super(page_fetcher: page_fetcher, sparql: sparql, html_extract_config: html_extract_config)
+    def initialize(page_fetcher:, sparql:, html_extract_config:, private_key_content: nil)
+      super(page_fetcher: page_fetcher, sparql: sparql, html_extract_config: html_extract_config,
+            private_key_content: private_key_content)
+      # Linked pages (see `from_property`) are often shared by many entities,
+      # so fetch each one once per run. Failed fetches are cached as nil.
+      @linked_page_cache = {}
+      @robots_txt_by_host = {}
     end
 
     def load_with_retry(entity_urls:)
@@ -36,6 +41,7 @@ module GraphFetcherService
           elsif !entity_uri.nil?
             extract_logic = @html_extract_config['extract']
             loaded_graph << extract_with_xpath(entity_uri, data, extract_logic)
+            loaded_graph << extract_from_linked_pages(entity_uri, entity_url, loaded_graph, extract_logic)
           else
             notification_instance = NotificationService::WebhookNotification.instance
             puts "Warning: Multiple entities of type #{entity_type} found from #{entity_url}, cannot add html data."
@@ -111,6 +117,8 @@ module GraphFetcherService
       doc = Nokogiri::HTML(data)
 
       extract_logic.each do |predicate, config|
+        # Entries with `from_property` read a linked page, not this one.
+        next if config['from_property']
         xpath_expr, css_expr, transform = config.values_at('xpath', 'css', 'transform')
         is_uri = config['uri'].to_s.casecmp?('true')
         is_array = config['array'].to_s.casecmp?('true')
@@ -137,6 +145,77 @@ module GraphFetcherService
       end
 
       graph
+    end
+
+    private
+
+    # Runs the `from_property` entries of extract_logic: each one takes a URL
+    # from that property of the entity, fetches the page and extracts from it.
+    def extract_from_linked_pages(uri, entity_url, entity_graph, extract_logic)
+      graph = RDF::Graph.new
+      linked = extract_logic.select { |_, config| config['from_property'] }
+      linked.group_by { |_, config| config['from_property'] }.each do |property, entries|
+        linked_url = linked_page_url(uri, entity_url, entity_graph, property)
+        next if linked_url.nil?
+
+        linked_data = fetch_linked_page(linked_url)
+        next if linked_data.nil?
+
+        logic = entries.to_h { |predicate, config| [predicate, config.reject { |k, _| k == 'from_property' }] }
+        graph << extract_with_xpath(uri, linked_data, logic)
+      end
+      graph
+    end
+
+    private
+
+    # First value of `property` on the entity that is an http(s) URL other than
+    # the crawled page itself. Relative values are resolved against entity_url.
+    def linked_page_url(uri, entity_url, entity_graph, property)
+      predicates = [property, property.sub(%r{\Ahttps?://}) { |m| m == 'http://' ? 'https://' : 'http://' }].uniq
+      values = predicates.flat_map { |p| entity_graph.query([uri, RDF::URI(p), nil]).map(&:object) }
+      values.each do |value|
+        begin
+          url = URI.join(entity_url, value.to_s.strip).to_s
+        rescue URI::Error
+          next
+        end
+        next unless url.start_with?('http://', 'https://')
+        next if same_page?(url, entity_url)
+        return url
+      end
+      nil
+    end
+
+    private
+
+    def same_page?(url_a, url_b)
+      normalize = ->(u) { u.sub(/#.*\z/, '').sub(%r{/\z}, '') }
+      normalize.call(url_a) == normalize.call(url_b)
+    end
+
+    private
+
+    def fetch_linked_page(url)
+      return @linked_page_cache[url] if @linked_page_cache.key?(url)
+
+      @linked_page_cache[url] =
+        if linked_page_allowed?(url)
+          puts "Fetching linked page #{url}"
+          @page_fetcher.fetcher_with_retry(page_url: url.gsub(' ', '+')).first
+        else
+          puts "Skipping linked page disallowed by robots.txt: #{url}"
+          nil
+        end
+    end
+
+    private
+
+    def linked_page_allowed?(url)
+      parsed = URI.parse(url)
+      origin = "#{parsed.scheme}://#{parsed.authority}"
+      @robots_txt_by_host[origin] ||= Helper.get_robots_txt_content(base_url: origin, private_key_content: @private_key_content)
+      @robots_txt_by_host[origin].allowed?(Helper.get_user_agent, parsed.request_uri)
     end
 
     private
