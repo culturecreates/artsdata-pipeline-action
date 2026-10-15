@@ -100,6 +100,7 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 | `custom-user-agent`                 | custom-user-agent for the http requests (optional, defaults to artsdata-crawler)
 | `html-extract-config`               | custom xpath-config to fetch additional_data. 
 | `auto-detect-page-param`            | Set to `true` when `page-url` does not contain a pagination query parameter but the listing is paginated. The action opens the page in a headless browser, discovers the site's (possibly randomized) pagination query param, and rewrites each `page-url` before crawling. (optional, defaults to false). See [Auto-detecting the pagination parameter](#auto-detecting-the-pagination-parameter).
+| `max-pages`                         | Maximum number of pages to visit (spider mode) or fetch (entity URLs), to keep very large sites within the GitHub job time limit. (optional, defaults to 2500)
 | `cloudflare-private-key`            | Ed25519 private key in PEM format for signing HTTP requests to identify the Artsdata bot to Cloudflare-protected sites. Should be stored as an organization or repository secret. (optional)
 
 

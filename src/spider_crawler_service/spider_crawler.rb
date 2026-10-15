@@ -1,7 +1,7 @@
 require_relative '../config/spider_config'
 module SpiderCrawlerService
   class SpiderCrawler
-    def initialize(url:, page_fetcher:, sparql:, robots_txt_content:)
+    def initialize(url:, page_fetcher:, sparql:, robots_txt_content:, max_pages: nil)
       @url = url
       @page_fetcher = page_fetcher
       @sparql = sparql
@@ -10,6 +10,7 @@ module SpiderCrawlerService
       @base_url = URI.parse(url[0]).scheme + "://" + URI.parse(url[0]).host
       @atleast_one_page_loaded = false
       @visited = Set.new
+      @max_pages = max_pages || Config::SPIDER_CRAWLER[:max_pages_to_crawl]
       @max_depth = Config::SPIDER_CRAWLER[:default_max_depth]
       @event_count = 0
       @structured_score = 0.0
@@ -148,7 +149,7 @@ module SpiderCrawlerService
     private
     def crawl_queue(queue:, sitemap: false)
       user_agent = Helper.get_user_agent()
-      until queue.empty? || @visited.size >= Config::SPIDER_CRAWLER[:max_pages_to_crawl] do
+      until queue.empty? || @visited.size >= @max_pages do
         queue.sort_by! { |_, score, _| -score }
         queue = queue.take(Config::SPIDER_CRAWLER[:max_queue_size])
 
