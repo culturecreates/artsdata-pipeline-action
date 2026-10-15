@@ -111,7 +111,8 @@ if mode.include?('fetch')
         private_key_content: cloudflare_private_key
       ),
       sparql_path: "./sparql/",
-      html_extract_config: html_extract_config
+      html_extract_config: html_extract_config,
+      private_key_content: cloudflare_private_key
     )
 
     graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)
@@ -197,7 +198,8 @@ if mode.include?('fetch')
         private_key_content: cloudflare_private_key
       ),
       sparql_path: "./sparql/",
-      html_extract_config: html_extract_config
+      html_extract_config: html_extract_config,
+      private_key_content: cloudflare_private_key
     )
 
     graph = graph_fetcher.load_with_retry(entity_urls: entity_urls)

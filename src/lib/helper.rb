@@ -210,11 +210,12 @@ module Helper
     )
   end
 
-  def self.get_graph_fetcher(page_fetcher:, sparql_path:, html_extract_config:)
+  def self.get_graph_fetcher(page_fetcher:, sparql_path:, html_extract_config:, private_key_content: nil)
     GraphFetcherService::LinkedDataGraphFetcher.new(
       page_fetcher: page_fetcher,
       sparql: SparqlService::Sparql.new(sparql_path),
-      html_extract_config: html_extract_config
+      html_extract_config: html_extract_config,
+      private_key_content: private_key_content
     )
   end
 
