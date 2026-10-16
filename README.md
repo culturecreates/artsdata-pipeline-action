@@ -105,19 +105,34 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 
 
 html-extract-config format: 
+Replace "property_uri" with the URI of the property to add, example `http://schema.org/description`.
 
     { 
       "entity_type": "type of entity you want to add additional info to, example "http://schema.org/Event", 
       "extract": { 
-        "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
-        "css": "css expression, example: div.um-name",
-        "isArray": "set as true if the object should be an array, default is false",
-        "isUri": "set as true if the object should be a URI, default is false",
-        "transform": {
-          "function": "function_name", eg : split (this is the only function currently available)
-          "args": "arguments" eg : [","]
+        "property_uri": {
+          "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
+          "css": "css expression, example: div.um-name",
+          "isArray": "set as true if the object should be an array, default is false",
+          "isUri": "set as true if the object should be a URI, default is false",
+          "transform": {
+            "function": "function_name", eg : split (this is the only function currently available)
+            "args": "arguments" eg : [","]
+          }
         }
       } 
+    }
+
+To extract from a page that the entity links to instead of the crawled page, add `from_property` to an `extract` entry. The URL is taken from that property of the matched entity, the linked page is fetched with the same page fetcher (user agent, robots.txt, Cloudflare signing), and the `xpath`/`css` runs on it. Each linked page is fetched once per run, even when many entities link to it. The entry is skipped when the property is missing or points to the page being crawled. Entries without `from_property` read the crawled page as before.
+
+    {
+      "entity_type": "http://schema.org/Event",
+      "extract": {
+        "http://schema.org/description": {
+          "from_property": "http://schema.org/url",
+          "xpath": "normalize-space(//div[contains(@class,\"content-box\")])"
+        }
+      }
     }
 
 ### Push mode (including fetch-push)
