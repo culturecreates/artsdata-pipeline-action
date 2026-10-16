@@ -104,17 +104,20 @@ Note: Ferrum gem requires Xvfb (X virtual framebuffer) to run headless browser s
 
 
 html-extract-config format: 
+Replace "property_uri" with the URI of the property to add, example `http://schema.org/description`.
 
     { 
       "entity_type": "type of entity you want to add additional info to, example "http://schema.org/Event", 
       "extract": { 
-        "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
-        "css": "css expression, example: div.um-name",
-        "isArray": "set as true if the object should be an array, default is false",
-        "isUri": "set as true if the object should be a URI, default is false",
-        "transform": {
-          "function": "function_name", eg : split (this is the only function currently available)
-          "args": "arguments" eg : [","]
+        "property_uri": {
+          "xpath" : "xpath expression, example ://div[@class=\"um-name\"]", 
+          "css": "css expression, example: div.um-name",
+          "isArray": "set as true if the object should be an array, default is false",
+          "isUri": "set as true if the object should be a URI, default is false",
+          "transform": {
+            "function": "function_name", eg : split (this is the only function currently available)
+            "args": "arguments" eg : [","]
+          }
         }
       } 
     }
