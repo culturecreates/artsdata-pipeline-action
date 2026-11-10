@@ -11,6 +11,7 @@ module UrlFetcherService
       @robots_txt_content = robots_txt_content
       @urls = []
       @atleast_one_page_loaded = false
+      @diagnostics = { matched: 0, without_href: 0, invalid: 0, disallowed: 0, sample_links: [] }
     end
 
 
@@ -41,7 +42,7 @@ module UrlFetcherService
               nil
             end
           number_of_entities = @urls.length
-          @urls.concat(fetch_url_from_page_data(page_data: main_doc, page_type: page_type, entity_identifier: identifier))
+          @urls.concat(fetch_url_from_page_data(page_data: main_doc, page_type: page_type, entity_identifier: identifier, page_url: url))
           @urls = @urls.uniq
           if @urls.length == number_of_entities || page_number.nil?
             puts "Fetched all entity URLs from #{url}."
@@ -61,11 +62,15 @@ module UrlFetcherService
         )
         exit(1)
       end
+      explain_no_entity_urls if @urls.empty?
       @urls
     end
 
     private
-    def fetch_url_from_page_data(page_data:, page_type:, entity_identifier:)
+    # Extracts entity URLs from one listing page. Each matched element is
+    # handled on its own, so one bad element never drops the others.
+    # Relative hrefs are resolved against the listing page URL.
+    def fetch_url_from_page_data(page_data:, page_type:, entity_identifier:, page_url: nil)
       return [] if page_data.nil?
       page_urls = []
       begin
@@ -76,30 +81,93 @@ module UrlFetcherService
         when :xpath
           entities_data = page_data.xpath(entity_identifier)
         end
-        puts "Found #{entities_data.length} elements matching '#{entity_identifier}'"
-        entities_data.each do |entity|
-          if(page_type == :xml)
-            url = entity.content
-          else
-            href = entity['href']
-            url = (href.start_with?('http') ? href : @base_url + (href.start_with?('/') ? href : "/#{href}"))
-          end
-          path = URI.parse(url).path
-          if !@robots_txt_content.allowed?(Helper.get_user_agent, path)
-            puts "Skipping disallowed URL by robots.txt: #{url}"
-            next
-          end
-          page_urls << url
-        end
       rescue StandardError => e
-        notification_message = "Error fetching entity URLs: #{e.message}"
+        notification_message = "Error fetching entity URLs: invalid entity-identifier '#{entity_identifier}': #{e.message}"
         NotificationService::WebhookNotification.instance.send_notification(
           stage: 'fetching_entity_urls',
           message: notification_message
         )
         puts notification_message
+        return []
+      end
+
+      puts "Found #{entities_data.length} elements matching '#{entity_identifier}'"
+      @diagnostics[:matched] += entities_data.length
+      @diagnostics[:sample_links] = sample_links(page_data) if entities_data.empty? && page_type == :html && @diagnostics[:sample_links].empty?
+
+      entities_data.each do |entity|
+        url =
+          if page_type == :xml
+            entity.content.to_s.strip
+          else
+            href_for(entity)
+          end
+        if url.nil? || url.empty?
+          @diagnostics[:without_href] += 1
+          next
+        end
+        url = resolve_url(url, page_url)
+        if url.nil?
+          @diagnostics[:invalid] += 1
+          next
+        end
+        path = URI.parse(url).path
+        if !@robots_txt_content.allowed?(Helper.get_user_agent, path)
+          puts "Skipping disallowed URL by robots.txt: #{url}"
+          @diagnostics[:disallowed] += 1
+          next
+        end
+        page_urls << url
+      rescue StandardError => e
+        @diagnostics[:invalid] += 1
+        puts "Skipping entity element: #{e.message}"
       end
       page_urls
+    end
+
+    # The href of the element, or of the first link inside it, so a
+    # selector on a container (e.g. "div.card") still works.
+    def href_for(entity)
+      href = entity['href'].to_s.strip
+      return href unless href.empty?
+
+      entity.at_css('a[href]')&.[]('href')&.strip
+    end
+
+    def resolve_url(href, page_url)
+      return href if href.start_with?('http://', 'https://')
+
+      url = URI.join(page_url || @base_url, href).to_s
+      url.start_with?('http://', 'https://') ? url : nil # e.g. mailto:, javascript:
+    rescue URI::Error
+      nil
+    end
+
+    def sample_links(doc)
+      doc.css('a[href]').map { |a| a['href'].to_s.strip }.reject { |h| h.empty? || h.start_with?('#') }.uniq.first(15)
+    end
+
+    # Says why no entity URLs were found, before main.rb exits with
+    # "No entity URLs found".
+    def explain_no_entity_urls
+      d = @diagnostics
+      reason =
+        if d[:matched].zero?
+          'the entity-identifier matched 0 elements on the page(s). The site markup may have changed, ' \
+          'or the listing is rendered with JavaScript (try fetch-urls-headlessly: true)'
+        elsif d[:disallowed].positive? && d[:without_href].zero? && d[:invalid].zero?
+          "all #{d[:matched]} matched URLs are disallowed by robots.txt"
+        elsif d[:without_href] == d[:matched]
+          "the #{d[:matched]} matched elements have no href and contain no link. Select the <a> elements"
+        else
+          "#{d[:matched]} elements matched: #{d[:without_href]} without href, " \
+          "#{d[:invalid]} invalid URLs, #{d[:disallowed]} disallowed by robots.txt"
+        end
+      puts "No entity URLs: #{reason}."
+      unless d[:sample_links].empty?
+        puts 'Sample links on the page:'
+        d[:sample_links].each { |h| puts "  #{h}" }
+      end
     end
 
     public
